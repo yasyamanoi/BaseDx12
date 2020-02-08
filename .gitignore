@@ -1,0 +1,12 @@
+*.user
+*.aps
+*.lib
+*.dll
+*.pdb
+*.cso
+/Libs/lib/
+/**/Temp/
+/**/Debug/
+/**/Release/
+/**/.vs/
+.vs/
