@@ -5,6 +5,7 @@
 *.pdb
 *.cso
 /Libs/lib/
+/**/packages/
 /**/Temp/
 /**/Debug/
 /**/Release/
