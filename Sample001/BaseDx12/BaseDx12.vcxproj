@@ -95,6 +95,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="GameDevice.h" />
     <ClInclude Include="GameStage.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Scene.h" />
@@ -107,6 +108,7 @@
     <Image Include="icon1.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GameDevice.cpp" />
     <ClCompile Include="GameStage.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="stdafx.cpp">

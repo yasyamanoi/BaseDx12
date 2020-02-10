@@ -15,17 +15,25 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)App.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)BaseMath.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)BaseMathInc.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)CommonDx12.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)d3dx12.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Device.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Helper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MeshHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)SceneBase.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)SimpleCamera.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Stage.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)StepTimer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)VertexHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)App.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Dx12Device.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)MeshHelper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SimpleCamera.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Stage.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)VertexHelper.cpp" />
   </ItemGroup>
 </Project>

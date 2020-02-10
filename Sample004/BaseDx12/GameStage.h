@@ -1,125 +1,24 @@
 #pragma once
 #include "stdafx.h"
-#include "Camera.h"
-#include "SquidRoom.h"
+#include "GameDevice.h"
 
-class FrameResource;
+namespace basedx12 {
 
-struct LightState
-{
-    XMFLOAT4 position;
-    XMFLOAT4 direction;
-    XMFLOAT4 color;
-    XMFLOAT4 falloff;
+    class GameStage : public Stage {
+        GameDivece m_device;
+    public:
+        GameStage();
+        virtual ~GameStage() {}
 
-    XMFLOAT4X4 view;
-    XMFLOAT4X4 projection;
-};
+        virtual void OnInit();
+        virtual void OnUpdate();
+        virtual void OnRender();
+        virtual void OnDestroy();
+        virtual void OnKeyDown(UINT8 key);
+        virtual void OnKeyUp(UINT8 key);
 
-struct SceneConstantBuffer
-{
-    XMFLOAT4X4 model;
-    XMFLOAT4X4 view;
-    XMFLOAT4X4 projection;
-    XMFLOAT4 ambientColor;
-    BOOL sampleShadowMap;
-    BOOL padding[3];        // Must be aligned to be made up of N float4s.
-    LightState lights[NumLights];
-};
-
-
-class GameStage : public Stage {
-    struct InputState
-    {
-        bool rightArrowPressed;
-        bool leftArrowPressed;
-        bool upArrowPressed;
-        bool downArrowPressed;
-        bool animate;
     };
 
-    // Pipeline objects.
-    CD3DX12_VIEWPORT m_viewport;
-    CD3DX12_RECT m_scissorRect;
-    ComPtr<IDXGISwapChain3> m_swapChain;
-    ComPtr<ID3D12Device> m_device;
-    ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
-    ComPtr<ID3D12Resource> m_depthStencil;
-    ComPtr<ID3D12CommandAllocator> m_commandAllocator;
-    ComPtr<ID3D12CommandQueue> m_commandQueue;
-    ComPtr<ID3D12RootSignature> m_rootSignature;
-    ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-    ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
-    ComPtr<ID3D12DescriptorHeap> m_cbvSrvHeap;
-    ComPtr<ID3D12DescriptorHeap> m_samplerHeap;
-    ComPtr<ID3D12PipelineState> m_pipelineState;
-    ComPtr<ID3D12PipelineState> m_pipelineStateShadowMap;
-
-    // App resources.
-    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
-    D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
-    ComPtr<ID3D12Resource> m_textures[_countof(SampleAssets::Textures)];
-    ComPtr<ID3D12Resource> m_textureUploads[_countof(SampleAssets::Textures)];
-    ComPtr<ID3D12Resource> m_indexBuffer;
-    ComPtr<ID3D12Resource> m_indexBufferUpload;
-    ComPtr<ID3D12Resource> m_vertexBuffer;
-    ComPtr<ID3D12Resource> m_vertexBufferUpload;
-    UINT m_rtvDescriptorSize;
-    InputState m_keyboardInput;
-    LightState m_lights[NumLights];
-    Camera m_lightCameras[NumLights];
-    Camera m_camera;
-    StepTimer m_timer;
-    StepTimer m_cpuTimer;
-    int m_titleCount;
-    double m_cpuTime;
-
-    // Synchronization objects.
-    HANDLE m_workerBeginRenderFrame[NumContexts];
-    HANDLE m_workerFinishShadowPass[NumContexts];
-    HANDLE m_workerFinishedRenderFrame[NumContexts];
-    HANDLE m_threadHandles[NumContexts];
-    UINT m_frameIndex;
-    HANDLE m_fenceEvent;
-    ComPtr<ID3D12Fence> m_fence;
-    UINT64 m_fenceValue;
-
-    // Singleton object so that worker threads can share members.
-    static GameStage* s_app;
-
-    // Frame resources.
-    FrameResource* m_frameResources[FrameCount];
-    FrameResource* m_pCurrentFrameResource;
-    int m_currentFrameResourceIndex;
-
-    struct ThreadParameter
-    {
-        int threadIndex;
-    };
-    ThreadParameter m_threadParameters[NumContexts];
-
-    void WorkerThread(int threadIndex);
-    void SetCommonPipelineState(ID3D12GraphicsCommandList* pCommandList);
-
-    void LoadPipeline();
-    void LoadAssets();
-    void LoadContexts();
-    void BeginFrame();
-    void MidFrame();
-    void EndFrame();
-
-public:
-    GameStage();
-    virtual ~GameStage();
-
-    static GameStage* Get() { return s_app; }
-
-    virtual void OnInit();
-    virtual void OnUpdate();
-    virtual void OnRender();
-    virtual void OnDestroy();
-    virtual void OnKeyDown(UINT8 key);
-    virtual void OnKeyUp(UINT8 key);
-
-};
+}
+//end basedx12
 

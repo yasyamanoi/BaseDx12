@@ -6,8 +6,8 @@ _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
 	try{
-		Scene scene;
-		return App::Run(&scene, hInstance, nCmdShow, 1280, 720);
+		basedx12::Scene scene;
+		return basedx12::App::Run(&scene, hInstance, nCmdShow, 1280, 720);
 	}
 	catch (exception & e) {
 		//STLÉGÉâÅ[

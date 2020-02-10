@@ -69,6 +69,7 @@
 #pragma comment( lib, "dxguid.lib" )
 #pragma comment( lib, "winmm.lib" )
 #pragma comment( lib, "comctl32.lib" )
+#pragma comment( lib, "WinPixEventRuntime.lib" )
 // XInput
 #pragma comment( lib, "XInput.lib" )
 //オーディオ

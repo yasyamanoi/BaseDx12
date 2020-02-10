@@ -102,6 +102,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="FrameResource.h" />
+    <ClInclude Include="GameDevice.h" />
     <ClInclude Include="GameStage.h" />
     <ClInclude Include="occcity.h" />
     <ClInclude Include="resource.h" />
@@ -116,6 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrameResource.cpp" />
+    <ClCompile Include="GameDevice.cpp" />
     <ClCompile Include="GameStage.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="stdafx.cpp">

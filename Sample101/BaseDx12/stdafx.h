@@ -25,6 +25,7 @@
 #include <DirectXCollision.h>
 #include <DirectXTex.h>
 //#include "d3dx12.h"
+#include <pix3.h>
 
 #include <xaudio2.h>	//サウンド
 #include <xaudio2fx.h>
@@ -68,6 +69,7 @@
 #pragma comment( lib, "dxguid.lib" )
 #pragma comment( lib, "winmm.lib" )
 #pragma comment( lib, "comctl32.lib" )
+#pragma comment( lib, "WinPixEventRuntime.lib" )
 // XInput
 #pragma comment( lib, "XInput.lib" )
 //オーディオ
@@ -79,6 +81,7 @@
 
 
 using namespace std;
+
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 

@@ -78,7 +78,7 @@
 //WinHTTP
 #pragma comment( lib, "Winhttp.lib" )
 //pix3
-//#pragma comment( lib, "WinPixEventRuntime.lib" )
+#pragma comment( lib, "WinPixEventRuntime.lib" )
 
 
 
