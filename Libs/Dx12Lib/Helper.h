@@ -30,13 +30,42 @@ namespace basedx12 {
         return std::string(s_str);
     }
 
+    inline std::string WstrToStr(const std::wstring& wstr)
+    {
+        
+        std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> cv;
+        return cv.to_bytes(wstr);
+    }
+
+
     class HrException : public std::runtime_error
     {
     public:
         HrException(HRESULT hr) : std::runtime_error(HrToString(hr)), m_hr(hr) {}
+        HrException(HRESULT hr,const std::string& mess) :
+            std::runtime_error(HrToString(hr) + mess),
+            m_hr(hr) 
+        {}
         HRESULT Error() const { return m_hr; }
     private:
         const HRESULT m_hr;
+    };
+
+    class BaseException : public std::runtime_error
+    {
+    public:
+        BaseException(const std::wstring& wstr1, 
+            const std::wstring& wstr2,
+            const std::wstring& wstr3 = L""
+        ) :
+            std::runtime_error(WstrToStr(wstr1) + WstrToStr(wstr2) + WstrToStr(wstr3))
+        {}
+        BaseException(const std::string& str1, 
+            const std::string& str2,
+            const std::string& str3 = ""
+        ) :
+            std::runtime_error(str1 + str2 + str3)
+        {}
     };
 
     #define SAFE_RELEASE(p) if (p) (p)->Release()
@@ -46,6 +75,30 @@ namespace basedx12 {
         if (FAILED(hr))
         {
             throw HrException(hr);
+        }
+    }
+
+    inline void ThrowIfFailed(HRESULT hr,
+        const std::wstring& wstr1,
+        const std::wstring& wstr2 = std::wstring(),
+        const std::wstring& wstr3 = std::wstring()
+    )
+    {
+        if (FAILED(hr))
+        {
+            throw HrException(hr, WstrToStr(wstr1) + WstrToStr(wstr2) + WstrToStr(wstr3));
+        }
+    }
+
+    inline void ThrowIfFailed(HRESULT hr, 
+        const std::string& str1,
+        const std::string& str2 = std::string(),
+        const std::string& str3 = std::string()
+    )
+    {
+        if (FAILED(hr))
+        {
+            throw HrException(hr, str1 + str2 + str3);
         }
     }
 

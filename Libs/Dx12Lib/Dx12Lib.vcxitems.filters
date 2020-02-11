@@ -48,6 +48,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Device.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Texture.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Stage.cpp">
@@ -66,6 +69,9 @@
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)Dx12Device.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Dx12Texture.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>

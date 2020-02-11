@@ -8,6 +8,7 @@
 #include "SimpleCamera.h"
 #include "StepTimer.h"
 #include "Dx12Device.h"
+#include "Dx12Texture.h"
 #include "Stage.h"
 #include "SceneBase.h"
 #include "App.h"
