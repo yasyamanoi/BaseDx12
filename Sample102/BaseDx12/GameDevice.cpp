@@ -149,12 +149,14 @@ namespace basedx12 {
             };
             //インデックス配列
             vector<uint32_t> indices = { 0, 1, 2, 1, 3, 2 };
+            //四角形メッシュの作成
             m_pntSquareMesh = Dx12Mesh::CreateDx12Mesh<VertexPositionTexture>(m_commandList, vertices, indices);
 
         }
         //コンスタントバッファ
         {
             //コンスタントバッファハンドルを作成
+            //三角形四角形共通
             CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
                 m_CbvSrvUavDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
                 0,
@@ -172,12 +174,13 @@ namespace basedx12 {
                 1,
                 m_CbvSrvDescriptorHandleIncrementSize
             );
+            //画像ファイルをもとにテクスチャを作成
             m_SkyTexture = Dx12Texture::CreateDx12Texture(TexFile, srvHandle);
         }
         //サンプラー
         {
             auto SamplerDescriptorHandle = m_SamplerDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-            DynamicSampler::CreateSampler(SamplerState::LinearClamp, SamplerDescriptorHandle);
+            Sampler::CreateSampler(SamplerState::LinearClamp, SamplerDescriptorHandle);
         }
         //コマンドラインクローズおよびキューの実行
         CommandList::Close(m_commandList);

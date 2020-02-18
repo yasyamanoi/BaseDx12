@@ -319,7 +319,7 @@ namespace basedx12 {
 	//--------------------------------------------------------------------------------------
 	/// サンプラーユーティリティ（変更可能）
 	//--------------------------------------------------------------------------------------
-	namespace DynamicSampler {
+	namespace Sampler {
 		static inline void CreateSampler(const SamplerState State, D3D12_CPU_DESCRIPTOR_HANDLE& Handle) {
 			D3D12_SAMPLER_DESC samplerDesc = {};
 			//デフォルトを入れておく
