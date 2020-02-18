@@ -9,6 +9,9 @@ namespace basedx12 {
     int App::m_width = 0;
     int App::m_height = 0;
 
+    shared_ptr<Dx12Device> App::m_device = nullptr;
+
+
     wstring App::m_classsName = L"BaseDx12Class";
     wstring App::m_title = L"BaseDx12Title";
 

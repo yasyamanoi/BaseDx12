@@ -14,10 +14,10 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Assets">
-      <UniqueIdentifier>{8dabad9e-2259-4fdc-a79c-21ded81cdab0}</UniqueIdentifier>
+      <UniqueIdentifier>{8e6ff625-edfb-4f37-a5c7-b8cb6693a99f}</UniqueIdentifier>
     </Filter>
     <Filter Include="Assets\Shaders">
-      <UniqueIdentifier>{64ed6107-c957-40ef-b61d-6377c3282d1a}</UniqueIdentifier>
+      <UniqueIdentifier>{090eafa6-fe00-4043-8bac-04455386fcb9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -27,16 +27,7 @@
     <ClInclude Include="stdafx.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="GameStage.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="Scene.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="FrameResource.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="occcity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="GameDevice.h">
@@ -60,13 +51,7 @@
     <ClCompile Include="WinMain.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="GameStage.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="Scene.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="FrameResource.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="GameDevice.cpp">
@@ -74,17 +59,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\media\Shaders\shader_mesh_alt_pixel.hlsl">
+    <FxCompile Include="..\media\Shaders\vshader.hlsl">
       <Filter>Assets\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\media\Shaders\shader_mesh_simple_pixel.hlsl">
+    <FxCompile Include="..\media\Shaders\pshader.hlsl">
       <Filter>Assets\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\media\Shaders\shader_mesh_simple_vert.hlsl">
-      <Filter>Assets\Shaders</Filter>
-    </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
 </Project>

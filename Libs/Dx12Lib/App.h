@@ -3,6 +3,7 @@
 namespace basedx12 {
 
     class SceneBase;
+    class Dx12Device;
 
     class App
     {
@@ -21,6 +22,15 @@ namespace basedx12 {
         static const wstring& GetRelativeShadersPath() { return m_wstrRelativeShadersPath; }
         static const wstring& GetRelativeAssetsPath() { return m_wstrRelativeAssetsPath; }
 
+        static shared_ptr<Dx12Device> GetDx12Device() {
+            return m_device;
+        }
+        static void SetDx12Device(const shared_ptr<Dx12Device>& ptr) {
+            m_device = ptr;
+        }
+        static ComPtr<ID3D12Device> GetID3D12Device() {
+            return m_device->GetID3D12Device();
+        }
 
     protected:
         static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -30,6 +40,9 @@ namespace basedx12 {
         static void SetAssetsPath();
         static HWND m_hwnd;
         static SceneBase* m_pSceneBase;
+
+        static shared_ptr<Dx12Device> m_device;
+
         static int m_width;
         static int m_height;
         static wstring m_classsName;

@@ -1,23 +1,8 @@
 #include "stdafx.h"
 
 namespace basedx12 {
-/*
-		//テクスチャ用のデスクプリタ
-		D3D12_RESOURCE_DESC m_TextureResDesc;
-		//リソース
-		ComPtr<ID3D12Resource> m_Texture;
-		//GPUアップロードのためのリソース
-		ComPtr<ID3D12Resource> m_TextureUploadHeap;
-		//テクスチャファイルへのパス
-		wstring m_FileName{ L"" };
-		//テクスチャデータ
-		vector<uint8_t> m_Data;
-		UINT m_TexturePixelSize;
-		bool m_DataRefresh;
-*/
-	ComPtr<ID3D12Resource> Dx12Texture::CreateDx12Texture(ID3D12Device* pDevice,
-		const wstring& FileName, 
-		DirectX::ScratchImage& image) {
+
+	shared_ptr<Dx12Texture>  Dx12Texture::CreateDx12Texture(const wstring& FileName, const CD3DX12_CPU_DESCRIPTOR_HANDLE& maphandle) {
 		if (FileName == L"") {
 			throw BaseException(
 				L"ファイルが指定されていません\n",
@@ -30,7 +15,7 @@ namespace basedx12 {
 			throw BaseException(
 				L"ファイルが存在しません\n",
 				FileName,
-				L"Dx12Texture::CreateDx12Texture()"
+				L"\nDx12Texture::CreateDx12Texture()"
 			);
 		}
 		//テクスチャ作成
@@ -52,49 +37,105 @@ namespace basedx12 {
 			Extbuff, _MAX_EXT);
 
 		wstring ExtStr = Extbuff;
+		shared_ptr<Dx12Texture> Ptr = shared_ptr<Dx12Texture>(new Dx12Texture());
+		TexMetadata matadata;
 
 		if (ExtStr == L".dds" || ExtStr == L".DDS") {
 			ThrowIfFailed(
-				DirectX::LoadFromDDSFile(FileName.c_str(), DDS_FLAGS_NONE, nullptr, image),
-				L"テクスチャの読み込みに失敗しました",
+				DirectX::LoadFromDDSFile(FileName.c_str(), DDS_FLAGS_NONE, &matadata, Ptr->m_image),
+				L"テクスチャの読み込みに失敗しました\n",
 				FileName,
-				L"Dx12Texture::CreateDx12Texture()"
+				L"\nDx12Texture::CreateDx12Texture()"
 			);
 		}
 		else if (ExtStr == L".tga" || ExtStr == L".TGA") {
 			ThrowIfFailed(
-				DirectX::LoadFromTGAFile(FileName.c_str(), nullptr, image),
-				L"テクスチャの読み込みに失敗しました",
+				DirectX::LoadFromTGAFile(FileName.c_str(), &matadata, Ptr->m_image),
+				L"テクスチャの読み込みに失敗しました\n",
 				FileName,
-				L"Dx12Texture::CreateDx12Texture()"
+				L"\nDx12Texture::CreateDx12Texture()"
 			);
 		}
 		else if (ExtStr == L".hdr" || ExtStr == L".HDR")
 		{
 			ThrowIfFailed(
-				DirectX::LoadFromHDRFile(FileName.c_str(), nullptr, image),
-				L"テクスチャの読み込みに失敗しました",
+				DirectX::LoadFromHDRFile(FileName.c_str(), &matadata, Ptr->m_image),
+				L"テクスチャの読み込みに失敗しました\n",
 				FileName,
-				L"Dx12Texture::CreateDx12Texture()"
+				L"\nDx12Texture::CreateDx12Texture()"
 			);
 		}
 		else {
 			ThrowIfFailed(
-				DirectX::LoadFromWICFile(FileName.c_str(), WIC_FLAGS_NONE, nullptr, image),
-				L"テクスチャの読み込みに失敗しました",
+				DirectX::LoadFromWICFile(FileName.c_str(), WIC_FLAGS_NONE, &matadata, Ptr->m_image),
+				L"テクスチャの読み込みに失敗しました\n",
 				FileName,
-				L"Dx12Texture::CreateDx12Texture()"
+				L"\nDx12Texture::CreateDx12Texture()"
 			);
 		}
-		ComPtr<ID3D12Resource> texture;
+		//デバイスの取得
+		auto Dev = App::GetID3D12Device();
 		ThrowIfFailed(
-			DirectX::CreateTexture(pDevice, image.GetMetadata(), &texture),
-			L"テクスチャリソースの作成に失敗しました",
+			DirectX::CreateTexture(Dev.Get(), matadata, &Ptr->m_texture),
+			L"テクスチャリソースの作成に失敗しました\n",
 			FileName,
-			L"Dx12Texture::CreateDx12Texture()"
+			L"\nDx12Texture::CreateDx12Texture()"
 		);
-		return texture;
+
+		ThrowIfFailed(
+			DirectX::PrepareUpload(Dev.Get(), Ptr->m_image.GetImages(),
+				Ptr->m_image.GetImageCount(), matadata, Ptr->m_subresources),
+			L"DirectX::PrepareUpload()に失敗しました\n",
+			FileName,
+			L"\nDx12Texture::CreateDx12Texture()"
+		);
+		const UINT64 uploadBufferSize = GetRequiredIntermediateSize(
+			Ptr->m_texture.Get(),
+			0, 
+			static_cast<unsigned int>(Ptr->m_subresources.size())
+		);
+		ThrowIfFailed(
+			Dev->CreateCommittedResource(
+				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+				D3D12_HEAP_FLAG_NONE,
+				&CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(Ptr->m_textureUploadHeap.GetAddressOf())),
+			L"テクスチャのアップロードヒープ作成に失敗しました\n",
+			FileName,
+			L"\nDx12Texture::CreateDx12Texture()"
+		);
+		Ptr->m_maphandle = maphandle;
+		return Ptr;
 	}
+	void Dx12Texture::UpdateSRAndCreateSRV(const ComPtr<ID3D12GraphicsCommandList>& commandList) {
+		UpdateSubresources(commandList.Get(),
+			m_texture.Get(), m_textureUploadHeap.Get(),
+			0, 0, static_cast<unsigned int>(m_subresources.size()),
+			m_subresources.data());
+		commandList->ResourceBarrier(
+			1,
+			&CD3DX12_RESOURCE_BARRIER::Transition(m_texture.Get(),
+				D3D12_RESOURCE_STATE_COPY_DEST,
+				D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+		);
+		//テクスチャのシェーダリソースビューを作成
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		//フォーマット
+		srvDesc.Format = m_texture->GetDesc().Format;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = m_texture->GetDesc().MipLevels;
+		//シェーダリソースビュー
+		auto Dev = App::GetID3D12Device();
+		Dev->CreateShaderResourceView(
+			m_texture.Get(),
+			&srvDesc,
+			m_maphandle);
+
+	}
+
 
 }
 // end basedx12

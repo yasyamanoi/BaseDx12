@@ -13,7 +13,7 @@
 
 #include "stdafx.h"
 #include "Camera.h"
-#include "GameStage.h"
+#include "GameDevice.h"
 
 using namespace DirectX;
 using namespace Microsoft::WRL;

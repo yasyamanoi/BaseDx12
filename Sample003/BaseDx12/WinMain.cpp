@@ -6,7 +6,7 @@ _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
 	int RetCode = 0;
-	try{
+	try {
 		if (FAILED(::CoInitialize(nullptr))) {
 			MessageBoxA(nullptr, "Com初期化に失敗しました。", "エラー", MB_OK);
 			return 1;
@@ -22,7 +22,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 		MessageBoxA(nullptr, e.what(), "エラー", MB_OK);
 		RetCode = 1;
 	}
-    catch (...) {
+	catch (...) {
 		//STLエラー
 		MessageBoxA(nullptr, "原因不明のエラー", "エラー", MB_OK);
 		RetCode = 1;

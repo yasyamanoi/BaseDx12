@@ -96,7 +96,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="GameDevice.h" />
-    <ClInclude Include="GameStage.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="stdafx.h" />
@@ -109,7 +108,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameDevice.cpp" />
-    <ClCompile Include="GameStage.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
