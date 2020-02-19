@@ -9,12 +9,7 @@ namespace basedx12 {
 
 
     GameDivece::GameDivece() :
-        Dx12Device(),
-        m_frameIndex(0),
-        m_viewport(0.0f, 0.0f, static_cast<float>(App::GetGameWidth()), static_cast<float>(App::GetGameHeight())),
-        m_scissorRect(0, 0, static_cast<LONG>(App::GetGameWidth()), static_cast<LONG>(App::GetGameHeight())),
-        m_fenceValues{},
-        m_rtvDescriptorSize(0)
+        Dx12Device()
     {
     }
 
@@ -48,21 +43,8 @@ namespace basedx12 {
             m_rtvHeap = DescriptorHeap::CreateRtvHeap(FrameCount);
             m_rtvDescriptorSize = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
         }
-
-        // フレームリーソース（フレームごとに作成する）
-        {
-            CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-
-            // Create a RTV and a command allocator for each frame.
-            for (UINT n = 0; n < FrameCount; n++)
-            {
-                ThrowIfFailed(GetIDXGISwapChain3()->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
-                GetID3D12Device()->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
-                rtvHandle.Offset(1, m_rtvDescriptorSize);
-                //コマンドアロケータ
-                m_commandAllocators[n] = CommandAllocator::CreateDefault();
-            }
-        }
+        // RTVとコマンドアロケータ
+        CreateRTVandCmdAllocators();
     }
 
     // 個別アセットの構築
@@ -99,20 +81,7 @@ namespace basedx12 {
         m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
         //同期オブジェクトおよびＧＰＵの処理待ち
-        {
-            ThrowIfFailed(GetID3D12Device()->CreateFence(m_fenceValues[m_frameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-            m_fenceValues[m_frameIndex]++;
-
-            // Create an event handle to use for frame synchronization.
-            m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-            if (m_fenceEvent == nullptr)
-            {
-                ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
-            }
-
-            //GPUの処理待ち
-            WaitForGpu();
-        }
+        SyncAndWaitForGpu();
     }
 
     // Update frame-based values.
@@ -141,7 +110,6 @@ namespace basedx12 {
     {
         //GPUの処理待ち
         WaitForGpu();
-
         CloseHandle(m_fenceEvent);
     }
 
@@ -149,8 +117,6 @@ namespace basedx12 {
     void GameDivece::PopulateCommandList()
     {
         ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
-
-//        ThrowIfFailed(m_commandList->Reset(m_commandAllocators[m_frameIndex].Get(), m_pipelineState.Get()));
         //コマンドリストのリセット
         CommandList::Reset(m_commandAllocators[m_frameIndex], m_commandList, m_pipelineState);
 
@@ -177,41 +143,6 @@ namespace basedx12 {
         m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
         ThrowIfFailed(m_commandList->Close());
-    }
-
-    // Wait for pending GPU work to complete.
-    void GameDivece::WaitForGpu()
-    {
-        // Schedule a Signal command in the queue.
-        ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]));
-
-        // Wait until the fence has been processed.
-        ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent));
-        WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
-
-        // Increment the fence value for the current frame.
-        m_fenceValues[m_frameIndex]++;
-    }
-
-    // Prepare to render the next frame.
-    void GameDivece::MoveToNextFrame()
-    {
-        // Schedule a Signal command in the queue.
-        const UINT64 currentFenceValue = m_fenceValues[m_frameIndex];
-        ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), currentFenceValue));
-
-        // Update the frame index.
-        m_frameIndex = GetIDXGISwapChain3()->GetCurrentBackBufferIndex();
-
-        // If the next frame is not ready to be rendered yet, wait until it is ready.
-        if (m_fence->GetCompletedValue() < m_fenceValues[m_frameIndex])
-        {
-            ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent));
-            WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
-        }
-
-        // Set the fence value for the next frame.
-        m_fenceValues[m_frameIndex] = currentFenceValue + 1;
     }
 
 

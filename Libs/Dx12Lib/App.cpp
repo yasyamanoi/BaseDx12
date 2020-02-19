@@ -155,6 +155,10 @@ namespace basedx12 {
         }
 
         m_pSceneBase->OnDestroy();
+        if (m_device) {
+            m_device->OnDestroy();
+            m_device.reset();
+        }
         m_pSceneBase = nullptr;
 
         return static_cast<char>(msg.wParam);
@@ -172,28 +176,34 @@ namespace basedx12 {
         }
         return 0;
         case WM_KEYDOWN:
-            if (m_pSceneBase)
             {
                 UINT8 key = static_cast<UINT8>(wParam);
                 if (key == VK_ESCAPE) {
                     DestroyWindow(hWnd);
                 }
                 else {
-                    m_pSceneBase->OnKeyDown(key);
+                    if (m_pSceneBase && m_device)
+                    {
+                        m_pSceneBase->OnKeyDown(key);
+                        m_device->OnKeyDown(key);
+                    }
                 }
             }
             return 0;
         case WM_KEYUP:
-            if (m_pSceneBase)
+            if (m_pSceneBase && m_device)
             {
                 m_pSceneBase->OnKeyUp(static_cast<UINT8>(wParam));
+                m_device->OnKeyUp(static_cast<UINT8>(wParam));
             }
             return 0;
         case WM_PAINT:
-            if (m_pSceneBase)
-            {
+            if (m_pSceneBase && m_device)
+            {                
                 m_pSceneBase->OnUpdate();
+                m_device->OnUpdate();
                 m_pSceneBase->OnRender();
+                m_device->OnRender();
             }
             return 0;
         case WM_DESTROY:

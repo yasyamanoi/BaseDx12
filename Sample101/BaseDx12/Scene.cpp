@@ -7,13 +7,10 @@ namespace basedx12 {
 		ResetActiveDx12Device<GameDivece>();
 	}
 	void Scene::OnUpdate() {
-		App::GetDx12Device()->OnUpdate();
 	}
 	void Scene::OnRender() {
-		App::GetDx12Device()->OnRender();
 	}
 	void Scene::OnDestroy() {
-		App::GetDx12Device()->OnDestroy();
 	}
 
 }

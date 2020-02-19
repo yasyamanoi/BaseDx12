@@ -14,47 +14,6 @@ namespace basedx12 {
 
 
     class GameDivece : public Dx12Device {
-        static const UINT FrameCount = 2;
-
-        struct Vertex
-        {
-            XMFLOAT3 position;
-            XMFLOAT4 color;
-        };
-
-
-        //パイプライン用
-        CD3DX12_VIEWPORT m_viewport;
-        CD3DX12_RECT m_scissorRect;
-
-        //レンダリングターゲート
-        ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
-        //コマンドアロケータ
-        ComPtr<ID3D12CommandAllocator> m_commandAllocators[FrameCount];
-        //コマンドキュー
-        ComPtr<ID3D12CommandQueue> m_commandQueue;
-
-        //デスクプリタヒープ
-        //レンダリングターゲートビューのデスクプリタヒープ
-        ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-        UINT m_rtvDescriptorSize;
-        //コンスタントバッファとシェーダリソース用デスクプリタヒープ
-        ComPtr<ID3D12DescriptorHeap> m_CbvSrvUavDescriptorHeap;
-        //CbvSrvのデスクプリタハンドルのインクリメントサイズ
-        UINT m_CbvSrvDescriptorHandleIncrementSize{ 0 };
-        //サンプラー用
-        ComPtr<ID3D12DescriptorHeap> m_SamplerDescriptorHeap;
-
-        //GPU側デスクプリタのハンドルの配列
-        vector<CD3DX12_GPU_DESCRIPTOR_HANDLE> m_GPUDescriptorHandleVec;
-
-        //コマンドリスト
-        ComPtr<ID3D12GraphicsCommandList> m_commandList;
-
-        //個別リソース
-        //ルートシグネチャ
-        ComPtr<ID3D12RootSignature> m_rootSignature;
-
 
         //PositionColorの三角形メッシュ
         shared_ptr<Dx12Mesh> m_pcTriangleMesh;
@@ -82,17 +41,10 @@ namespace basedx12 {
         SceneConstantBuffer m_constantBufferData;
         //コンスタントバッファ
         shared_ptr<ConstantBuffer> m_ConstantBuffer;
-        // Synchronization objects.
-        UINT m_frameIndex;
-        HANDLE m_fenceEvent;
-        ComPtr<ID3D12Fence> m_fence;
-        UINT64 m_fenceValues[FrameCount];
 
         void LoadPipeline();
         void LoadAssets();
         void PopulateCommandList();
-        void MoveToNextFrame();
-        void WaitForGpu();
 
     public:
         GameDivece();

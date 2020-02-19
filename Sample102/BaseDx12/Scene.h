@@ -3,8 +3,9 @@
 
 namespace basedx12 {
 
+
+
 	class Scene :public SceneBase {
-		shared_ptr<GameDivece> m_device;
 	public:
 		Scene() :SceneBase() {}
 		virtual ~Scene() {}
