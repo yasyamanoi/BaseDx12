@@ -4,12 +4,9 @@
 
 namespace basedx12 {
 
-    IMPLEMENT_DX12SHADER(VSPCSprite, App::GetShadersPath() + L"vshader.cso")
-    IMPLEMENT_DX12SHADER(PSPCSprite, App::GetShadersPath() + L"pshader.cso")
 
-
-    GameDivece::GameDivece() :
-        Dx12Device()
+    GameDivece::GameDivece(UINT frameCount) :
+        Dx12Device(frameCount)
     {
     }
 
@@ -26,11 +23,11 @@ namespace basedx12 {
 //ファクトリ
         ComPtr<IDXGIFactory4> factory = Dx12Factory::CreateDirect();
         //デバイス(親クラスにある)
-        SetID3D12Device(D3D12Device::CreateDefault(factory, m_useWarpDevice));
+        m_device = D3D12Device::CreateDefault(factory, m_useWarpDevice);
 //コマンドキュー
         m_commandQueue = CommandQueue::CreateDefault();
         //スワップチェーン(親クラスにある)
-        SetIDXGISwapChain3(SwapChain::CreateDefault(m_commandQueue, FrameCount));
+        m_swapChain = SwapChain::CreateDefault(m_commandQueue, m_FrameCount);
 
         // This sample does not support fullscreen transitions.
         ThrowIfFailed(factory->MakeWindowAssociation(App::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
@@ -40,7 +37,7 @@ namespace basedx12 {
         // デスクプリタヒープ
         {
             // レンダリングターゲットビュー
-            m_rtvHeap = DescriptorHeap::CreateRtvHeap(FrameCount);
+            m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_FrameCount);
             m_rtvDescriptorSize = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
         }
         // RTVとコマンドアロケータ
@@ -55,26 +52,10 @@ namespace basedx12 {
             //一番シンプル
             m_rootSignature = RootSignature::CreateSimple();
         }
-        // ２Ｄの基本的なパイプライン
-        {
-            D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
-            m_pipelineState
-                = PipelineState::CreateDefault2D<VertexPositionColor, VSPCSprite, PSPCSprite>(m_rootSignature, PipeLineDesc);
-        }
         // 頂点などのリソース構築用のコマンドリスト
         m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);
-        // メッシュ
-        {
-            vector<VertexPositionColor> vertex =
-            {
-                { Vec3( 0.0f, 0.25f * m_aspectRatio, 0.0f ), Vec4(1.0f, 0.0f, 0.0f, 1.0f ) },
-                { Vec3(0.25f, -0.25f * m_aspectRatio, 0.0f ), Vec4(0.0f, 1.0f, 0.0f, 1.0f ) },
-                { Vec3(-0.25f, -0.25f * m_aspectRatio, 0.0f ), Vec4(0.0f, 0.0f, 1.0f, 1.0f ) }
-            };
-            //メッシュ作成
-            m_Dx12Mesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(m_commandList, vertex);
-        }
-
+        //シーンに各オブジェクトの構築を任せる
+        App::GetSceneBase().OnInitAssets();
         //コマンドラインクローズおよびキューの実行
         ThrowIfFailed(m_commandList->Close());
         ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
@@ -117,15 +98,13 @@ namespace basedx12 {
     void GameDivece::PopulateCommandList()
     {
         ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
-        //コマンドリストのリセット
-        CommandList::Reset(m_commandAllocators[m_frameIndex], m_commandList, m_pipelineState);
 
-
+        //コマンドリストのリセット（パイプライン指定なし）
+        CommandList::Reset(m_commandAllocators[m_frameIndex], m_commandList);
         // Set necessary state.
         m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
         m_commandList->RSSetViewports(1, &m_viewport);
         m_commandList->RSSetScissorRects(1, &m_scissorRect);
-
         // Indicate that the back buffer will be used as a render target.
         m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
@@ -135,10 +114,8 @@ namespace basedx12 {
         // Record commands.
         const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
         m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-        m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        m_commandList->IASetVertexBuffers(0, 1, &m_Dx12Mesh->GetVertexBufferView());
-        m_commandList->DrawInstanced(3, 1, 0, 0);
-
+        // シーンに個別描画を任せる
+        App::GetSceneBase().OnRender();
         // Indicate that the back buffer will now be used to present.
         m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 

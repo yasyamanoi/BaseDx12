@@ -4,18 +4,9 @@
 
 namespace basedx12 {
 
-    IMPLEMENT_DX12SHADER(VSPCSprite, App::GetShadersPath() + L"vshader.cso")
-    IMPLEMENT_DX12SHADER(PSPCSprite, App::GetShadersPath() + L"pshader.cso")
 
-    IMPLEMENT_DX12SHADER(VSPCConstSprite, App::GetShadersPath() + L"VsPCConst.cso")
-    IMPLEMENT_DX12SHADER(PSPCConstSprite, App::GetShadersPath() + L"PsPCConst.cso")
-
-    IMPLEMENT_DX12SHADER(VSPTSprite, App::GetShadersPath() + L"VSPTSprite.cso")
-    IMPLEMENT_DX12SHADER(PSPTSprite, App::GetShadersPath() + L"PSPTSprite.cso")
-
-
-    GameDivece::GameDivece() :
-        Dx12Device()
+    GameDivece::GameDivece(UINT frameCount) :
+        Dx12Device(frameCount)
     {
     }
 
@@ -29,30 +20,27 @@ namespace basedx12 {
     // パイプラインの準備
     void GameDivece::LoadPipeline()
     {
-//ファクトリ
+        //ファクトリ
         ComPtr<IDXGIFactory4> factory = Dx12Factory::CreateDirect();
-        //デバイス(親クラスにある)
-        SetID3D12Device(D3D12Device::CreateDefault(factory, m_useWarpDevice));
-//コマンドキュー
+        //デバイス
+        m_device = D3D12Device::CreateDefault(factory, m_useWarpDevice);
+        //コマンドキュー
         m_commandQueue = CommandQueue::CreateDefault();
-        //スワップチェーン(親クラスにある)
-        SetIDXGISwapChain3(SwapChain::CreateDefault(m_commandQueue, FrameCount));
-
+        //スワップチェーン
+        m_swapChain = SwapChain::CreateDefault(m_commandQueue, m_FrameCount);
         // This sample does not support fullscreen transitions.
         ThrowIfFailed(factory->MakeWindowAssociation(App::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
-
-        m_frameIndex = GetIDXGISwapChain3()->GetCurrentBackBufferIndex();
-
+        m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
         // デスクプリタヒープ
         {
             // レンダリングターゲットビュー
-            m_rtvHeap = DescriptorHeap::CreateRtvHeap(FrameCount);
-            m_rtvDescriptorSize = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+            m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_FrameCount);
+            m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
             //CbvSrvデスクプリタヒープ(コンスタントバッファとシェーダリソース)
             m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(1 + 1);
             m_CbvSrvDescriptorHandleIncrementSize
-                = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+                = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             //サンプラーデスクリプタヒープ
             m_SamplerDescriptorHeap = DescriptorHeap::CreateSamplerHeap(1);
 
@@ -96,75 +84,10 @@ namespace basedx12 {
             //コンスタントバッファ付ルートシグネチャ
             m_rootSignature = RootSignature::CreateCbvSrvSmp();
         }
-        // ２Ｄのパイプライン
-        {
-            D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
-            //コンスタントバッファ無し
-            m_pcPipelineState
-                = PipelineState::CreateDefault2D<VertexPositionColor, VSPCSprite, PSPCSprite>(m_rootSignature, PipeLineDesc);
-
-            m_pcConstPipelineState
-                = PipelineState::CreateDefault2D<VertexPositionColor, VSPCConstSprite, PSPCConstSprite>(m_rootSignature, PipeLineDesc);
-
-            m_ptConstPipelineState
-                = PipelineState::CreateDefault2D<VertexPositionTexture, VSPTSprite, PSPTSprite>(m_rootSignature, PipeLineDesc);
-
-        }
         // 頂点などのリソース構築用のコマンドリスト
         m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);
-        // メッシュ
-        {
-            vector<VertexPositionColor> vertex =
-            {
-                { Vec3( 0.0f, 0.25f * m_aspectRatio, 0.0f ), Vec4(1.0f, 0.0f, 0.0f, 1.0f ) },
-                { Vec3(0.25f, -0.25f * m_aspectRatio, 0.0f ), Vec4(0.0f, 1.0f, 0.0f, 1.0f ) },
-                { Vec3(-0.25f, -0.25f * m_aspectRatio, 0.0f ), Vec4(0.0f, 0.0f, 1.0f, 1.0f ) }
-            };
-            //三角形メッシュ作成
-            m_pcTriangleMesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(m_commandList, vertex);
-            float HelfSize = 0.1f;
-            //頂点配列
-            vector<VertexPositionTexture> vertices = {
-                { VertexPositionTexture(Vec3(-HelfSize, HelfSize, 0),	Vec2(0.0f, 0.0f)) },
-                { VertexPositionTexture(Vec3(HelfSize, HelfSize, 0),	Vec2(1.0f, 0.0f)) },
-                { VertexPositionTexture(Vec3(-HelfSize, -HelfSize, 0),	Vec2(0.0f, 1.0f)) },
-                { VertexPositionTexture(Vec3(HelfSize, -HelfSize, 0),	Vec2(1.0f, 1.0f)) },
-            };
-            //インデックス配列
-            vector<uint32_t> indices = { 0, 1, 2, 1, 3, 2 };
-            //四角形メッシュの作成
-            m_pntSquareMesh = Dx12Mesh::CreateDx12Mesh<VertexPositionTexture>(m_commandList, vertices, indices);
-
-        }
-        //コンスタントバッファ
-        {
-            //コンスタントバッファハンドルを作成
-            //三角形四角形共通
-            CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
-                m_CbvSrvUavDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-                0,
-                0
-            );
-            m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
-        }
-        //テクスチャ
-        {
-            auto TexFile = App::GetDataPath() + L"sky.jpg";
-            //テクスチャの作成
-            //シェーダリソースハンドルを作成
-            CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(
-                m_CbvSrvUavDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-                1,
-                m_CbvSrvDescriptorHandleIncrementSize
-            );
-            //画像ファイルをもとにテクスチャを作成
-            m_SkyTexture = Dx12Texture::CreateDx12Texture(TexFile, srvHandle);
-        }
-        //サンプラー
-        {
-            auto SamplerDescriptorHandle = m_SamplerDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-            Sampler::CreateSampler(SamplerState::LinearClamp, SamplerDescriptorHandle);
-        }
+        //シーンに各オブジェクトの構築を任せる
+        App::GetSceneBase().OnInitAssets();
         //コマンドラインクローズおよびキューの実行
         CommandList::Close(m_commandList);
         CommandList::Excute(m_commandQueue, m_commandList);
@@ -172,18 +95,10 @@ namespace basedx12 {
         SyncAndWaitForGpu();
     }
 
-    // Update frame-based values.
+    //更新
     void GameDivece::OnUpdate()
     {
-        const float translationSpeed = 0.005f;
-        const float offsetBounds = 1.25f;
-
-        m_constantBufferData.offset.x += translationSpeed;
-        if (m_constantBufferData.offset.x > offsetBounds)
-        {
-            m_constantBufferData.offset.x = -offsetBounds;
-        }
-        m_ConstantBuffer->Copy(m_constantBufferData);
+        //シーンに更新を任せるので何もしない
     }
 
     // 描画処理
@@ -215,8 +130,8 @@ namespace basedx12 {
     {
         ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
 
-        //コマンドリストのリセット
-        CommandList::Reset(m_commandAllocators[m_frameIndex], m_commandList, m_pcPipelineState);
+        //コマンドリストのリセット（パイプライン指定なし）
+        CommandList::Reset(m_commandAllocators[m_frameIndex], m_commandList);
         // Set necessary state.
         m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
         m_commandList->RSSetViewports(1, &m_viewport);
@@ -229,7 +144,7 @@ namespace basedx12 {
             m_commandList->SetGraphicsRootDescriptorTable(i, m_GPUDescriptorHandleVec[i]);
         }
 
-        // Indicate that the back buffer will be used as a render target.
+        // バックバッファを使うためのバリア
         m_commandList->ResourceBarrier(
             1,
             &CD3DX12_RESOURCE_BARRIER::Transition(
@@ -240,22 +155,11 @@ namespace basedx12 {
 
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
         m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-
-        // Record commands.
         const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
         m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-        m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        m_commandList->IASetVertexBuffers(0, 1, &m_pcTriangleMesh->GetVertexBufferView());
-        m_commandList->DrawInstanced(3, 1, 0, 0);
-        m_commandList->SetPipelineState(m_pcConstPipelineState.Get());
-        m_commandList->DrawInstanced(3, 1, 0, 0);
-        m_commandList->SetPipelineState(m_ptConstPipelineState.Get());
-        m_SkyTexture->UpdateSRAndCreateSRV(m_commandList);
-        m_commandList->IASetVertexBuffers(0, 1, &m_pntSquareMesh->GetVertexBufferView());
-        m_commandList->IASetIndexBuffer(&m_pntSquareMesh->GetIndexBufferView());
-        m_commandList->DrawIndexedInstanced(m_pntSquareMesh->GetNumIndices(), 1, 0, 0, 0);
-
-        // Indicate that the back buffer will now be used to present.
+        // シーンの個別描画
+        App::GetSceneBase().OnRender();
+        // フロントバッファに転送するためのバリア
         m_commandList->ResourceBarrier(1, 
             &CD3DX12_RESOURCE_BARRIER::Transition(
                 m_renderTargets[m_frameIndex].Get(),

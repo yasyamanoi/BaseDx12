@@ -22,7 +22,10 @@ namespace basedx12 {
         static const wstring& GetRelativeShadersPath() { return m_wstrRelativeShadersPath; }
         static const wstring& GetRelativeAssetsPath() { return m_wstrRelativeAssetsPath; }
 
-        static shared_ptr<Dx12Device> GetDx12Device() {
+        static SceneBase& GetSceneBase() {
+            return *m_pSceneBase;
+        }
+        static shared_ptr<Dx12Device>& GetDx12Device() {
             return m_device;
         }
         static void SetDx12Device(const shared_ptr<Dx12Device>& ptr) {

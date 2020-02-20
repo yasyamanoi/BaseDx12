@@ -8,10 +8,6 @@ namespace basedx12 {
 	protected:
 		SceneBase() {}
 		virtual ~SceneBase() {}
-		template<typename T>
-		void Createdx12Device() {
-			auto device = shared_ptr<T>(new T());
-		}
 	public:
 		template<typename T, typename... Ts>
 		shared_ptr<T> ResetActiveDx12Device(Ts&&... params) {
@@ -30,6 +26,7 @@ namespace basedx12 {
 
 
 		virtual void OnInit() = 0;
+		virtual void OnInitAssets() = 0;
 		virtual void OnUpdate() = 0;
 		virtual void OnRender() = 0;
 		virtual void OnDestroy() = 0;

@@ -403,6 +403,7 @@ namespace basedx12 {
 		ConstantBuffer() :m_pCbvDataBegin(nullptr){}
 	public:
 		~ConstantBuffer() {
+			m_constantBuffer->Unmap(0, nullptr);
 		}
 		template<typename T>
 		static inline shared_ptr<ConstantBuffer> CreateDirect(
@@ -412,11 +413,12 @@ namespace basedx12 {
 			//デバイスの取得
 			auto Dev = App::GetID3D12Device();
 			shared_ptr<ConstantBuffer> Ptr = shared_ptr<ConstantBuffer>(new ConstantBuffer());
-
+			// CB size is required to be 256-byte aligned.
+			UINT constsize = (sizeof(T) + 255) & ~255;
 			ThrowIfFailed(Dev->CreateCommittedResource(
 				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 				D3D12_HEAP_FLAG_NONE,
-				&CD3DX12_RESOURCE_DESC::Buffer(1024 * 64),
+				&CD3DX12_RESOURCE_DESC::Buffer(constsize),
 				D3D12_RESOURCE_STATE_GENERIC_READ,
 				nullptr,
 				IID_PPV_ARGS(&Ptr->m_constantBuffer)));
@@ -424,7 +426,7 @@ namespace basedx12 {
 			// Describe and create a constant buffer view.
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 			cbvDesc.BufferLocation = Ptr->m_constantBuffer->GetGPUVirtualAddress();
-			cbvDesc.SizeInBytes = (sizeof(T) + 255) & ~255;    // CB size is required to be 256-byte aligned.
+			cbvDesc.SizeInBytes = constsize;    
 			Dev->CreateConstantBufferView(&cbvDesc, descHandle);
 
 			// Map and initialize the constant buffer. We don't unmap this until the

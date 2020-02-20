@@ -2,13 +2,13 @@
 
 namespace basedx12 {
 
-    Dx12Device::Dx12Device() :
-        m_useWarpDevice(false),
+    Dx12Device::Dx12Device(UINT frameCount) :
+        m_FrameCount(frameCount),
+        m_fenceValues(m_FrameCount),
+        m_renderTargets(m_FrameCount),
+        m_commandAllocators(m_FrameCount),
         m_viewport(0.0f, 0.0f, static_cast<float>(App::GetGameWidth()), static_cast<float>(App::GetGameHeight())),
-        m_scissorRect(0, 0, static_cast<LONG>(App::GetGameWidth()), static_cast<LONG>(App::GetGameHeight())),
-        m_frameIndex(0),
-        m_fenceValues{},
-        m_rtvDescriptorSize(0)
+        m_scissorRect(0, 0, static_cast<LONG>(App::GetGameWidth()), static_cast<LONG>(App::GetGameHeight()))
     {
         m_aspectRatio = static_cast<float>(App::GetGameWidth()) / static_cast<float>(App::GetGameHeight());
     }
@@ -48,7 +48,7 @@ namespace basedx12 {
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
         // Create a RTV and a command allocator for each frame.
-        for (UINT n = 0; n < FrameCount; n++)
+        for (UINT n = 0; n < m_FrameCount; n++)
         {
             ThrowIfFailed(GetIDXGISwapChain3()->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
             GetID3D12Device()->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);

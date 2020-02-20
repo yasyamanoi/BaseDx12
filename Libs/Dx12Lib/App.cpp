@@ -139,6 +139,7 @@ namespace basedx12 {
             hInstance,
             nullptr);
 
+        //デバイスの初期化はシーンから呼ばれる
         m_pSceneBase->OnInit();
 
         ShowWindow(m_hwnd, nCmdShow);
@@ -202,7 +203,7 @@ namespace basedx12 {
             {                
                 m_pSceneBase->OnUpdate();
                 m_device->OnUpdate();
-                m_pSceneBase->OnRender();
+                //シーンのレンダリングはデバイスから呼ばれる
                 m_device->OnRender();
             }
             return 0;

@@ -3,11 +3,8 @@
 
 namespace basedx12 {
     class Dx12Device {
-        //デバイスとスワップチェーンは基底クラスに置く
-        ComPtr<ID3D12Device> m_device;
-        ComPtr<IDXGISwapChain3> m_swapChain;
     public:
-        Dx12Device();
+        Dx12Device(UINT frameCount);
         virtual ~Dx12Device();
         virtual void OnInit() = 0;
         virtual void OnUpdate() = 0;
@@ -15,68 +12,123 @@ namespace basedx12 {
         virtual void OnDestroy() = 0;
         virtual void OnKeyDown(UINT8 /*key*/) {}
         virtual void OnKeyUp(UINT8 /*key*/) {}
+        UINT GetFrameCount()const {
+            return m_FrameCount;
+        }
+        UINT GetFrameIndex() const {
+            return m_frameIndex;
+        }
+        bool IsUseWarpDevice() const {
+            return m_useWarpDevice;
+        }
         ComPtr<ID3D12Device> GetID3D12Device() const {
             return m_device;
         }
         ComPtr<IDXGISwapChain3> GetIDXGISwapChain3() const {
             return m_swapChain;
         }
+        const CD3DX12_VIEWPORT& GetViewport() const {
+            return m_viewport;
+        }
+        void SetViewport(const CD3DX12_VIEWPORT& viewport) {
+            m_viewport = viewport;
+        }
+        const CD3DX12_RECT& GetScissorRect() const {
+            return m_scissorRect;
+        }
+        void SetScissorRect(const CD3DX12_RECT& scissorRect) {
+            m_scissorRect = scissorRect;
+        }
+        float GetAspectRatio() const {
+            return m_aspectRatio;
+        }
+        ComPtr<ID3D12CommandQueue> GetCommandQueue() const {
+            return m_commandQueue;
+        }
+        ComPtr<ID3D12Fence> GetFence() const {
+            return m_fence;
+        }
+        const vector<UINT64>& GetFenceValues() const {
+            return m_fenceValues;
+        }
+        const HANDLE& GetFenceEvent() const {
+            return m_fenceEvent;
+        }
+        const vector<ComPtr<ID3D12Resource>>& GetRenderTargets() const {
+            return m_renderTargets;
+        }
+        const vector<ComPtr<ID3D12CommandAllocator>> GetCommandAllocators() const {
+            return m_commandAllocators;
+        }
+        ComPtr<ID3D12DescriptorHeap> GetRtvHeap() {
+            return m_rtvHeap;
+        }
+        UINT GetRtvDescriptorSize() const {
+            return m_rtvDescriptorSize;
+        }
+        ComPtr<ID3D12DescriptorHeap> GetCbvSrvUavDescriptorHeap() const {
+            return m_CbvSrvUavDescriptorHeap;
+        }
+        UINT GetCbvSrvDescriptorHandleIncrementSize() const {
+            return m_CbvSrvDescriptorHandleIncrementSize;
+        }
+        ComPtr<ID3D12DescriptorHeap> GetSamplerDescriptorHeap() const {
+            return m_SamplerDescriptorHeap;
+        }
+        const vector<CD3DX12_GPU_DESCRIPTOR_HANDLE>& GetGPUDescriptorHandleVec() const {
+            return m_GPUDescriptorHandleVec;
+        }
+        ComPtr<ID3D12GraphicsCommandList> GetCommandList() const {
+            return m_commandList;
+        }
+        ComPtr<ID3D12RootSignature> GetRootSignature() const {
+            return m_rootSignature;
+        }
     protected:
-        static const UINT FrameCount = 3;
-        void SetID3D12Device(const ComPtr<ID3D12Device>& device) {
-            m_device = device;
-        }
-        void SetIDXGISwapChain3(const ComPtr<IDXGISwapChain3>& swapChain){
-            m_swapChain = swapChain;
-        }
-        void GetHardwareAdapter(_In_ IDXGIFactory2* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
-        // Adapter info.
-        bool m_useWarpDevice;
-
-        // Viewport
+        //フレーム関連
+        const UINT m_FrameCount;
+        UINT m_frameIndex = 0;
+        //ラップアダプターを使うかどうか（false）
+        bool m_useWarpDevice = false;
+        //デバイスとスワップチェーン
+        ComPtr<ID3D12Device> m_device;
+        ComPtr<IDXGISwapChain3> m_swapChain;
+        //ビュー関連
         CD3DX12_VIEWPORT m_viewport;
         CD3DX12_RECT m_scissorRect;
         float m_aspectRatio;
-
-        void MoveToNextFrame();
-        void WaitForGpu();
-
-        void CreateRTVandCmdAllocators();
-        void SyncAndWaitForGpu();
-
         //コマンドキュー
         ComPtr<ID3D12CommandQueue> m_commandQueue;
+        //フェンス関連
         ComPtr<ID3D12Fence> m_fence;
-        UINT64 m_fenceValues[FrameCount];
-        UINT m_frameIndex;
+        vector<UINT64> m_fenceValues;
         HANDLE m_fenceEvent;
-
         //レンダリングターゲート
-        ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
+        vector<ComPtr<ID3D12Resource>> m_renderTargets;
         //コマンドアロケータ
-        ComPtr<ID3D12CommandAllocator> m_commandAllocators[FrameCount];
-
+        vector<ComPtr<ID3D12CommandAllocator>> m_commandAllocators;
         //デスクプリタヒープ
         //レンダリングターゲートビューのデスクプリタヒープ
         ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-        UINT m_rtvDescriptorSize;
+        UINT m_rtvDescriptorSize = 0;
         //コンスタントバッファとシェーダリソース用デスクプリタヒープ
         ComPtr<ID3D12DescriptorHeap> m_CbvSrvUavDescriptorHeap;
         //CbvSrvのデスクプリタハンドルのインクリメントサイズ
         UINT m_CbvSrvDescriptorHandleIncrementSize{ 0 };
         //サンプラー用
         ComPtr<ID3D12DescriptorHeap> m_SamplerDescriptorHeap;
-
         //GPU側デスクプリタのハンドルの配列
         vector<CD3DX12_GPU_DESCRIPTOR_HANDLE> m_GPUDescriptorHandleVec;
-
         //コマンドリスト
         ComPtr<ID3D12GraphicsCommandList> m_commandList;
-
         //ルートシグネチャ
         ComPtr<ID3D12RootSignature> m_rootSignature;
-
-
+        //メンバ関数
+        void GetHardwareAdapter(_In_ IDXGIFactory2* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
+        void MoveToNextFrame();
+        void WaitForGpu();
+        void CreateRTVandCmdAllocators();
+        void SyncAndWaitForGpu();
     };
 
 }
