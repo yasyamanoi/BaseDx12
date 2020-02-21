@@ -137,7 +137,7 @@ namespace basedx12 {
 		*/
 		//--------------------------------------------------------------------------------------
 		static void CreateCapsule(float diameter,
-			const bsm::Vec3& PointA, const bsm::Vec3& PointB,
+			const bsm::Float3& PointA, const bsm::Float3& PointB,
 			size_t tessellation,
 			vector<VertexPositionNormalTexture>& vertices, vector<uint32_t>& indices,bool landscape = false);
 		//--------------------------------------------------------------------------------------

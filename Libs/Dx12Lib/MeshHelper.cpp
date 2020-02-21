@@ -58,10 +58,10 @@ namespace basedx12 {
 		try {
 			float HelfSize = size / 2.0f;
 			//頂点配列
-			vertices.push_back(VertexPositionNormalTexture(bsm::Vec3(-HelfSize, HelfSize, 0), bsm::Vec3(0.0f, 0.0f, -1.0f), bsm::Vec2(0.0f, 0.0f)));
-			vertices.push_back(VertexPositionNormalTexture(bsm::Vec3(HelfSize, HelfSize, 0), bsm::Vec3(0.0f, 0.0f, -1.0f), bsm::Vec2(1.0f, 0.0f)));
-			vertices.push_back(VertexPositionNormalTexture(bsm::Vec3(-HelfSize, -HelfSize, 0), bsm::Vec3(0.0f, 0.0f, -1.0f), bsm::Vec2(0.0f, 1.0f)));
-			vertices.push_back(VertexPositionNormalTexture(bsm::Vec3(HelfSize, -HelfSize, 0), bsm::Vec3(0.0f, 0.0f, -1.0f), bsm::Vec2(1.0f, 1.0f)));
+			vertices.push_back(VertexPositionNormalTexture(bsm::Float3(-HelfSize, HelfSize, 0), bsm::Float3(0.0f, 0.0f, -1.0f), bsm::Float2(0.0f, 0.0f)));
+			vertices.push_back(VertexPositionNormalTexture(bsm::Float3(HelfSize, HelfSize, 0), bsm::Float3(0.0f, 0.0f, -1.0f), bsm::Float2(1.0f, 0.0f)));
+			vertices.push_back(VertexPositionNormalTexture(bsm::Float3(-HelfSize, -HelfSize, 0), bsm::Float3(0.0f, 0.0f, -1.0f), bsm::Float2(0.0f, 1.0f)));
+			vertices.push_back(VertexPositionNormalTexture(bsm::Float3(HelfSize, -HelfSize, 0), bsm::Float3(0.0f, 0.0f, -1.0f), bsm::Float2(1.0f, 1.0f)));
 			//インデックスを作成するための配列
 			indices.push_back((uint32_t)0);
 			indices.push_back((uint32_t)1);
@@ -197,7 +197,7 @@ namespace basedx12 {
 
 
 	void MeshUtill::CreateCapsule(float diameter,
-		const bsm::Vec3& PointA, const bsm::Vec3& PointB,
+		const bsm::Float3& PointA, const bsm::Float3& PointB,
 		size_t tessellation,
 		vector<VertexPositionNormalTexture>& vertices, vector<uint32_t>& indices,
 		bool landscape) {
@@ -220,7 +220,7 @@ namespace basedx12 {
 
 				XMScalarSinCos(&dy, &dxz, latitude);
 
-				bsm::Vec3 CenterPos = PointA;
+				bsm::Float3 CenterPos = PointA;
 				if (i >= (verticalSegments / 2)) {
 					CenterPos = PointB;
 				}
@@ -806,14 +806,14 @@ namespace basedx12 {
 
 	void MeshUtill::SetNormalTangent(vector<VertexPositionNormalTangentTexture>& vertices) {
 		for (size_t i = 0; i < vertices.size(); i++) {
-			bsm::Vec3 Norm = (bsm::Vec3)vertices[i].normal;
+			bsm::Float3 Norm = (bsm::Float3)vertices[i].normal;
 			Norm.normalize();
-			if (bsm::Vec3(XMVector3AngleBetweenNormals(Norm, bsm::Vec3(0, 1, 0))).x <= 0.1f ||
-				bsm::Vec3(XMVector3AngleBetweenNormals(Norm, bsm::Vec3(0, -1, 0))).x <= 0.1f) {
-				vertices[i].tangent = bsm::Vec4(bsm::cross(Norm, bsm::Vec3(0, 0, 1)),0.0);
+			if (bsm::Float3(XMVector3AngleBetweenNormals(Norm, bsm::Float3(0, 1, 0))).x <= 0.1f ||
+				bsm::Float3(XMVector3AngleBetweenNormals(Norm, bsm::Float3(0, -1, 0))).x <= 0.1f) {
+				vertices[i].tangent = bsm::Float4(bsm::cross(Norm, bsm::Float3(0, 0, 1)),0.0);
 			}
 			else {
-				vertices[i].tangent = bsm::Vec4(bsm::cross(Norm, bsm::Vec3(0, 1, 0)),0.0);
+				vertices[i].tangent = bsm::Float4(bsm::cross(Norm, bsm::Float3(0, 1, 0)),0.0);
 			}
 			vertices[i].tangent.w = 0.0f;
 		}
@@ -821,14 +821,14 @@ namespace basedx12 {
 
 	void MeshUtill::SetNormalTangent(vector<VertexPositionNormalTangentTextureSkinning>& vertices) {
 		for (size_t i = 0; i < vertices.size(); i++) {
-			bsm::Vec3 Norm = (bsm::Vec3)vertices[i].normal;
+			bsm::Float3 Norm = (bsm::Float3)vertices[i].normal;
 			Norm.normalize();
-			if (bsm::Vec3(XMVector3AngleBetweenNormals(Norm, bsm::Vec3(0, 1, 0))).x <= 0.1f ||
-				bsm::Vec3(XMVector3AngleBetweenNormals(Norm, bsm::Vec3(0, -1, 0))).x <= 0.1f) {
-				vertices[i].tangent = bsm::Vec4(bsm::cross(Norm, bsm::Vec3(0, 0, 1)),0.0);
+			if (bsm::Float3(XMVector3AngleBetweenNormals(Norm, bsm::Float3(0, 1, 0))).x <= 0.1f ||
+				bsm::Float3(XMVector3AngleBetweenNormals(Norm, bsm::Float3(0, -1, 0))).x <= 0.1f) {
+				vertices[i].tangent = bsm::Float4(bsm::cross(Norm, bsm::Float3(0, 0, 1)),0.0);
 			}
 			else {
-				vertices[i].tangent = bsm::Vec4(bsm::cross(Norm, bsm::Vec3(0, 1, 0)),0.0);
+				vertices[i].tangent = bsm::Float4(bsm::cross(Norm, bsm::Float3(0, 1, 0)),0.0);
 			}
 			vertices[i].tangent.w = 0.0f;
 		}

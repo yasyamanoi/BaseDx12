@@ -2,16 +2,15 @@
 #include "stdafx.h"
 
 namespace basedx12 {
-    class Dx12Device {
-    public:
+
+    //--------------------------------------------------------------------------------------
+    ///	Dx12デバイスクラス
+    //--------------------------------------------------------------------------------------
+    class Dx12Device : public ObjectInterface {
+    protected:
         Dx12Device(UINT frameCount);
         virtual ~Dx12Device();
-        virtual void OnInit() = 0;
-        virtual void OnUpdate() = 0;
-        virtual void OnRender() = 0;
-        virtual void OnDestroy() = 0;
-        virtual void OnKeyDown(UINT8 /*key*/) {}
-        virtual void OnKeyUp(UINT8 /*key*/) {}
+    public:
         UINT GetFrameCount()const {
             return m_FrameCount;
         }

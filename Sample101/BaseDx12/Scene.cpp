@@ -26,9 +26,9 @@ namespace basedx12 {
             auto aspectRatio = Device->GetAspectRatio();
             vector<VertexPositionColor> vertex =
             {
-                { Vec3(0.0f, 0.25f * aspectRatio, 0.0f), Vec4(1.0f, 0.0f, 0.0f, 1.0f) },
-                { Vec3(0.25f, -0.25f * aspectRatio, 0.0f), Vec4(0.0f, 1.0f, 0.0f, 1.0f) },
-                { Vec3(-0.25f, -0.25f * aspectRatio, 0.0f), Vec4(0.0f, 0.0f, 1.0f, 1.0f) }
+                { Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 0.0f, 1.0f) },
+                { Float3(0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 1.0f, 0.0f, 1.0f) },
+                { Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) }
             };
             //ÉÅÉbÉVÉÖçÏê¨
             m_Dx12Mesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(commandList, vertex);

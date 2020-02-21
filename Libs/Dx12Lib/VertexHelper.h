@@ -34,7 +34,7 @@ namespace basedx12 {
 		{ }
 
 		VertexPosition(float x,float y,float z)
-			: position(bsm::Vec3(x, y, z))
+			: position(bsm::Float3(x, y, z))
 		{ }
 
 
@@ -46,7 +46,7 @@ namespace basedx12 {
 			: position(pos)
 		{ }
 
-		bsm::Vec3 position;
+		bsm::Float3 position;
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement(){
 			return VertexPositionLayout;
@@ -85,8 +85,8 @@ namespace basedx12 {
 		{
 		}
 
-		bsm::Vec3 position;
-		bsm::Col4 color;
+		bsm::Float3 position;
+		bsm::Float4 color;
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement(){
 			return VertexPositionColorLayout;
@@ -124,8 +124,8 @@ namespace basedx12 {
 		{
 		}
 
-		bsm::Vec3 position;
-		bsm::Vec2 textureCoordinate;
+		bsm::Float3 position;
+		bsm::Float2 textureCoordinate;
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement(){
 			return VertexPositionTextureLayout;
@@ -163,8 +163,8 @@ namespace basedx12 {
 		{
 		}
 
-		bsm::Vec3 position;
-		bsm::Vec3 normal;
+		bsm::Float3 position;
+		bsm::Float3 normal;
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement(){
 			return VertexPositionNormalLayout;
@@ -205,9 +205,9 @@ namespace basedx12 {
 		{
 		}
 
-		bsm::Vec3 position;
-		bsm::Col4 color;
-		bsm::Vec2 textureCoordinate;
+		bsm::Float3 position;
+		bsm::Float4 color;
+		bsm::Float2 textureCoordinate;
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement(){
 			return VertexPositionColorTextureLayout;
@@ -248,9 +248,9 @@ namespace basedx12 {
 		{
 		}
 
-		bsm::Vec3 position;
-		bsm::Vec3 normal;
-		bsm::Col4 color;
+		bsm::Float3 position;
+		bsm::Float3 normal;
+		bsm::Float4 color;
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement(){
 			return VertexPositionNormalColorLayout;
@@ -292,9 +292,9 @@ namespace basedx12 {
 			textureCoordinate(tex)
 		{ }
 
-		bsm::Vec3 position;
-		bsm::Vec3 normal;
-		bsm::Vec2 textureCoordinate;
+		bsm::Float3 position;
+		bsm::Float3 normal;
+		bsm::Float2 textureCoordinate;
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement(){
 			return VertexPositionNormalTextureLayout;
@@ -350,9 +350,9 @@ namespace basedx12 {
 		}
 
 
-		bsm::Vec3 position;
-		bsm::Vec3 normal;
-		bsm::Vec2 textureCoordinate;
+		bsm::Float3 position;
+		bsm::Float3 normal;
+		bsm::Float2 textureCoordinate;
 		uint32_t indices[4];
 		float weights[4];
 
@@ -399,10 +399,10 @@ namespace basedx12 {
 			textureCoordinate(tex)
 		{ }
 
-		bsm::Vec3 position;
-		bsm::Vec3 normal;
-		bsm::Col4 color;
-		bsm::Vec2 textureCoordinate;
+		bsm::Float3 position;
+		bsm::Float3 normal;
+		bsm::Float4 color;
+		bsm::Float2 textureCoordinate;
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement(){
 			return VertexPositionNormalColorTextureLayout;
@@ -449,10 +449,10 @@ namespace basedx12 {
 		}
 
 
-		bsm::Vec3 position;
-		bsm::Vec3 normal;
-		bsm::Vec4 tangent;
-		bsm::Vec2 textureCoordinate;
+		bsm::Float3 position;
+		bsm::Float3 normal;
+		bsm::Float4 tangent;
+		bsm::Float2 textureCoordinate;
 
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement() {
@@ -512,10 +512,10 @@ namespace basedx12 {
 		}
 
 
-		bsm::Vec3 position;
-		bsm::Vec3 normal;
-		bsm::Vec4 tangent;
-		bsm::Vec2 textureCoordinate;
+		bsm::Float3 position;
+		bsm::Float3 normal;
+		bsm::Float4 tangent;
+		bsm::Float2 textureCoordinate;
 		uint32_t indices[4];
 		float weights[4];
 
@@ -592,11 +592,11 @@ namespace basedx12 {
 		void SetColor( XMFLOAT4 const& color ) { SetColor( XMLoadFloat4( &color ) ); }
 		void XM_CALLCONV SetColor( FXMVECTOR color );
 
-		bsm::Vec3 position;
-		bsm::Vec3 normal;
-		bsm::Vec4 tangent;
+		bsm::Float3 position;
+		bsm::Float3 normal;
+		bsm::Float4 tangent;
 		uint32_t color;
-		bsm::Vec2 textureCoordinate;
+		bsm::Float2 textureCoordinate;
 
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement(){
@@ -718,8 +718,8 @@ namespace basedx12 {
 		{
 		}
 
-		bsm::Vec3 position;
-		bsm::Col4 color;
+		bsm::Float3 position;
+		bsm::Float4 color;
 		bsm::Mat4x4 matrix;
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement() {
@@ -771,8 +771,8 @@ namespace basedx12 {
 		{
 		}
 
-		bsm::Vec3 position;
-		bsm::Vec2 textureCoordinate;
+		bsm::Float3 position;
+		bsm::Float2 textureCoordinate;
 		bsm::Mat4x4 matrix;
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement() {
@@ -827,9 +827,9 @@ namespace basedx12 {
 		{
 		}
 
-		bsm::Vec3 position;
-		bsm::Col4 color;
-		bsm::Vec2 textureCoordinate;
+		bsm::Float3 position;
+		bsm::Float4 color;
+		bsm::Float2 textureCoordinate;
 		bsm::Mat4x4 matrix;
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement() {
@@ -880,9 +880,9 @@ namespace basedx12 {
 		{
 		}
 
-		bsm::Vec3 position;
-		bsm::Vec3 normal;
-		bsm::Vec2 textureCoordinate;
+		bsm::Float3 position;
+		bsm::Float3 normal;
+		bsm::Float2 textureCoordinate;
 		bsm::Mat4x4 matrix;
 
 		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement() {

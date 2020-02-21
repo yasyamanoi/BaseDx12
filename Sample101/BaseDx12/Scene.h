@@ -13,11 +13,11 @@ namespace basedx12 {
 	public:
 		Scene() :SceneBase() {}
 		virtual ~Scene() {}
-		virtual void OnInit();
-		virtual void OnInitAssets();
-		virtual void OnUpdate();
-		virtual void OnRender();
-		virtual void OnDestroy();
+		virtual void OnInit()override;
+		virtual void OnInitAssets()override;
+		virtual void OnUpdate()override;
+		virtual void OnRender()override;
+		virtual void OnDestroy()override;
 	};
 
 }

@@ -4,7 +4,7 @@ namespace basedx12 {
 
 	class App;
 
-	class SceneBase {
+	class SceneBase : public ObjectInterface {
 	protected:
 		SceneBase() {}
 		virtual ~SceneBase() {}
@@ -23,15 +23,8 @@ namespace basedx12 {
 			Ptr->OnInit();
 			return Ptr;
 		}
-
-
-		virtual void OnInit() = 0;
 		virtual void OnInitAssets() = 0;
-		virtual void OnUpdate() = 0;
-		virtual void OnRender() = 0;
-		virtual void OnDestroy() = 0;
-		virtual void OnKeyDown(UINT8 key) {}
-		virtual void OnKeyUp(UINT8 key) {}
+
 	};
 }
 // end basedx12

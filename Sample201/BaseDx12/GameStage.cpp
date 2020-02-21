@@ -1,5 +1,7 @@
 #include "stdafx.h"
+#include "GameStage.h"
 #include "Scene.h"
+
 
 namespace basedx12 {
 
@@ -80,7 +82,7 @@ namespace basedx12 {
             float HelfSize = 0.2f;
             //頂点配列
             vector<VertexPositionTexture> vertices = {
-                { VertexPositionTexture(Float3(-HelfSize, HelfSize, 0),	Float2(0.0f, 0.0f)) },
+                { VertexPositionTexture(Float3(-HelfSize, HelfSize, 0),Float2(0.0f, 0.0f)) },
                 { VertexPositionTexture(Float3(HelfSize, HelfSize, 0),	Float2(1.0f, 0.0f)) },
                 { VertexPositionTexture(Float3(-HelfSize, -HelfSize, 0),	Float2(0.0f, 1.0f)) },
                 { VertexPositionTexture(Float3(HelfSize, -HelfSize, 0),	Float2(1.0f, 1.0f)) },
@@ -123,12 +125,10 @@ namespace basedx12 {
 
     }
 
-	void Scene::OnInit() {
-		ResetActiveDx12Device<GameDivece>(3);
-	}
-	void Scene::OnInitAssets() {
 
-		//ここでシーン上のオブジェクトを構築
+	void GameStage::OnInit() {
+
+        //ここでシーン上のオブジェクトを構築
         //必要なパイプラインオブジェクトをデバイスから取得
         auto Device = App::GetDx12Device();
         auto commandList = Device->GetCommandList();
@@ -149,9 +149,10 @@ namespace basedx12 {
             );
             m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
         }
+
 	}
 
-	void Scene::OnUpdate() {
+	void GameStage::OnUpdate() {
         const float translationSpeed = 0.005f;
         const float offsetBounds = 1.25f;
         m_constantBufferData.offset.x += translationSpeed;
@@ -161,7 +162,8 @@ namespace basedx12 {
         }
         m_ConstantBuffer->Copy(m_constantBufferData);
 	}
-	void Scene::OnRender() {
+
+	void GameStage::OnRender() {
         auto Device = App::GetDx12Device();
         auto commandList = Device->GetCommandList();
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -169,10 +171,8 @@ namespace basedx12 {
         m_MoveTriangle.OnRender();
         m_MoveSquare.OnRender();
 	}
-	void Scene::OnDestroy() {
-	}
+
+
 
 }
-//end badedx12
-
-
+//end basedx12

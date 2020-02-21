@@ -272,107 +272,674 @@ namespace basedx12 {
         }
     }
 
-    //--------------------------------------------------------------------------------------
-    ///	Objectを構築する
-    //--------------------------------------------------------------------------------------
-    class ObjectFactory {
-    public:
-        //--------------------------------------------------------------------------------------
-        /*!
-        @brief オブジェクト作成（static関数）
-        @tparam T	作成する型
-        @tparam Ts...	可変長パラメータ型
-        @param[in]	params	可変長パラメータ
-        @return　作成したオブジェクトのshared_ptr
-        */
-        //--------------------------------------------------------------------------------------
-        template<typename T, typename... Ts>
-        static shared_ptr<T> Create(Ts&&... params) {
-            shared_ptr<T> Ptr = shared_ptr<T>(new T(params...));
-            //初期化関数呼び出し
-            Ptr->OnInit();
-            return Ptr;
-        }
-        //--------------------------------------------------------------------------------------
-        /*!
-        @brief オブジェクト作成（static関数）。パラメータはOnInitに渡される
-        @tparam T	作成する型
-        @tparam Ts...	可変長パラメータ型
-        @param[in]	params	可変長パラメータ
-        @return　作成したオブジェクトのshared_ptr
-        */
-        //--------------------------------------------------------------------------------------
-        template<typename T, typename... Ts>
-        static shared_ptr<T> CreateInitParam(Ts&&... params) {
-            shared_ptr<T> Ptr = shared_ptr<T>(new T());
-            //初期化関数呼び出し
-            Ptr->OnInit(params...);
-            return Ptr;
-        }
-
-    };
 
     struct 	Util {
 
 
-        //--------------------------------------------------------------------------------------
-        /*!
-        @brief	安全にCOMインターフェイスのポインタを取得するヘルパー関数.
-        @tparam	T	取得する型
-        @tparam	TCreateFunc	作成関数の型
-        @param[in,out]	comPtr	COMポインタ
-        @param[in]	mutex	ミューテックス
-        @param[in]	createFunc	作成関数
-        @return	COMが無効の場合は新しく作成して、それ以外はCOMから得たCOMインターフェイスのポインタ
-        */
-        //--------------------------------------------------------------------------------------
-        template<typename T, typename TCreateFunc>
-        static T* DemandCreate(ComPtr<T>& comPtr, std::mutex& mutex, TCreateFunc createFunc)
-        {
-            T* result = comPtr.Get();
-            //ロック状態をチェック
-            MemoryBarrier();
-            if (!result)
-            {
-                std::lock_guard<std::mutex> lock(mutex);
-                result = comPtr.Get();
-                if (!result)
-                {
-                    createFunc(&result);
-                    MemoryBarrier();
-                    comPtr.Attach(result);
-                }
-            }
-            return result;
-        }
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	大きい方を求める.
+		@tparam	T	比較する型
+		@param[in]	v1	T型の値1
+		@param[in]	v2	T型の値2
+		@return	T型の大きい方
+		*/
+		//--------------------------------------------------------------------------------------
+		template<typename T>
+		static T Maximum(const T& v1, const T& v2) {
+			return v1 > v2 ? v1 : v2;
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	小さい方を求める.
+		@tparam	T	比較する型
+		@param[in]	v1	T型の値1
+		@param[in]	v2	T型の値2
+		@return	T型の小さい方
+		*/
+		//--------------------------------------------------------------------------------------
+		template<typename T>
+		static T Minimum(const T& v1, const T& v2) {
+			return v1 < v2 ? v1 : v2;
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	安全にCOMインターフェイスのポインタを取得するヘルパー関数.
+		@tparam	T	取得する型
+		@tparam	TCreateFunc	作成関数の型
+		@param[in,out]	comPtr	COMポインタ
+		@param[in]	mutex	ミューテックス
+		@param[in]	createFunc	作成関数
+		@return	COMが無効の場合は新しく作成して、それ以外はCOMから得たCOMインターフェイスのポインタ
+		*/
+		//--------------------------------------------------------------------------------------
+		template<typename T, typename TCreateFunc>
+		static T* DemandCreate(ComPtr<T>& comPtr, std::mutex& mutex, TCreateFunc createFunc)
+		{
+			T* result = comPtr.Get();
+			//ロック状態をチェック
+			MemoryBarrier();
+			if (!result)
+			{
+				std::lock_guard<std::mutex> lock(mutex);
+				result = comPtr.Get();
+				if (!result)
+				{
+					createFunc(&result);
+					MemoryBarrier();
+					comPtr.Attach(result);
+				}
+			}
+			return result;
+		}
 
-        //--------------------------------------------------------------------------------------
-        /*!
-        @brief	安全にCOMインターフェイスのポインタを取得するヘルパー関数.<br />
-        無効の場合は例外を出す
-        @tparam	T	取得する型
-        @param[in]	comPtr	COMポインタ
-        @return　COMが無効の場合は例外を出して、それ以外はCOMから得たCOMインターフェイスのポインタ
-        */
-        //--------------------------------------------------------------------------------------
-        template<typename T>
-        static T* GetComPtr(ComPtr<T>& comPtr) {
-            T* result = comPtr.Get();
-            //ロック状態をチェック
-            MemoryBarrier();
-            if (!result)
-            {
-                //失敗
-                throw BaseException(
-                    L"このCOMインターフェイスを取得できません",
-                    Util::GetWSTypeName<T>(),
-                    L"Util::GetComPtr()"
-                );
-            }
-            return result;
-        }
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	安全にCOMインターフェイスのポインタを取得するヘルパー関数.<br />
+		無効の場合は例外を出す
+		@tparam	T	取得する型
+		@param[in]	comPtr	COMポインタ
+		@return　COMが無効の場合は例外を出して、それ以外はCOMから得たCOMインターフェイスのポインタ
+		*/
+		//--------------------------------------------------------------------------------------
+		template<typename T>
+		static T* GetComPtr(ComPtr<T>& comPtr) {
+			T* result = comPtr.Get();
+			//ロック状態をチェック
+			MemoryBarrier();
+			if (!result)
+			{
+				//失敗
+				throw BaseException(
+					L"このCOMインターフェイスを取得できません",
+					Util::GetWSTypeName<T>(),
+					L"Util::GetComPtr()"
+				);
+			}
+			return result;
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	両端から空白を取り除く<br/>
+		元になる文字列から取り除く
+		@param[in,out]	wstr	もとになる文字列（リターンにも使用される）
+		@param[in]	trimCharacterList = L" \t\v\r\n"	取り除く文字
+		@return　なし
+		*/
+		//--------------------------------------------------------------------------------------
+		static void WStrTrim(wstring& wstr, const wchar_t* TrimCharList = L" \t\v\r\n") {
+			wstring result(L"");
+			if (wstr.size() <= 0) {
+				wstr = result;
+				return;
+			}
+			wstring::size_type left = wstr.find_first_not_of(TrimCharList);
+			if (left != wstring::npos) {
+				wstring::size_type right = wstr.find_last_not_of(TrimCharList);
+				result = wstr.substr(left, right - left + 1);
+			}
+			wstr = result;
+		}
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	ワイド文字列からマルチバイト文字列変換<br />
+		ロケール依存のため、WinMain()等で、setlocale( LC_ALL, "JPN" );が必要
+		@param[in] src	変換する文字列（ワイドキャラ）
+		@param[out]	dest	変換後の文字列（マルチバイト）
+		@return	なし
+		*/
+		//--------------------------------------------------------------------------------------
+		static void WStoMB(const wstring& src, string& dest) {
+			size_t i;
+			char* pMBstr = new char[src.length() * MB_CUR_MAX + 1];
+			wcstombs_s(
+				&i,
+				pMBstr,
+				src.length() * MB_CUR_MAX + 1,
+				src.c_str(),
+				_TRUNCATE	//すべて変換できなかったら切り捨て
+			);
+			dest = pMBstr;
+			delete[] pMBstr;
+		}
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	ワイド文字列からマルチバイトUTF8文字列変換<br />
+		ロケール依存のため、WinMain()等で、setlocale( LC_ALL, "JPN" );が必要
+		@param[in]	src	変換する文字列（ワイドキャラ）
+		@param[out]	dest	変換後の文字列（マルチバイト）
+		@return	なし
+		*/
+		//--------------------------------------------------------------------------------------
+		static void ConvertWstringtoUtf8(const wstring& src, string& dest) {
+			INT bufsize = ::WideCharToMultiByte(CP_UTF8, 0, src.c_str(), -1, NULL, 0, NULL, NULL);
+			char* Temp = new char[bufsize + 1];
+			::WideCharToMultiByte(CP_UTF8, 0, src.c_str(), -1, Temp, bufsize, NULL, NULL);
+			dest = Temp;
+			delete[] Temp;
+		}
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	マルチバイトUTF8文字からワイド文字列変換<br />
+		ロケール依存のため、WinMain()等で、setlocale( LC_ALL, "JPN" );が必要
+		@param[in]	src	変換する文字列（マルチバイトUTF8）
+		@param[out]	dest	変換後文字列（ワイドキャラ）
+		@return	なし
+		*/
+		//--------------------------------------------------------------------------------------
+		static void ConvertUtf8toWstring(const string& src, wstring& dest) {
+			INT bufsize = ::MultiByteToWideChar(CP_UTF8, 0, src.c_str(), -1, (wchar_t*)NULL, 0);
+			wchar_t* Temp = (wchar_t*)new wchar_t[bufsize];
+			::MultiByteToWideChar(CP_UTF8, 0, src.c_str(), -1, Temp, bufsize);
+			dest = Temp;
+			delete[] Temp;
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	マルチバイト文字列からワイド文字列変換<br />
+		ロケール依存のため、WinMain()等で、setlocale( LC_ALL, "JPN" );が必要
+		@param[in]	src	変換する文字列（マルチバイト）
+		@param[out]	dest	変換後の文字列（ワイドキャラ）
+		@return	なし
+		*/
+		//--------------------------------------------------------------------------------------
+		static void MBtoWS(const string& src, wstring& dest) {
+			size_t i;
+			wchar_t* WCstr = new wchar_t[src.length() + 1];
+			mbstowcs_s(
+				&i,
+				WCstr,
+				src.length() + 1,
+				src.c_str(),
+				_TRUNCATE //すべて変換できなかったら切り捨て
+			);
+			dest = WCstr;
+			delete[] WCstr;
+		}
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	文字列をデリミタ文字により区切って配列に保存
+		@param[out]	wstrvec	保存される配列
+		@param[in]	line	元となる文字列
+		@param[in]	delimiter	デリミタ
+		@return	なし
+		*/
+		//--------------------------------------------------------------------------------------
+		static void WStrToTokenVector(vector<wstring>& wstrvec, const wstring& line, wchar_t delimiter) {
+			wstring::size_type i = 0;
+			wstring wks(L"");
+			for (i = 0; i < line.size(); i++) {
+				if (line[i] == delimiter) {
+					if (wks != L"") {
+						wstrvec.push_back(wks);
+					}
+					wks = L"";
+				}
+				else {
+					wks += line[i];
+				}
+			}
+			wstrvec.push_back(wks);
+		}
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	T型の内部機器別名を得る（wstring）
+		@tparam T	型名を得る型
+		@return	T型の内部機器別名
+		*/
+		//--------------------------------------------------------------------------------------
+		template<typename T>
+		static wstring GetWSTypeName() {
+			wstring clsname;
+			MBtoWS(typeid(T).name(), clsname);
+			return clsname;
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	T型の内部機器別名を得る（string）
+		@tparam T	型名を得る型
+		@return	T型の内部機器別名
+		*/
+		//--------------------------------------------------------------------------------------
+		template<typename T>
+		static string GetMBTypeName() {
+			string clsname = typeid(T).name();
+			return clsname;
+		}
+
+		//--------------------------------------------------------------------------------------
+		/// float型を文字列に変換する場合の形式
+		//--------------------------------------------------------------------------------------
+		enum FloatModify {
+			Default = 0,	///< デフォルト（浮動小数点）
+			Fixed,	///< 数字を出力
+			Scientific,	///< e+09などの形式
+		};
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	浮動小数点を文字列に変換する（wstring版）
+		@param[in]	Val	浮動小数点値
+		@param[in]	Precision = 0	精度0でデフォルト
+		@param[in]	Modify = FloatModify::Default	表示形式
+		@return	変換した文字列
+		*/
+		//--------------------------------------------------------------------------------------
+		static wstring FloatToWStr(float Val, streamsize Precision = 0,
+			FloatModify Modify = FloatModify::Default) {
+			//返す文字列
+			wstring str;
+			//書式を整えるストリーム
+			wostringstream stream;
+			//浮動小数点の精度を決める
+			if (Precision > 0) {
+				stream.precision(Precision);
+			}
+			switch (Modify) {
+			case FloatModify::Fixed:
+				stream << std::fixed << Val;
+				break;
+			case FloatModify::Scientific:
+				stream << std::scientific << Val;
+				break;
+			case FloatModify::Default:
+			default:
+				stream << Val;
+				break;
+			}
+			str = stream.str();
+			return str;
+		}
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	浮動小数点を文字列に変換する（string版）
+		@param[in]	Val	浮動小数点値
+		@param[in]	Precision = 0	精度0でデフォルト
+		@param[in]	Modify = FloatModify::Default	表示形式
+		@return	変換した文字列
+		*/
+		//--------------------------------------------------------------------------------------
+		static string FloatToStr(float Val, streamsize Precision = 0,
+			FloatModify Modify = FloatModify::Default) {
+			//返す文字列
+			string str;
+			//書式を整えるストリーム
+			ostringstream stream;
+			//浮動小数点の精度を決める
+			if (Precision > 0) {
+				stream.precision(Precision);
+			}
+			switch (Modify) {
+			case FloatModify::Fixed:
+				stream << std::fixed << Val;
+				break;
+			case FloatModify::Scientific:
+				stream << std::scientific << Val;
+				break;
+			case FloatModify::Default:
+			default:
+				stream << Val;
+				break;
+			}
+			str = stream.str();
+			return str;
+		}
+
+
+		//--------------------------------------------------------------------------------------
+		/// 整数型を文字列に変換する場合の形式
+		//--------------------------------------------------------------------------------------
+		enum NumModify {
+			Dec = 0,	///< 10進数
+			Hex,	///< 16進数
+			Oct,	///< 8進数
+		};
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	unsigned数値を文字列に変換する（wstring版）
+		@param[in]	num	unsigned数値
+		@param[in]	Modify = NumModify::Dec	進数
+		@return	変換した文字列
+		*/
+		//--------------------------------------------------------------------------------------
+		static wstring UintToWStr(UINT num, NumModify Modify = NumModify::Dec) {
+			//返す文字列
+			wstring str;
+			//書式を整えるストリーム
+			wostringstream stream;
+			//表示形式を決める
+			switch (Modify) {
+			case NumModify::Oct:
+				stream << std::oct << num;
+				break;
+			case NumModify::Hex:
+				stream << std::hex << num;
+				break;
+			case NumModify::Dec:
+			default:
+				stream << std::dec << num;
+				break;
+			}
+			str = stream.str();
+			return str;
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	size_t数値を文字列に変換する（wstring版）(UINT)にキャストするだけなので、32ビットを超える場合は注意が必要
+		@param[in]	num	unsigned数値
+		@param[in]	Modify = NumModify::Dec	進数
+		@return	変換した文字列
+		*/
+		//--------------------------------------------------------------------------------------
+		static wstring SizeTToWStr(size_t num, NumModify Modify = NumModify::Dec) {
+			//返す文字列
+			wstring str;
+			//書式を整えるストリーム
+			wostringstream stream;
+			//表示形式を決める
+			switch (Modify) {
+			case NumModify::Oct:
+				stream << std::oct << num;
+				break;
+			case NumModify::Hex:
+				stream << std::hex << num;
+				break;
+			case NumModify::Dec:
+			default:
+				stream << std::dec << num;
+				break;
+			}
+			str = stream.str();
+			return str;
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	unsigned数値を文字列に変換する（string版）
+		@param[in]	num	unsigned数値
+		@param[in]	Modify = NumModify::Dec	進数
+		@return	変換した文字列
+		*/
+		//--------------------------------------------------------------------------------------
+		static string UintToStr(UINT num, NumModify Modify = NumModify::Dec) {
+			//返す文字列
+			string str;
+			//書式を整えるストリーム
+			ostringstream stream;
+			//表示形式を決める
+			switch (Modify) {
+			case NumModify::Oct:
+				stream << std::oct << num;
+				break;
+			case NumModify::Hex:
+				stream << std::hex << num;
+				break;
+			case NumModify::Dec:
+			default:
+				stream << std::dec << num;
+				break;
+			}
+			str = stream.str();
+			return str;
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	unsigned数値を文字列に変換する（string版）(UINT)にキャストするだけなので、32ビットを超える場合は注意が必要
+		@param[in]	num	unsigned数値
+		@param[in]	Modify = NumModify::Dec	進数
+		@return	変換した文字列
+		*/
+		//--------------------------------------------------------------------------------------
+		static string SizeTToStr(UINT num, NumModify Modify = NumModify::Dec) {
+			return UintToStr((UINT)num, Modify);
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	signed数値を文字列に変換する（wstring版）
+		@param[in]	num	signed数値
+		@param[in]	Modify = NumModify::Dec	進数
+		@return	変換した文字列
+		*/
+		//--------------------------------------------------------------------------------------
+		static wstring IntToWStr(int num, NumModify Modify = NumModify::Dec) {
+			//返す文字列
+			wstring str;
+			//書式を整えるストリーム
+			wostringstream stream;
+			//表示形式を決める
+			switch (Modify) {
+			case NumModify::Oct:
+				stream << std::oct << num;
+				break;
+			case NumModify::Hex:
+				stream << std::hex << num;
+				break;
+			case NumModify::Dec:
+			default:
+				stream << std::dec << num;
+				break;
+			}
+			str = stream.str();
+			return str;
+		}
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	signed数値を文字列に変換する（string版）
+		@param[in]	num	signed数値
+		@param[in]	Modify = NumModify::Dec	進数
+		@return	変換した文字列
+		*/
+		//--------------------------------------------------------------------------------------
+		static string IntToStr(int num, NumModify Modify = NumModify::Dec) {
+			//返す文字列
+			string str;
+			//書式を整えるストリーム
+			ostringstream stream;
+			//表示形式を決める
+			switch (Modify) {
+			case NumModify::Oct:
+				stream << std::oct << num;
+				break;
+			case NumModify::Hex:
+				stream << std::hex << num;
+				break;
+			case NumModify::Dec:
+			default:
+				stream << std::dec << num;
+				break;
+			}
+			str = stream.str();
+			return str;
+		}
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	Probability分の1の確率で、trueを返す<br />
+		Probabilityは0より大きくなければならない（0除算はできない）
+		@param[in]	Probability	確率。何分の1かを指定する
+		@return	Probability分の1の確率になればtrue
+		*/
+		//--------------------------------------------------------------------------------------
+		static bool DivProbability(UINT Probability) {
+			if (Probability <= 0) {
+				return false;
+			}
+			double Prob = (double)rand() / (double)RAND_MAX;
+			double Seed = 1.0 / (double)Probability;
+			if (Prob <= Seed) {
+				return true;
+			}
+			return false;
+		}
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	0から1.0fの間の乱数を返す<br />
+		ZeroOKがfalseの場合、0が返る可能性はない（0.00001fになる）
+		@param[in]	ZeroOK = false	0が返っていいかどうかの指定
+		@return	0から1.0fの間の乱数
+		*/
+		//--------------------------------------------------------------------------------------
+		static float RandZeroToOne(bool ZeroOK = false) {
+			double Prob = (double)rand() / (double)RAND_MAX;
+			if (Prob <= 0) {
+				if (!ZeroOK) {
+					Prob = 0.00001;
+				}
+				else {
+					Prob = 0.0;
+				}
+			}
+			return (float)Prob;
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	切り上げ
+		@param[in]	dSrc	元の数値
+		@param[in]	iLen	小数点以下の桁数
+		@return	処理後の数値
+		*/
+		//--------------------------------------------------------------------------------------
+		static double Ceil(double dSrc, int iLen)
+		{
+			double	dRet;
+
+			dRet = dSrc * pow(10.0, iLen);
+			dRet = (double)(int)(dRet + 0.9);
+
+			return dRet * pow(10.0, -iLen);
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	切り下げ
+		@param[in]	dSrc	元の数値
+		@param[in]	iLen	小数点以下の桁数
+		@return	処理後の数値
+		*/
+		//--------------------------------------------------------------------------------------
+		static double Floor(double dSrc, int iLen)
+		{
+			double dRet;
+
+			dRet = dSrc * pow(10.0, iLen);
+			dRet = (double)(int)(dRet);
+
+			return dRet * pow(10.0, -iLen);
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	四捨五入
+		@param[in]	dSrc	元の数値
+		@param[in]	iLen	小数点以下の桁数
+		@return	処理後の数値
+		*/
+		//--------------------------------------------------------------------------------------
+		static double Round(double dSrc, int iLen)
+		{
+			double	dRet;
+
+			dRet = dSrc * pow(10.0, iLen);
+			dRet = (double)(int)(dRet + 0.5);
+
+			return dRet * pow(10.0, -iLen);
+		}
 
     };
+
+	//--------------------------------------------------------------------------------------
+	///	Objectインターフェイス
+	//--------------------------------------------------------------------------------------
+	class ObjectInterface {
+		friend class ObjectFactory;
+		//クリエイト済みかどうか
+		//Create関数が呼び出し後にtrueになる
+		bool m_Created{ false };
+		void SetCreated(bool b) {
+			m_Created = b;
+		}
+	protected:
+		ObjectInterface() {}
+		virtual ~ObjectInterface() {}
+	public:
+		template<typename T>
+		std::shared_ptr<T> GetThis() {
+			auto Ptr = dynamic_pointer_cast<T>(shared_from_this());
+			if (Ptr) {
+				return Ptr;
+			}
+			else {
+				wstring str(L"thisを");
+				str += Util::GetWSTypeName<T>();
+				str += L"型にキャストできません";
+				throw BaseException(
+					str,
+					L"if( ! dynamic_pointer_cast<T>(shared_from_this()) )",
+					L"ObjectInterface::GetThis()"
+				);
+			}
+			return nullptr;
+		}
+		bool IsCreated()const {
+			return m_Created;
+		}
+
+		virtual void OnInit() = 0;
+		virtual void OnUpdate() = 0;
+		virtual void OnRender() = 0;
+		virtual void OnDestroy() = 0;
+		virtual void OnKeyDown(UINT8 /*key*/) {}
+		virtual void OnKeyUp(UINT8 /*key*/) {}
+	};
+
+
+	//--------------------------------------------------------------------------------------
+	///	Objectを構築する
+	//--------------------------------------------------------------------------------------
+	class ObjectFactory {
+	public:
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief オブジェクト作成（static関数）
+		@tparam T	作成する型
+		@tparam Ts...	可変長パラメータ型
+		@param[in]	params	可変長パラメータ
+		@return　作成したオブジェクトのshared_ptr
+		*/
+		//--------------------------------------------------------------------------------------
+		template<typename T, typename... Ts>
+		static shared_ptr<T> Create(Ts&&... params) {
+			shared_ptr<T> Ptr = shared_ptr<T>(new T(params...));
+			//初期化関数呼び出し
+			Ptr->OnInit();
+			Ptr->SetCreated(true);
+			return Ptr;
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief オブジェクト作成（static関数）。パラメータはOnInitに渡される
+		@tparam T	作成する型
+		@tparam Ts...	可変長パラメータ型
+		@param[in]	params	可変長パラメータ
+		@return　作成したオブジェクトのshared_ptr
+		*/
+		//--------------------------------------------------------------------------------------
+		template<typename T, typename... Ts>
+		static shared_ptr<T> CreateInitParam(Ts&&... params) {
+			shared_ptr<T> Ptr = shared_ptr<T>(new T());
+			//初期化関数呼び出し
+			Ptr->OnInit(params...);
+			Ptr->SetCreated(true);
+			return Ptr;
+		}
+
+	};
+
 
     //--------------------------------------------------------------------------------------
     ///	シェーダ関連リソースのインターフェイス

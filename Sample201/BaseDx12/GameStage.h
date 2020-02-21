@@ -1,5 +1,5 @@
 #pragma once
-#include "GameDevice.h"
+#include "stdafx.h"
 
 namespace basedx12 {
 
@@ -39,7 +39,7 @@ namespace basedx12 {
         //PositionColor用パイプラインステート（コンスタントバッファあり）
         ComPtr<ID3D12PipelineState> m_pcConstPipelineState;
     public:
-        MoveTriangle(){}
+        MoveTriangle() {}
         ~MoveTriangle() {}
         void OnInit();
         void OnUpdate();
@@ -61,7 +61,8 @@ namespace basedx12 {
         void OnRender();
     };
 
-	class Scene :public SceneBase {
+
+	class GameStage : public Stage {
         FixedTriangle m_FixedTriangle;
         MoveTriangle m_MoveTriangle;
         MoveSquare m_MoveSquare;
@@ -69,18 +70,15 @@ namespace basedx12 {
         SceneConstantBuffer m_constantBufferData;
         //コンスタントバッファ
         shared_ptr<ConstantBuffer> m_ConstantBuffer;
-	public:
-		Scene() :SceneBase() {}
-		virtual ~Scene() {}
-
-		virtual void OnInit()override;
-		virtual void OnInitAssets()override;
+    public:
+		GameStage():Stage(){}
+		virtual ~GameStage() {}
+        virtual void OnInit() override;
 		virtual void OnUpdate()override;
 		virtual void OnRender()override;
-		virtual void OnDestroy()override;
+		virtual void OnDestroy()override {}
+
 	};
-
 }
-//end basedx12
-
+// end basedx12
 
