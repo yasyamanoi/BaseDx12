@@ -13,11 +13,8 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Assets">
-      <UniqueIdentifier>{8e6ff625-edfb-4f37-a5c7-b8cb6693a99f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Assets\Shaders">
-      <UniqueIdentifier>{090eafa6-fe00-4043-8bac-04455386fcb9}</UniqueIdentifier>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{7bb112a3-b56f-4dd4-b057-d7319ad1b27b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -59,11 +56,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\media\Shaders\vshader.hlsl">
-      <Filter>Assets\Shaders</Filter>
+    <FxCompile Include="Shaders\pshader.hlsl">
+      <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="..\media\Shaders\pshader.hlsl">
-      <Filter>Assets\Shaders</Filter>
+    <FxCompile Include="Shaders\vshader.hlsl">
+      <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

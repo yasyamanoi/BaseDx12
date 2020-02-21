@@ -17,6 +17,7 @@ namespace basedx12 {
 		{}
 		virtual ~GameObject() {}
 	public:
+		void OnDestroy()override {}
 	};
 
 	//--------------------------------------------------------------------------------------
@@ -43,7 +44,11 @@ namespace basedx12 {
 				throw;
 			}
 		}
-
+		virtual void UpdateGameObjects();
+		virtual void RenderGameObjects();
+		virtual void OnUpdate()override {}
+		virtual void OnRender()override {}
+		virtual void OnDestroy()override {}
 	};
 
 	//--------------------------------------------------------------------------------------

@@ -94,7 +94,7 @@ namespace basedx12 {
         }
         //テクスチャ
         {
-            auto TexFile = App::GetDataPath() + L"sky.jpg";
+            auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";
             //テクスチャの作成
             //シェーダリソースハンドルを作成
             CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(
@@ -134,9 +134,9 @@ namespace basedx12 {
         auto commandList = Device->GetCommandList();
         // それぞれのオブジェクトの初期化
         {
-            m_FixedTriangle.OnInit();
-            m_MoveTriangle.OnInit();
-            m_MoveSquare.OnInit();
+            AddGameObject<FixedTriangle>();
+            AddGameObject<MoveTriangle>();
+            AddGameObject<MoveSquare>();
         }
         //コンスタントバッファ
         {
@@ -162,17 +162,6 @@ namespace basedx12 {
         }
         m_ConstantBuffer->Copy(m_constantBufferData);
 	}
-
-	void GameStage::OnRender() {
-        auto Device = App::GetDx12Device();
-        auto commandList = Device->GetCommandList();
-        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        m_FixedTriangle.OnRender();
-        m_MoveTriangle.OnRender();
-        m_MoveSquare.OnRender();
-	}
-
-
 
 }
 //end basedx12

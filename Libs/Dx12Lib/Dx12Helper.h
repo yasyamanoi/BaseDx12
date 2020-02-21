@@ -855,7 +855,7 @@ namespace basedx12 {
 	//--------------------------------------------------------------------------------------
 	///	Objectインターフェイス
 	//--------------------------------------------------------------------------------------
-	class ObjectInterface {
+	class ObjectInterface : public std::enable_shared_from_this<ObjectInterface> {
 		friend class ObjectFactory;
 		//クリエイト済みかどうか
 		//Create関数が呼び出し後にtrueになる

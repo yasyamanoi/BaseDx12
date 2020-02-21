@@ -20,33 +20,33 @@ namespace basedx12 {
         {}
     };
 
-    class FixedTriangle {
+    class FixedTriangle : public GameObject {
         //PositionColorの三角形メッシュ
         shared_ptr<Dx12Mesh> m_pcTriangleMesh;
         //PositionColor用パイプラインステート（コンスタントバッファなし）
         ComPtr<ID3D12PipelineState> m_pcPipelineState;
     public:
-        FixedTriangle() {}
+        FixedTriangle(const shared_ptr<Stage>& stage):GameObject(stage){}
         ~FixedTriangle() {}
-        void OnInit();
-        void OnUpdate() {}
-        void OnRender();
+        void OnInit() override;
+        void OnUpdate() override {}
+        void OnRender()override;
     };
 
-    class MoveTriangle {
+    class MoveTriangle : public GameObject {
         //PositionColorの三角形メッシュ
         shared_ptr<Dx12Mesh> m_pcTriangleMesh;
         //PositionColor用パイプラインステート（コンスタントバッファあり）
         ComPtr<ID3D12PipelineState> m_pcConstPipelineState;
     public:
-        MoveTriangle() {}
+        MoveTriangle(const shared_ptr<Stage>& stage) :GameObject(stage) {}
         ~MoveTriangle() {}
-        void OnInit();
-        void OnUpdate();
-        void OnRender();
+        void OnInit()override;
+        void OnUpdate()override;
+        void OnRender()override;
     };
 
-    class MoveSquare {
+    class MoveSquare : public GameObject {
         //PositionTextureの四角形メッシュ
         shared_ptr<Dx12Mesh> m_ptSquareMesh;
         //テクスチャ
@@ -54,18 +54,15 @@ namespace basedx12 {
         //PositionTexture用パイプラインステート（コンスタントバッファあり）
         ComPtr<ID3D12PipelineState> m_ptConstPipelineState;
     public:
-        MoveSquare() {}
+        MoveSquare(const shared_ptr<Stage>& stage) :GameObject(stage) {}
         ~MoveSquare() {}
-        void OnInit();
-        void OnUpdate();
-        void OnRender();
+        void OnInit()override;
+        void OnUpdate()override;
+        void OnRender()override;
     };
 
 
 	class GameStage : public Stage {
-        FixedTriangle m_FixedTriangle;
-        MoveTriangle m_MoveTriangle;
-        MoveSquare m_MoveSquare;
         //コンスタントバッファの実体
         SceneConstantBuffer m_constantBufferData;
         //コンスタントバッファ
@@ -75,8 +72,6 @@ namespace basedx12 {
 		virtual ~GameStage() {}
         virtual void OnInit() override;
 		virtual void OnUpdate()override;
-		virtual void OnRender()override;
-		virtual void OnDestroy()override {}
 
 	};
 }
