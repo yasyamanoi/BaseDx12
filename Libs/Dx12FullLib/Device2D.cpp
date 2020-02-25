@@ -7,6 +7,7 @@ namespace basedx12 {
     {
     }
 
+
     //初期化
     void Default2DDivece::OnInit()
     {
@@ -35,38 +36,11 @@ namespace basedx12 {
             m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
             //CbvSrvデスクプリタヒープ(コンスタントバッファとシェーダリソース)
-            m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(1 + 1);
+            m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(1 + m_constBuffMax);
             m_CbvSrvDescriptorHandleIncrementSize
                 = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             //サンプラーデスクリプタヒープ
             m_SamplerDescriptorHeap = DescriptorHeap::CreateSamplerHeap(1);
-
-            //GPU側デスクプリタヒープのハンドルの配列の作成
-            m_GPUDescriptorHandleVec.clear();
-            //Cbv
-            CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle(
-                m_CbvSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
-                0,
-                0
-            );
-            m_GPUDescriptorHandleVec.push_back(SrvHandle);
-
-            //Srv
-            CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
-                m_CbvSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
-                1,
-                m_CbvSrvDescriptorHandleIncrementSize
-            );
-            m_GPUDescriptorHandleVec.push_back(CbvHandle);
-
-            //Sampler
-            CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
-                m_SamplerDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
-                0,
-                0
-            );
-            m_GPUDescriptorHandleVec.push_back(SamplerHandle);
-
         }
 
         // RTVとコマンドアロケータ
@@ -79,7 +53,7 @@ namespace basedx12 {
         // ルートシグネチャー
         {
             //コンスタントバッファ付ルートシグネチャ
-            m_rootSignature = RootSignature::CreateCbvSrvSmp();
+            m_rootSignature = RootSignature::CreateSrvSmpCbv();
         }
         // 頂点などのリソース構築用のコマンドリスト
         m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);
@@ -95,11 +69,19 @@ namespace basedx12 {
     //更新
     void Default2DDivece::OnUpdate()
     {
-        //シーンに更新を任せるので何もしない
+        // 頂点などのリソース構築用のコマンドリスト
+        m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);
+        //シーンの更新（もしこの間にメッシュの追加があればコマンド実行）
+        App::GetSceneBase().OnUpdate();
+        //コマンドラインクローズおよびキューの実行
+        CommandList::Close(m_commandList);
+        CommandList::Excute(m_commandQueue, m_commandList);
+        //同期オブジェクトおよびＧＰＵの処理待ち
+        SyncAndWaitForGpu();
     }
 
     // 描画処理
-    void Default2DDivece::OnRender()
+    void Default2DDivece::OnDraw()
     {
         // 描画のためのコマンドリストを集める
         PopulateCommandList();
@@ -107,6 +89,9 @@ namespace basedx12 {
         // 描画用コマンドリスト実行
         ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
         m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+//        m_commandQueue->ExecuteCommandLists((UINT)m_drawCommandLists.size(), &m_drawCommandLists[0]);
+
 
         // フロントバッファに表示
         ThrowIfFailed(GetIDXGISwapChain3()->Present(1, 0));
@@ -129,17 +114,16 @@ namespace basedx12 {
 
         //コマンドリストのリセット（パイプライン指定なし）
         CommandList::Reset(m_commandAllocators[m_frameIndex], m_commandList);
+
         // Set necessary state.
         m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
         m_commandList->RSSetViewports(1, &m_viewport);
         m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
-        ID3D12DescriptorHeap* ppHeaps[] = { m_CbvSrvUavDescriptorHeap.Get(), m_SamplerDescriptorHeap.Get() };
-        m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-
-        for (UINT i = 0; i < m_GPUDescriptorHandleVec.size(); i++) {
-            m_commandList->SetGraphicsRootDescriptorTable(i, m_GPUDescriptorHandleVec[i]);
-        }
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+        m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+        const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+        m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
         // バックバッファを使うためのバリア
         m_commandList->ResourceBarrier(
@@ -150,12 +134,10 @@ namespace basedx12 {
             )
         );
 
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
-        m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-        const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-        m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+        ID3D12DescriptorHeap* ppHeaps[] = { m_CbvSrvUavDescriptorHeap.Get(),m_SamplerDescriptorHeap.Get()};
+        m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
         // シーンの個別描画
-        App::GetSceneBase().OnRender();
+        App::GetSceneBase().OnDraw();
         // フロントバッファに転送するためのバリア
         m_commandList->ResourceBarrier(1,
             &CD3DX12_RESOURCE_BARRIER::Transition(
@@ -164,8 +146,8 @@ namespace basedx12 {
                 D3D12_RESOURCE_STATE_PRESENT
             )
         );
-
         ThrowIfFailed(m_commandList->Close());
+
     }
 
 

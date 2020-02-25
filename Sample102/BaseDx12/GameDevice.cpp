@@ -44,31 +44,6 @@ namespace basedx12 {
             //サンプラーデスクリプタヒープ
             m_SamplerDescriptorHeap = DescriptorHeap::CreateSamplerHeap(1);
 
-            //GPU側デスクプリタヒープのハンドルの配列の作成
-            m_GPUDescriptorHandleVec.clear();
-            //Cbv
-            CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle(
-                m_CbvSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
-                0,
-                0
-            );
-            m_GPUDescriptorHandleVec.push_back(SrvHandle);
-
-            //Srv
-            CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
-                m_CbvSrvUavDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
-                1,
-                m_CbvSrvDescriptorHandleIncrementSize
-            );
-            m_GPUDescriptorHandleVec.push_back(CbvHandle);
-
-            //Sampler
-            CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
-                m_SamplerDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
-                0,
-                0
-            );
-            m_GPUDescriptorHandleVec.push_back(SamplerHandle);
 
         }
 
@@ -82,7 +57,7 @@ namespace basedx12 {
         // ルートシグネチャー
         {
             //コンスタントバッファ付ルートシグネチャ
-            m_rootSignature = RootSignature::CreateCbvSrvSmp();
+            m_rootSignature = RootSignature::CreateSrvSmpCbv();
         }
         // 頂点などのリソース構築用のコマンドリスト
         m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);
@@ -98,11 +73,12 @@ namespace basedx12 {
     //更新
     void GameDivece::OnUpdate()
     {
-        //シーンに更新を任せるので何もしない
+        //シーンに更新を任せる
+        App::GetSceneBase().OnUpdate();
     }
 
     // 描画処理
-    void GameDivece::OnRender()
+    void GameDivece::OnDraw()
     {
         // 描画のためのコマンドリストを集める
         PopulateCommandList();
@@ -140,9 +116,32 @@ namespace basedx12 {
         ID3D12DescriptorHeap* ppHeaps[] = { m_CbvSrvUavDescriptorHeap.Get(), m_SamplerDescriptorHeap.Get() };
         m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-        for (UINT i = 0; i < m_GPUDescriptorHandleVec.size(); i++) {
-            m_commandList->SetGraphicsRootDescriptorTable(i, m_GPUDescriptorHandleVec[i]);
-        }
+        //Srv
+        CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle(
+            GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+            0,
+            0
+        );
+        //srv
+        m_commandList->SetGraphicsRootDescriptorTable(0, SrvHandle);
+        //Sampler
+        CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
+            GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+            0,
+            0
+        );
+        //sampler
+        m_commandList->SetGraphicsRootDescriptorTable(1, SamplerHandle);
+        //Cbv
+        CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
+            GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+            1,
+            GetCbvSrvDescriptorHandleIncrementSize()
+        );
+        //csv
+        m_commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
+
+
 
         // バックバッファを使うためのバリア
         m_commandList->ResourceBarrier(
@@ -158,7 +157,7 @@ namespace basedx12 {
         const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
         m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
         // シーンの個別描画
-        App::GetSceneBase().OnRender();
+        App::GetSceneBase().OnDraw();
         // フロントバッファに転送するためのバリア
         m_commandList->ResourceBarrier(1, 
             &CD3DX12_RESOURCE_BARRIER::Transition(

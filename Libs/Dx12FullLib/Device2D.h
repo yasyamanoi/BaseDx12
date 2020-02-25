@@ -13,10 +13,10 @@ namespace basedx12 {
     public:
         Default2DDivece(UINT frameCount);
         virtual ~Default2DDivece() {}
-        virtual void OnInit();
-        virtual void OnUpdate();
-        virtual void OnRender();
-        virtual void OnDestroy();
+        virtual void OnInit()override;
+        virtual void OnUpdate()override;
+        virtual void OnDraw()override;
+        virtual void OnDestroy()override;
     };
 
 

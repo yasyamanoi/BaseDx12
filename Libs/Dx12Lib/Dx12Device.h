@@ -7,10 +7,12 @@ namespace basedx12 {
     ///	Dx12デバイスクラス
     //--------------------------------------------------------------------------------------
     class Dx12Device : public ObjectInterface {
+        UINT m_constBuffSendIndex;
     protected:
         Dx12Device(UINT frameCount);
         virtual ~Dx12Device();
     public:
+        UINT GetConstBuffNextIndex();
         UINT GetFrameCount()const {
             return m_FrameCount;
         }
@@ -74,9 +76,6 @@ namespace basedx12 {
         ComPtr<ID3D12DescriptorHeap> GetSamplerDescriptorHeap() const {
             return m_SamplerDescriptorHeap;
         }
-        const vector<CD3DX12_GPU_DESCRIPTOR_HANDLE>& GetGPUDescriptorHandleVec() const {
-            return m_GPUDescriptorHandleVec;
-        }
         ComPtr<ID3D12GraphicsCommandList> GetCommandList() const {
             return m_commandList;
         }
@@ -114,10 +113,10 @@ namespace basedx12 {
         ComPtr<ID3D12DescriptorHeap> m_CbvSrvUavDescriptorHeap;
         //CbvSrvのデスクプリタハンドルのインクリメントサイズ
         UINT m_CbvSrvDescriptorHandleIncrementSize{ 0 };
+        //コンスタントバッファのMAXサイズ
+        const UINT m_constBuffMax;
         //サンプラー用
         ComPtr<ID3D12DescriptorHeap> m_SamplerDescriptorHeap;
-        //GPU側デスクプリタのハンドルの配列
-        vector<CD3DX12_GPU_DESCRIPTOR_HANDLE> m_GPUDescriptorHandleVec;
         //コマンドリスト
         ComPtr<ID3D12GraphicsCommandList> m_commandList;
         //ルートシグネチャ

@@ -11,6 +11,8 @@ namespace basedx12 {
 
     shared_ptr<Dx12Device> App::m_device = nullptr;
 
+    StepTimer App::m_Timer;
+
 
     wstring App::m_classsName = L"BaseDx12Class";
     wstring App::m_title = L"BaseDx12Title";
@@ -200,11 +202,10 @@ namespace basedx12 {
             return 0;
         case WM_PAINT:
             if (m_pSceneBase && m_device)
-            {                
-                m_pSceneBase->OnUpdate();
+            {
                 m_device->OnUpdate();
                 //シーンのレンダリングはデバイスから呼ばれる
-                m_device->OnRender();
+                m_device->OnDraw();
             }
             return 0;
         case WM_DESTROY:

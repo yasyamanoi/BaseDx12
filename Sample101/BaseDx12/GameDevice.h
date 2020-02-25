@@ -16,7 +16,7 @@ namespace basedx12 {
 
         virtual void OnInit()override;
         virtual void OnUpdate()override;
-        virtual void OnRender()override;
+        virtual void OnDraw()override;
         virtual void OnDestroy()override;
 
     };

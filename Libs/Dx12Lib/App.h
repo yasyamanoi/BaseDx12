@@ -38,6 +38,15 @@ namespace basedx12 {
             return m_device->GetID3D12Device();
         }
 
+        static float GetElapsedTime() {
+            double d = m_Timer.GetElapsedSeconds();
+            //0除算回避のため1000分の1未満は返らないようにする
+            if (d < 0.001) {
+                d = 0.001;
+            }
+            return (float)d;
+        }
+
     protected:
         static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
     private:
@@ -61,6 +70,9 @@ namespace basedx12 {
         static wstring m_wstrRelativeDataPath;	///< 相対パスのメディアディレクトリ
         static wstring m_wstrRelativeShadersPath;	///< 相対パスのシェーダディレクトリ
         static wstring	m_wstrRelativeAssetsPath;	///< 相対パスのアセットディレクトリ
+
+        static StepTimer m_Timer;										///< タイマー
+
 
     };
 

@@ -28,7 +28,7 @@ namespace basedx12 {
             { Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) }
         };
         //三角形メッシュ作成
-        m_pcTriangleMesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(commandList, vertex);
+        m_pcTriangleMesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(vertex);
 
     }
 
@@ -55,7 +55,7 @@ namespace basedx12 {
             { Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) }
         };
         //三角形メッシュ作成
-        m_pcTriangleMesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(commandList, vertex);
+        m_pcTriangleMesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(vertex);
 
     }
     void MoveTriangle::OnUpdate() {
@@ -88,7 +88,7 @@ namespace basedx12 {
             //インデックス配列
             vector<uint32_t> indices = { 0, 1, 2, 1, 3, 2 };
             //四角形メッシュの作成
-            m_ptSquareMesh = Dx12Mesh::CreateDx12Mesh<VertexPositionTexture>(commandList, vertices, indices);
+            m_ptSquareMesh = Dx12Mesh::CreateDx12Mesh<VertexPositionTexture>(vertices, indices);
         }
         //テクスチャ
         {
@@ -97,8 +97,8 @@ namespace basedx12 {
             //シェーダリソースハンドルを作成
             CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(
                 Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-                1,
-                Device->GetCbvSrvDescriptorHandleIncrementSize()
+                0,
+                0
             );
             //画像ファイルをもとにテクスチャを作成
             m_SkyTexture = Dx12Texture::CreateDx12Texture(TexFile, srvHandle);
@@ -144,8 +144,8 @@ namespace basedx12 {
             //三角形四角形共通
             CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
                 Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-                0,
-                0
+                1,
+                Device->GetCbvSrvDescriptorHandleIncrementSize()
             );
             m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
         }
@@ -159,9 +159,9 @@ namespace basedx12 {
         {
             m_constantBufferData.offset.x = -offsetBounds;
         }
+    }
+	void Scene::OnDraw() {
         m_ConstantBuffer->Copy(m_constantBufferData);
-	}
-	void Scene::OnRender() {
         auto Device = App::GetDx12Device();
         auto commandList = Device->GetCommandList();
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

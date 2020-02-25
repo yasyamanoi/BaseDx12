@@ -85,4 +85,3 @@ using Microsoft::WRL::ComPtr;
 
 #include "CommonDx12.h"
 #include "CommonDx12Full.h"
-

@@ -47,9 +47,11 @@ namespace basedx12 {
 		}
 		//頂点のみ
 		template<typename T>
-		static shared_ptr<Dx12Mesh> CreateDx12Mesh(const ComPtr<ID3D12GraphicsCommandList>& commandList, const vector<T>& vertices) {
+		static shared_ptr<Dx12Mesh> CreateDx12Mesh(const vector<T>& vertices) {
 			//デバイスの取得
 			auto Dev = App::GetID3D12Device();
+			auto Device = App::GetDx12Device();
+			auto commandList = Device->GetCommandList();
 			shared_ptr<Dx12Mesh> Ptr = shared_ptr<Dx12Mesh>(new Dx12Mesh());
 			UINT vertexBufferSize = (UINT)(sizeof(T) * vertices.size());
 			//頂点バッファの作成
@@ -113,9 +115,11 @@ namespace basedx12 {
 
 		//頂点とインデックス
 		template<typename T>
-		static shared_ptr<Dx12Mesh> CreateDx12Mesh(const ComPtr<ID3D12GraphicsCommandList>& commandList,const vector<T>& vertices, const vector<uint32_t>& indices) {
+		static shared_ptr<Dx12Mesh> CreateDx12Mesh(const vector<T>& vertices, const vector<uint32_t>& indices) {
 			//デバイスの取得
 			auto Dev = App::GetID3D12Device();
+			auto Device = App::GetDx12Device();
+			auto commandList = Device->GetCommandList();
 			shared_ptr<Dx12Mesh> Ptr = shared_ptr<Dx12Mesh>(new Dx12Mesh());
 			UINT vertexBufferSize = (UINT)(sizeof(T) * vertices.size());
 			//頂点バッファの作成

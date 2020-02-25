@@ -275,18 +275,18 @@ namespace basedx12 {
 			return CreateDirect(rootSignatureDesc);
 		}
 
-		//コンスタントバッファとシェーダリソースとサンプラーと
-		static inline ComPtr<ID3D12RootSignature> CreateCbvSrvSmp() {
+		//シェーダリソースとサンプラーとコンスタントバッファ
+		static inline ComPtr<ID3D12RootSignature> CreateSrvSmpCbv() {
 
 			CD3DX12_DESCRIPTOR_RANGE ranges[3];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
+			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
+			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 
 			CD3DX12_ROOT_PARAMETER rootParameters[3];
-			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
-			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_ALL);
 
 			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 			rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -434,11 +434,17 @@ namespace basedx12 {
 			CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
 			ThrowIfFailed(Ptr->m_constantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&Ptr->m_pCbvDataBegin)));
 			memcpy(Ptr->m_pCbvDataBegin, &src, sizeof(src));
+
+			Ptr->m_constantBuffer->Unmap(0, nullptr);
+
 			return Ptr;
 		}
 		template<typename T>
 		void Copy(const T& src) {
+			CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+			ThrowIfFailed(m_constantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pCbvDataBegin)));
 			memcpy(m_pCbvDataBegin, &src, sizeof(src));
+			m_constantBuffer->Unmap(0, nullptr);
 		}
 	};
 

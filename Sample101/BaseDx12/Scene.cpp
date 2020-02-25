@@ -31,13 +31,13 @@ namespace basedx12 {
                 { Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) }
             };
             //ƒƒbƒVƒ…ì¬
-            m_Dx12Mesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(commandList, vertex);
+            m_Dx12Mesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(vertex);
         }
 
 	}
 	void Scene::OnUpdate() {
 	}
-	void Scene::OnRender() {
+	void Scene::OnDraw() {
         auto Device = App::GetDx12Device();
         auto commandList = Device->GetCommandList();
         commandList->SetPipelineState(m_pipelineState.Get());

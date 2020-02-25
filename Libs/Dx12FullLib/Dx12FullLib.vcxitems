@@ -14,13 +14,23 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Behavior.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)CommonDx12Full.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Device2D.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)FullObjects.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Draw2DComp.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)SceneEx.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)GameObject.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Stage.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)UpdateComp.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Behavior.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Device2D.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)FullObjects.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Draw2DComp.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)GameObject.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SceneEx.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Stage.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)UpdateComp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="$(MSBuildThisFileDirectory)Shaders\pshader.hlsl">

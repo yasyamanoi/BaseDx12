@@ -8,12 +8,28 @@ namespace basedx12 {
         m_renderTargets(m_FrameCount),
         m_commandAllocators(m_FrameCount),
         m_viewport(0.0f, 0.0f, static_cast<float>(App::GetGameWidth()), static_cast<float>(App::GetGameHeight())),
-        m_scissorRect(0, 0, static_cast<LONG>(App::GetGameWidth()), static_cast<LONG>(App::GetGameHeight()))
+        m_scissorRect(0, 0, static_cast<LONG>(App::GetGameWidth()), static_cast<LONG>(App::GetGameHeight())),
+        m_constBuffMax(1024),
+        m_constBuffSendIndex(0)
     {
         m_aspectRatio = static_cast<float>(App::GetGameWidth()) / static_cast<float>(App::GetGameHeight());
     }
 
     Dx12Device::~Dx12Device() {}
+
+    UINT Dx12Device::GetConstBuffNextIndex() {
+        //初期値は1にするSRVのぶんをインクリメント
+        m_constBuffSendIndex++;
+        if (m_constBuffSendIndex >= m_constBuffMax) {
+            throw BaseException(
+                L"これ以上コンスタントバッファは増やせません。\n",
+                L"Default2DDivece::GetConstBuffNextIndex()"
+            );
+        }
+        return m_constBuffSendIndex;
+    }
+
+
 
     _Use_decl_annotations_
         void Dx12Device::GetHardwareAdapter(IDXGIFactory2* pFactory, IDXGIAdapter1** ppAdapter)

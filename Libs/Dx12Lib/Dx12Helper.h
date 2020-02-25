@@ -889,9 +889,10 @@ namespace basedx12 {
 			return m_Created;
 		}
 
+		virtual void OnPreInit() {}
 		virtual void OnInit() = 0;
 		virtual void OnUpdate() = 0;
-		virtual void OnRender() = 0;
+		virtual void OnDraw() = 0;
 		virtual void OnDestroy() = 0;
 		virtual void OnKeyDown(UINT8 /*key*/) {}
 		virtual void OnKeyUp(UINT8 /*key*/) {}
@@ -916,6 +917,7 @@ namespace basedx12 {
 		static shared_ptr<T> Create(Ts&&... params) {
 			shared_ptr<T> Ptr = shared_ptr<T>(new T(params...));
 			//‰Šú‰»ŠÖ”ŒÄ‚Ño‚µ
+			Ptr->OnPreInit();
 			Ptr->OnInit();
 			Ptr->SetCreated(true);
 			return Ptr;
