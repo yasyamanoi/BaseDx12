@@ -65,7 +65,7 @@ namespace basedx12 {
     }
     void MoveTriangle2::OnUpdate() {
         auto compPtr = GetComponent<PCSpriteDraw>();
-        compPtr->Move(0.01f);
+        compPtr->Move(0.0075f);
     }
 
 
@@ -96,7 +96,7 @@ namespace basedx12 {
         }
     }
     void MoveSquare::OnUpdate() {
-        auto compPtr = GetComponent<PCSpriteDraw>();
+        auto compPtr = GetComponent<PTSpriteDraw>();
         compPtr->Move(0.01f);
 
     }
@@ -104,7 +104,7 @@ namespace basedx12 {
         AddGameObject<FixedTriangle>();
         AddGameObject<MoveTriangle>();
         AddGameObject<MoveTriangle2>();
-        // AddGameObject<MoveSquare>();
+        AddGameObject<MoveSquare>();
     }
 
     void Scene::OnInit() {
