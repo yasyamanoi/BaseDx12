@@ -2,11 +2,9 @@
 
 namespace basedx12 {
 
-    IMPLEMENT_DX12SHADER(VSPCSprite, App::GetShadersPath() + L"vshader.cso")
-    IMPLEMENT_DX12SHADER(PSPCSprite, App::GetShadersPath() + L"pshader.cso")
+    IMPLEMENT_DX12SHADER(VSPCSprite, App::GetShadersPath() + L"VSPCSprite.cso")
+    IMPLEMENT_DX12SHADER(PSPCSprite, App::GetShadersPath() + L"PSPCSprite.cso")
 
-    IMPLEMENT_DX12SHADER(VSPCConstSprite, App::GetShadersPath() + L"VsPCConst.cso")
-    IMPLEMENT_DX12SHADER(PSPCConstSprite, App::GetShadersPath() + L"PsPCConst.cso")
 
     IMPLEMENT_DX12SHADER(VSPTSprite, App::GetShadersPath() + L"VSPTSprite.cso")
     IMPLEMENT_DX12SHADER(PSPTSprite, App::GetShadersPath() + L"PSPTSprite.cso")
@@ -31,7 +29,7 @@ namespace basedx12 {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
         //パイプライステート
         m_pipelineState
-            = PipelineState::CreateDefault2D<VertexPositionColor, VSPCConstSprite, PSPCConstSprite>(Device->GetRootSignature(), PipeLineDesc);
+            = PipelineState::CreateDefault2D<VertexPositionColor, VSPCSprite, PSPCSprite>(Device->GetRootSignature(), PipeLineDesc);
         //コンスタントバッファ
         //コンスタントバッファハンドルを作成
         m_consrBuffIndex = Device->GetConstBuffNextIndex();
@@ -44,39 +42,33 @@ namespace basedx12 {
     }
 
     void PCSpriteDraw::Move(float speed) {
-        float translationSpeed = speed;
-        const float offsetBounds = 1.25f;
-        m_constantBufferData.offset.x += translationSpeed;
-        if (m_constantBufferData.offset.x > offsetBounds)
-        {
-            m_constantBufferData.offset.x = -offsetBounds;
-        }
-        m_constantBuffer->Copy(m_constantBufferData);
+        //float translationSpeed = speed;
+        //const float offsetBounds = 1.25f;
+        //m_constantBufferData.offset.x += translationSpeed;
+        //if (m_constantBufferData.offset.x > offsetBounds)
+        //{
+        //    m_constantBufferData.offset.x = -offsetBounds;
+        //}
+        //m_constantBuffer->Copy(m_constantBufferData);
     }
 
 
     void PCSpriteDraw::OnUpdate() {
-       //const float translationSpeed = 0.005f;
-       // const float offsetBounds = 1.25f;
-       // m_constantBufferData.offset.x += translationSpeed;
-       // if (m_constantBufferData.offset.x > offsetBounds)
-       // {
-       //     m_constantBufferData.offset.x = -offsetBounds;
-       // }
     }
 
     void PCSpriteDraw::OnDraw() {
+        auto world = GetGameObject()->GetComponent<Transform>()->GetWorldMatrix();
+        float w = static_cast<float>(App::GetGameWidth());
+        float h = static_cast<float>(App::GetGameHeight());
+        Mat4x4 proj;
+        proj.orthographicLH(w, h, -1.0, 1.0f);
+        //行列の合成
+        world *= proj;
+        m_constantBufferData.World = world;
+        m_constantBuffer->Copy(m_constantBufferData);
+
         auto Device = App::GetDx12Device();
-        //auto frameidx = Device->GetFrameIndex();
-        //auto Allocator = Device->GetCommandAllocators();
-        //ComPtr<ID3D12GraphicsCommandList> commandList;
-        //CommandList::Reset(Allocator[frameidx], commandList);
-
-
         auto commandList = Device->GetCommandList();
-
-        
-
         //Srv
         CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle(
             Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
@@ -102,14 +94,9 @@ namespace basedx12 {
         //csv
         commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
 
-
-
         commandList->SetPipelineState(m_pipelineState.Get());
         commandList->IASetVertexBuffers(0, 1, &m_mesh->GetVertexBufferView());
         commandList->DrawInstanced(3, 1, 0, 0);
-
-   //     ThrowIfFailed(commandList->Close());
-
 
     }
 
@@ -159,17 +146,27 @@ namespace basedx12 {
     }
 
     void PTSpriteDraw::Move(float speed) {
-        float translationSpeed = speed;
-        const float offsetBounds = 1.25f;
-        m_constantBufferData.offset.x += translationSpeed;
-        if (m_constantBufferData.offset.x > offsetBounds)
-        {
-            m_constantBufferData.offset.x = -offsetBounds;
-        }
-        m_constantBuffer->Copy(m_constantBufferData);
+        //float translationSpeed = speed;
+        //const float offsetBounds = 1.25f;
+        //m_constantBufferData.offset.x += translationSpeed;
+        //if (m_constantBufferData.offset.x > offsetBounds)
+        //{
+        //    m_constantBufferData.offset.x = -offsetBounds;
+        //}
+        //m_constantBuffer->Copy(m_constantBufferData);
     }
 
     void PTSpriteDraw::OnDraw() {
+        auto world = GetGameObject()->GetComponent<Transform>()->GetWorldMatrix();
+        float w = static_cast<float>(App::GetGameWidth());
+        float h = static_cast<float>(App::GetGameHeight());
+        Mat4x4 proj;
+        proj.orthographicLH(w, h, -1.0, 1.0f);
+        //行列の合成
+        world *= proj;
+        m_constantBufferData.World = world;
+        m_constantBuffer->Copy(m_constantBufferData);
+
         auto Device = App::GetDx12Device();
         auto commandList = Device->GetCommandList();
         //Srv

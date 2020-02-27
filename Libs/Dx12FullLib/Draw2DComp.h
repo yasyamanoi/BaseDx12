@@ -6,9 +6,6 @@ namespace basedx12 {
     DECLARE_DX12SHADER(VSPCSprite)
     DECLARE_DX12SHADER(PSPCSprite)
 
-    DECLARE_DX12SHADER(VSPCConstSprite)
-    DECLARE_DX12SHADER(PSPCConstSprite)
-
     DECLARE_DX12SHADER(VSPTSprite)
     DECLARE_DX12SHADER(PSPTSprite)
 
@@ -19,6 +16,21 @@ namespace basedx12 {
             offset(0.0f, 0, 0, 0)
         {}
     };
+
+    //コンスタントバッファ
+    struct DiffuseSpriteConstantBuffer
+    {
+        Mat4x4 World;
+        Float4 Emissive;
+        Float4 Diffuse;
+        DiffuseSpriteConstantBuffer() :
+            World(),
+            Emissive(0.0f),
+            Diffuse(1.0f)
+        {
+        };
+    };
+
 
     //--------------------------------------------------------------------------------------
     ///	描画コンポーネント親
@@ -31,7 +43,7 @@ namespace basedx12 {
         shared_ptr<Dx12Mesh> m_mesh;
         ComPtr<ID3D12PipelineState> m_pipelineState;
         //コンスタントバッファの実体
-        SpriteConstantBuffer m_constantBufferData;
+        DiffuseSpriteConstantBuffer m_constantBufferData;
         //コンスタントバッファ
         shared_ptr<ConstantBuffer> m_constantBuffer;
         //コンスタントバッファのインデックス

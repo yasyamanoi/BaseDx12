@@ -61,19 +61,18 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="$(MSBuildThisFileDirectory)Shaders\pshader.hlsl">
+    <None Include="$(MSBuildThisFileDirectory)Shaders\INCStructs.hlsli">
       <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="$(MSBuildThisFileDirectory)Shaders\PsPCConst.hlsl">
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="$(MSBuildThisFileDirectory)Shaders\PSPCSprite.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="$(MSBuildThisFileDirectory)Shaders\PSPTSprite.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="$(MSBuildThisFileDirectory)Shaders\vshader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="$(MSBuildThisFileDirectory)Shaders\VsPCConst.hlsl">
+    <FxCompile Include="$(MSBuildThisFileDirectory)Shaders\VSPCSprite.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="$(MSBuildThisFileDirectory)Shaders\VSPTSprite.hlsl">

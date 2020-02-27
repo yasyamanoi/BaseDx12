@@ -1,12 +1,15 @@
-struct PSPTInput
-{
-	float4 position : SV_POSITION;
-	float2 tex : TEXCOORD;
-};
+//--------------------------------------------------------------------------------------
+// File: PSPTSprite.hlsl
+//
+//--------------------------------------------------------------------------------------
 
-cbuffer SceneConstantBuffer : register(b0)
+#include "INCStructs.hlsli"
+
+cbuffer ConstantBuffer : register(b0)
 {
-	float4 offset;
+	row_major float4x4 MatrixTransform : packoffset(c0);
+	float4 Emissive : packoffset(c4);
+	float4 Diffuse : packoffset(c5);
 };
 
 
@@ -16,7 +19,9 @@ SamplerState g_sampler : register(s0);
 
 float4 main(PSPTInput input) : SV_TARGET
 {
-	float4 Light = g_texture.Sample(g_sampler, input.tex);
-	return saturate(Light);
+	//テクスチャとデフィーズからライティングを作成
+	float4 Light = g_texture.Sample(g_sampler, input.tex) * saturate(Diffuse);
+	//エミッシブを足す
+	return saturate(Light + Emissive);
 }
 
