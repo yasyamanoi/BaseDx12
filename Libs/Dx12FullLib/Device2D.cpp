@@ -5,6 +5,7 @@ namespace basedx12 {
     Default2DDivece::Default2DDivece(UINT frameCount) :
         Dx12Device(frameCount)
     {
+        m_Is3DDevice = false;
     }
 
 
@@ -85,17 +86,11 @@ namespace basedx12 {
     {
         // 描画のためのコマンドリストを集める
         PopulateCommandList();
-
         // 描画用コマンドリスト実行
         ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
         m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
-//        m_commandQueue->ExecuteCommandLists((UINT)m_drawCommandLists.size(), &m_drawCommandLists[0]);
-
-
         // フロントバッファに表示
         ThrowIfFailed(GetIDXGISwapChain3()->Present(1, 0));
-
         //次のフレームに移動
         MoveToNextFrame();
     }
@@ -120,11 +115,6 @@ namespace basedx12 {
         m_commandList->RSSetViewports(1, &m_viewport);
         m_commandList->RSSetScissorRects(1, &m_scissorRect);
 
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
-        m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-        const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-        m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-
         // バックバッファを使うためのバリア
         m_commandList->ResourceBarrier(
             1,
@@ -133,6 +123,12 @@ namespace basedx12 {
                 D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
             )
         );
+
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+        m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+        const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+        m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
 
         ID3D12DescriptorHeap* ppHeaps[] = { m_CbvSrvUavDescriptorHeap.Get(),m_SamplerDescriptorHeap.Get()};
         m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);

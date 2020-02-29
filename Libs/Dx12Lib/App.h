@@ -1,4 +1,5 @@
 #pragma once
+#include "stdafx.h"
 
 namespace basedx12 {
 
@@ -11,7 +12,9 @@ namespace basedx12 {
     class App
     {
     public:
-        static int Run(SceneBase* pSceneBase, HINSTANCE hInstance, int nCmdShow, int width, int height);
+        static void Init(HWND hwd,SceneBase* pSceneBase, HINSTANCE hInstance, int nCmdShow, int width, int height);
+        static void UpdateDraw();
+        static void Destroy();
         static HWND GetHwnd() { return m_hwnd; }
         static const int GetGameWidth() { return m_width; }
         static const int GetGameHeight() { return m_height; }
@@ -48,7 +51,6 @@ namespace basedx12 {
         }
 
     protected:
-        static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
     private:
         App() {}
         ~App() {}

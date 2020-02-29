@@ -1,8 +1,3 @@
-/*!
-@file MeshHelper.cpp
-@brief プリミティブ作成関数等実体
-@copyright Copyright (c) 2017 WiZ Tamura Hiroki,Yamanoi Yasushi.
-*/
 #include "stdafx.h"
 
 namespace basedx12 {

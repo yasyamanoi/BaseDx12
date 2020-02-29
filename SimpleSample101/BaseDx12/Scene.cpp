@@ -36,7 +36,7 @@ namespace basedx12 {
 
 	}
 	void Scene::OnUpdate() {
-	}
+    }
 	void Scene::OnDraw() {
         auto Device = App::GetDx12Device();
         auto commandList = Device->GetCommandList();

@@ -1,11 +1,4 @@
-/*!
-@file VertexHelper.h
-@brief ’¸“_’è‹`A“™
-@copyright Copyright (c) 2017 WiZ Tamura Hiroki,Yamanoi Yasushi.
-*/
-
 #pragma once
-
 #include "stdafx.h"
 
 namespace basedx12 {

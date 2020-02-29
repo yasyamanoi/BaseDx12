@@ -1,6 +1,5 @@
 #include "stdafx.h"
-#include "App.h"
-#include "Scene.h"
+
 namespace basedx12 {
 
     HWND App::m_hwnd = nullptr;
@@ -106,114 +105,37 @@ namespace basedx12 {
     }
 
 
-    int App::Run(SceneBase* pSceneBase, HINSTANCE hInstance, int nCmdShow, int width, int height)
+    void App::Init(HWND hwd, SceneBase* pSceneBase, HINSTANCE hInstance, int nCmdShow, int width, int height)
     {
         m_width = width;
         m_height = height;
-
-        SetAssetsPath();
         m_pSceneBase = pSceneBase;
-
-        // Initialize the window class.
-        WNDCLASSEX windowClass = { 0 };
-        windowClass.cbSize = sizeof(WNDCLASSEX);
-        windowClass.style = CS_HREDRAW | CS_VREDRAW;
-        windowClass.lpfnWndProc = WindowProc;
-        windowClass.hInstance = hInstance;
-        windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-        windowClass.lpszClassName = m_classsName.c_str();
-        RegisterClassEx(&windowClass);
-        RECT windowRect = { 0,0,m_width ,m_height };
-
-        AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
-
-        // Create the window and store a handle to it.
-        m_hwnd = CreateWindow(
-            windowClass.lpszClassName,
-            m_title.c_str(),
-            WS_OVERLAPPEDWINDOW,
-            CW_USEDEFAULT,
-            CW_USEDEFAULT,
-            windowRect.right - windowRect.left,
-            windowRect.bottom - windowRect.top,
-            nullptr,
-            nullptr,
-            hInstance,
-            nullptr);
-
+        m_hwnd = hwd;
+        SetAssetsPath();
         //デバイスの初期化はシーンから呼ばれる
         m_pSceneBase->OnInit();
+    }
 
-        ShowWindow(m_hwnd, nCmdShow);
-
-        MSG msg = {};
-        while (msg.message != WM_QUIT)
+    void  App::UpdateDraw() {
+        if (m_pSceneBase && m_device)
         {
-            // Process any messages in the queue.
-            if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
+            m_device->OnUpdate();
+            m_device->OnDraw();
         }
+    }
 
-        m_pSceneBase->OnDestroy();
+    void App::Destroy() {
+        if (m_pSceneBase) {
+            m_pSceneBase->OnDestroy();
+        }
         if (m_device) {
             m_device->OnDestroy();
             m_device.reset();
         }
         m_pSceneBase = nullptr;
-
-        return static_cast<char>(msg.wParam);
     }
 
-    LRESULT CALLBACK App::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-    {
-        switch (message)
-        {
-        case WM_CREATE:
-        {
-            // Save the DXSample* passed in to CreateWindow.
-            LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
-            SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
-        }
-        return 0;
-        case WM_KEYDOWN:
-            {
-                UINT8 key = static_cast<UINT8>(wParam);
-                if (key == VK_ESCAPE) {
-                    DestroyWindow(hWnd);
-                }
-                else {
-                    if (m_pSceneBase && m_device)
-                    {
-                        m_pSceneBase->OnKeyDown(key);
-                        m_device->OnKeyDown(key);
-                    }
-                }
-            }
-            return 0;
-        case WM_KEYUP:
-            if (m_pSceneBase && m_device)
-            {
-                m_pSceneBase->OnKeyUp(static_cast<UINT8>(wParam));
-                m_device->OnKeyUp(static_cast<UINT8>(wParam));
-            }
-            return 0;
-        case WM_PAINT:
-            if (m_pSceneBase && m_device)
-            {
-                m_device->OnUpdate();
-                //シーンのレンダリングはデバイスから呼ばれる
-                m_device->OnDraw();
-            }
-            return 0;
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
-        }
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
+
 }
 //end basedx12
 

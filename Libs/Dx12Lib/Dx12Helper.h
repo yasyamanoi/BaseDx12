@@ -1,23 +1,6 @@
-//*********************************************************
-//
-// Copyright (c) Microsoft. All rights reserved.
-// This code is licensed under the MIT License (MIT).
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-//*********************************************************
-
 #pragma once
 #include <stdexcept>
 
-
-
-// Note that while ComPtr is used to manage the lifetime of resources on the CPU,
-// it has no understanding of the lifetime of resources on the GPU. Apps must account
-// for the GPU lifetime of resources to avoid destroying objects that may still be
-// referenced by the GPU.
 using Microsoft::WRL::ComPtr;
 
 namespace basedx12 {
@@ -75,22 +58,33 @@ namespace basedx12 {
         const HRESULT m_hr;
     };
 
-    class BaseException : public std::runtime_error
-    {
-    public:
-        BaseException(const std::wstring& wstr1,
-            const std::wstring& wstr2,
-            const std::wstring& wstr3 = L""
-        ) :
-            std::runtime_error(WStoMB(wstr1) + WStoMB(wstr2) + WStoMB(wstr3))
-        {}
-        BaseException(const std::string& str1,
-            const std::string& str2,
-            const std::string& str3 = ""
-        ) :
-            std::runtime_error(str1 + str2 + str3)
-        {}
-    };
+	//--------------------------------------------------------------------------------------
+	/// 例外クラス
+	//--------------------------------------------------------------------------------------
+
+	class BaseException : public exception
+	{
+		// メッセージ変数
+		string m_Message;
+	public:
+		BaseException(const wstring& m1, const wstring& m2 = wstring(L""), const wstring& m3 = wstring(L"")) {
+			m_Message = WStoMB(m1);
+			m_Message += "\r\n";
+			m_Message += WStoMB(m2);
+			m_Message += "\r\n";
+			m_Message += WStoMB(m3);
+		}
+		BaseException(const string& m1, const string& m2 = string(""), const string& m3 = string("")) {
+			m_Message = m1;
+			m_Message += "\r\n";
+			m_Message += m2;
+			m_Message += "\r\n";
+			m_Message += m3;
+		}
+		const char* what() const throw() {
+			return m_Message.c_str();
+		}
+	};
 
 #define SAFE_RELEASE(p) if (p) (p)->Release()
 

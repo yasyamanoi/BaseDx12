@@ -1,8 +1,3 @@
-/*!
-@file BaseMathInc.h
-@brief XMMathを使うための薄いレイヤー(includeファkル)
-@copyright Copyright (c) 2017 WiZ Tamura Hiroki,Yamanoi Yasushi.
-*/
 
 #pragma once
 

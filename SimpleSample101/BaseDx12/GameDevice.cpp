@@ -68,6 +68,7 @@ namespace basedx12 {
     // Update frame-based values.
     void GameDivece::OnUpdate()
     {
+        App::GetSceneBase().OnUpdate();
     }
 
     // •`‰æˆ—

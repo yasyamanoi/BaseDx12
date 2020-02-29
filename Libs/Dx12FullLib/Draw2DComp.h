@@ -9,21 +9,14 @@ namespace basedx12 {
     DECLARE_DX12SHADER(VSPTSprite)
     DECLARE_DX12SHADER(PSPTSprite)
 
-    struct SpriteConstantBuffer
-    {
-        XMFLOAT4 offset;
-        SpriteConstantBuffer() :
-            offset(0.0f, 0, 0, 0)
-        {}
-    };
 
     //コンスタントバッファ
-    struct DiffuseSpriteConstantBuffer
+    struct SpriteConstantBuffer
     {
         Mat4x4 World;
         Float4 Emissive;
         Float4 Diffuse;
-        DiffuseSpriteConstantBuffer() :
+        SpriteConstantBuffer() :
             World(),
             Emissive(0.0f),
             Diffuse(1.0f)
@@ -43,7 +36,7 @@ namespace basedx12 {
         shared_ptr<Dx12Mesh> m_mesh;
         ComPtr<ID3D12PipelineState> m_pipelineState;
         //コンスタントバッファの実体
-        DiffuseSpriteConstantBuffer m_constantBufferData;
+        SpriteConstantBuffer m_constantBufferData;
         //コンスタントバッファ
         shared_ptr<ConstantBuffer> m_constantBuffer;
         //コンスタントバッファのインデックス
@@ -62,7 +55,6 @@ namespace basedx12 {
     public:
         explicit PCSpriteDraw(const shared_ptr<GameObject>& gameObjectPtr);
         virtual ~PCSpriteDraw();
-        void Move(float speed);
         virtual void OnInit()override;
         virtual void OnUpdate()override;
         virtual void OnDraw()override;
@@ -80,7 +72,6 @@ namespace basedx12 {
         explicit PTSpriteDraw(const shared_ptr<GameObject>& gameObjectPtr);
         virtual ~PTSpriteDraw();
         void SetTextureFile(const wstring& textureName);
-        void Move(float speed);
         virtual void OnInit()override;
         virtual void OnUpdate()override {}
         virtual void OnDraw()override;

@@ -28,8 +28,14 @@ namespace basedx12 {
         auto aspectRatio = Device->GetAspectRatio();
         D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
         //パイプライステート
-        m_pipelineState
-            = PipelineState::CreateDefault2D<VertexPositionColor, VSPCSprite, PSPCSprite>(Device->GetRootSignature(), PipeLineDesc);
+        if (Device->Is3DDevice()) {
+            m_pipelineState
+                = PipelineState::CreateDefault3D<VertexPositionColor, VSPCSprite, PSPCSprite>(Device->GetRootSignature(), PipeLineDesc);
+        }
+        else {
+            m_pipelineState
+                = PipelineState::CreateDefault2D<VertexPositionColor, VSPCSprite, PSPCSprite>(Device->GetRootSignature(), PipeLineDesc);
+        }
         //コンスタントバッファ
         //コンスタントバッファハンドルを作成
         m_consrBuffIndex = Device->GetConstBuffNextIndex();
@@ -39,17 +45,6 @@ namespace basedx12 {
             Device->GetCbvSrvDescriptorHandleIncrementSize()
         );
         m_constantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
-    }
-
-    void PCSpriteDraw::Move(float speed) {
-        //float translationSpeed = speed;
-        //const float offsetBounds = 1.25f;
-        //m_constantBufferData.offset.x += translationSpeed;
-        //if (m_constantBufferData.offset.x > offsetBounds)
-        //{
-        //    m_constantBufferData.offset.x = -offsetBounds;
-        //}
-        //m_constantBuffer->Copy(m_constantBufferData);
     }
 
 
@@ -114,8 +109,14 @@ namespace basedx12 {
         auto aspectRatio = Device->GetAspectRatio();
         D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
         //パイプライステート
-        m_pipelineState
-            = PipelineState::CreateDefault2D<VertexPositionTexture, VSPTSprite, PSPTSprite>(Device->GetRootSignature(), PipeLineDesc);
+        if (Device->Is3DDevice()) {
+            m_pipelineState
+                = PipelineState::CreateDefault3D<VertexPositionTexture, VSPTSprite, PSPTSprite>(Device->GetRootSignature(), PipeLineDesc);
+        }
+        else {
+            m_pipelineState
+                = PipelineState::CreateDefault2D<VertexPositionTexture, VSPTSprite, PSPTSprite>(Device->GetRootSignature(), PipeLineDesc);
+        }
         //コンスタントバッファ
         //コンスタントバッファハンドルを作成
         m_consrBuffIndex = Device->GetConstBuffNextIndex();
@@ -143,17 +144,6 @@ namespace basedx12 {
         );
         //画像ファイルをもとにテクスチャを作成
         m_texture = Dx12Texture::CreateDx12Texture(m_textureFileName, srvHandle);
-    }
-
-    void PTSpriteDraw::Move(float speed) {
-        //float translationSpeed = speed;
-        //const float offsetBounds = 1.25f;
-        //m_constantBufferData.offset.x += translationSpeed;
-        //if (m_constantBufferData.offset.x > offsetBounds)
-        //{
-        //    m_constantBufferData.offset.x = -offsetBounds;
-        //}
-        //m_constantBuffer->Copy(m_constantBufferData);
     }
 
     void PTSpriteDraw::OnDraw() {

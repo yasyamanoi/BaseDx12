@@ -82,7 +82,12 @@ namespace basedx12 {
         ComPtr<ID3D12RootSignature> GetRootSignature() const {
             return m_rootSignature;
         }
+        bool Is3DDevice() const {
+            return m_Is3DDevice;
+        }
     protected:
+        //3Dデバイスかどうか
+        bool m_Is3DDevice;
         //フレーム関連
         const UINT m_FrameCount;
         UINT m_frameIndex = 0;
@@ -109,6 +114,10 @@ namespace basedx12 {
         //レンダリングターゲートビューのデスクプリタヒープ
         ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
         UINT m_rtvDescriptorSize = 0;
+        //デプスステンシッル
+        ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
+        UINT m_dsvDescriptorSize = 0;
+        ComPtr<ID3D12Resource> m_depthStencil;
         //コンスタントバッファとシェーダリソース用デスクプリタヒープ
         ComPtr<ID3D12DescriptorHeap> m_CbvSrvUavDescriptorHeap;
         //CbvSrvのデスクプリタハンドルのインクリメントサイズ

@@ -1,11 +1,4 @@
-/*!
-@file BaseMath.h
-@brief XMMath‚ğg‚¤‚½‚ß‚Ì”–‚¢ƒŒƒCƒ„[
-@copyright Copyright (c) 2017 WiZ Tamura Hiroki,Yamanoi Yasushi.
-*/
-
 #pragma once
-
 #include "stdafx.h"
 
 namespace basedx12 {

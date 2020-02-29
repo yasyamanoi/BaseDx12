@@ -1,8 +1,3 @@
-/*!
-@file VertexHelper.cpp
-@brief ’¸“_’è‹`A“™À‘Ì
-@copyright Copyright (c) 2017 WiZ Tamura Hiroki,Yamanoi Yasushi.
-*/
 
 #include "stdafx.h"
 #include <DirectXPackedVector.h>
