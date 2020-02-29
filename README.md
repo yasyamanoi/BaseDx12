@@ -5,3 +5,11 @@ https://yasyamanoi.github.io/BaseDx12/
 
 Windows10、VisualStdio2019のみの対応です。  
 スマフォなどには対応してませんのでご注意を。
+
+<div style="text-align: right;">
+2020年春  
+山ノ井靖（有限会社山ノ井商事）  
+URL: https://mtwel.jp/  
+E-mail: yasyamanoi@gmail.com  
+</div>
+
