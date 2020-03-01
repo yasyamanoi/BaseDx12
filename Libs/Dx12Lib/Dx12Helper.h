@@ -5,271 +5,7 @@ using Microsoft::WRL::ComPtr;
 
 namespace basedx12 {
 
-
-    inline std::string HrToString(HRESULT hr)
-    {
-        char s_str[64] = {};
-        sprintf_s(s_str, "HRESULT of 0x%08X", static_cast<UINT>(hr));
-        return std::string(s_str);
-    }
-
-
-    inline std::string WStoMB(const wstring& src) {
-        size_t i;
-        char* pMBstr = new char[src.length() * MB_CUR_MAX + 1];
-        wcstombs_s(
-            &i,
-            pMBstr,
-            src.length() * MB_CUR_MAX + 1,
-            src.c_str(),
-            _TRUNCATE	//すべて変換できなかったら切り捨て
-        );
-        string ret = pMBstr;
-        delete[] pMBstr;
-        return ret;
-    }
-
-    inline std::wstring MBtoWS(const string& src) {
-        size_t i;
-        wchar_t* WCstr = new wchar_t[src.length() + 1];
-        mbstowcs_s(
-            &i,
-            WCstr,
-            src.length() + 1,
-            src.c_str(),
-            _TRUNCATE //すべて変換できなかったら切り捨て
-        );
-        wstring ret = WCstr;
-        delete[] WCstr;
-        return ret;
-    }
-
-
-    class HrException : public std::runtime_error
-    {
-    public:
-        HrException(HRESULT hr) : std::runtime_error(HrToString(hr)), m_hr(hr) {}
-        HrException(HRESULT hr, const std::string& mess) :
-            std::runtime_error(HrToString(hr) + mess),
-            m_hr(hr)
-        {}
-        HRESULT Error() const { return m_hr; }
-    private:
-        const HRESULT m_hr;
-    };
-
-	//--------------------------------------------------------------------------------------
-	/// 例外クラス
-	//--------------------------------------------------------------------------------------
-
-	class BaseException : public exception
-	{
-		// メッセージ変数
-		string m_Message;
-	public:
-		BaseException(const wstring& m1, const wstring& m2 = wstring(L""), const wstring& m3 = wstring(L"")) {
-			m_Message = WStoMB(m1);
-			m_Message += "\r\n";
-			m_Message += WStoMB(m2);
-			m_Message += "\r\n";
-			m_Message += WStoMB(m3);
-		}
-		BaseException(const string& m1, const string& m2 = string(""), const string& m3 = string("")) {
-			m_Message = m1;
-			m_Message += "\r\n";
-			m_Message += m2;
-			m_Message += "\r\n";
-			m_Message += m3;
-		}
-		const char* what() const throw() {
-			return m_Message.c_str();
-		}
-	};
-
-#define SAFE_RELEASE(p) if (p) (p)->Release()
-
-    inline void ThrowIfFailed(HRESULT hr)
-    {
-        if (FAILED(hr))
-        {
-            throw HrException(hr);
-        }
-    }
-
-    inline void ThrowIfFailed(HRESULT hr,
-        const std::wstring& wstr1,
-        const std::wstring& wstr2 = std::wstring(),
-        const std::wstring& wstr3 = std::wstring()
-    )
-    {
-        if (FAILED(hr))
-        {
-            throw HrException(hr, WStoMB(wstr1) + WStoMB(wstr2) + WStoMB(wstr3));
-        }
-    }
-
-    inline void ThrowIfFailed(HRESULT hr,
-        const std::string& str1,
-        const std::string& str2 = std::string(),
-        const std::string& str3 = std::string()
-    )
-    {
-        if (FAILED(hr))
-        {
-            throw HrException(hr, str1 + str2 + str3);
-        }
-    }
-
-    inline void GetAssetsPath(_Out_writes_(pathSize) WCHAR* path, UINT pathSize)
-    {
-        if (path == nullptr)
-        {
-            throw std::exception();
-        }
-
-        DWORD size = GetModuleFileName(nullptr, path, pathSize);
-        if (size == 0 || size == pathSize)
-        {
-            // Method failed or path was truncated.
-            throw std::exception();
-        }
-
-        WCHAR* lastSlash = wcsrchr(path, L'\\');
-        if (lastSlash)
-        {
-            *(lastSlash + 1) = L'\0';
-        }
-    }
-
-    inline HRESULT ReadDataFromFile(LPCWSTR filename, byte** data, UINT* size)
-    {
-        using namespace Microsoft::WRL;
-
-        CREATEFILE2_EXTENDED_PARAMETERS extendedParams = {};
-        extendedParams.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
-        extendedParams.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
-        extendedParams.dwFileFlags = FILE_FLAG_SEQUENTIAL_SCAN;
-        extendedParams.dwSecurityQosFlags = SECURITY_ANONYMOUS;
-        extendedParams.lpSecurityAttributes = nullptr;
-        extendedParams.hTemplateFile = nullptr;
-
-        Wrappers::FileHandle file(CreateFile2(filename, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, &extendedParams));
-        if (file.Get() == INVALID_HANDLE_VALUE)
-        {
-            throw std::exception();
-        }
-
-        FILE_STANDARD_INFO fileInfo = {};
-        if (!GetFileInformationByHandleEx(file.Get(), FileStandardInfo, &fileInfo, sizeof(fileInfo)))
-        {
-            throw std::exception();
-        }
-
-        if (fileInfo.EndOfFile.HighPart != 0)
-        {
-            throw std::exception();
-        }
-
-        *data = reinterpret_cast<byte*>(malloc(fileInfo.EndOfFile.LowPart));
-        *size = fileInfo.EndOfFile.LowPart;
-
-        if (!ReadFile(file.Get(), *data, fileInfo.EndOfFile.LowPart, nullptr, nullptr))
-        {
-            throw std::exception();
-        }
-
-        return S_OK;
-    }
-
-    // Assign a name to the object to aid with debugging.
-#if defined(_DEBUG) || defined(DBG)
-    inline void SetName(ID3D12Object* pObject, LPCWSTR name)
-    {
-        pObject->SetName(name);
-    }
-    inline void SetNameIndexed(ID3D12Object* pObject, LPCWSTR name, UINT index)
-    {
-        WCHAR fullName[50];
-        if (swprintf_s(fullName, L"%s[%u]", name, index) > 0)
-        {
-            pObject->SetName(fullName);
-        }
-    }
-#else
-    inline void SetName(ID3D12Object*, LPCWSTR)
-    {
-    }
-    inline void SetNameIndexed(ID3D12Object*, LPCWSTR, UINT)
-    {
-    }
-#endif
-
-    // Naming helper for ComPtr<T>.
-    // Assigns the name of the variable as the name of the object.
-    // The indexed variant will include the index in the name of the object.
-#define NAME_D3D12_OBJECT(x) SetName((x).Get(), L#x)
-#define NAME_D3D12_OBJECT_INDEXED(x, n) SetNameIndexed((x)[n].Get(), L#x, n)
-
-    inline UINT CalculateConstantBufferByteSize(UINT byteSize)
-    {
-        // Constant buffer size is required to be aligned.
-        return (byteSize + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1);
-    }
-
-#ifdef D3D_COMPILE_STANDARD_FILE_INCLUDE
-    inline Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
-        const std::wstring& filename,
-        const D3D_SHADER_MACRO* defines,
-        const std::string& entrypoint,
-        const std::string& target)
-    {
-        UINT compileFlags = 0;
-#if defined(_DEBUG) || defined(DBG)
-        compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#endif
-
-        HRESULT hr;
-
-        Microsoft::WRL::ComPtr<ID3DBlob> byteCode = nullptr;
-        Microsoft::WRL::ComPtr<ID3DBlob> errors;
-        hr = D3DCompileFromFile(filename.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-            entrypoint.c_str(), target.c_str(), compileFlags, 0, &byteCode, &errors);
-
-        if (errors != nullptr)
-        {
-            OutputDebugStringA((char*)errors->GetBufferPointer());
-        }
-        ThrowIfFailed(hr);
-
-        return byteCode;
-    }
-#endif
-
-    // Resets all elements in a ComPtr array.
-    template<class T>
-    void ResetComPtrArray(T* comPtrArray)
-    {
-        for (auto& i : *comPtrArray)
-        {
-            i.Reset();
-        }
-    }
-
-
-    // Resets all elements in a unique_ptr array.
-    template<class T>
-    void ResetUniquePtrArray(T* uniquePtrArray)
-    {
-        for (auto& i : *uniquePtrArray)
-        {
-            i.reset();
-        }
-    }
-
-
     struct 	Util {
-
-
 		//--------------------------------------------------------------------------------------
 		/*!
 		@brief	大きい方を求める.
@@ -374,6 +110,37 @@ namespace basedx12 {
 			}
 			wstr = result;
 		}
+
+		static std::string WStoRetMB(const wstring& src) {
+			size_t i;
+			char* pMBstr = new char[src.length() * MB_CUR_MAX + 1];
+			wcstombs_s(
+				&i,
+				pMBstr,
+				src.length() * MB_CUR_MAX + 1,
+				src.c_str(),
+				_TRUNCATE	//すべて変換できなかったら切り捨て
+			);
+			string ret = pMBstr;
+			delete[] pMBstr;
+			return ret;
+		}
+
+		static std::wstring MBtoRetWS(const string& src) {
+			size_t i;
+			wchar_t* WCstr = new wchar_t[src.length() + 1];
+			mbstowcs_s(
+				&i,
+				WCstr,
+				src.length() + 1,
+				src.c_str(),
+				_TRUNCATE //すべて変換できなかったら切り捨て
+			);
+			wstring ret = WCstr;
+			delete[] WCstr;
+			return ret;
+		}
+
 
 		//--------------------------------------------------------------------------------------
 		/*!
@@ -845,6 +612,85 @@ namespace basedx12 {
 		}
 
     };
+
+	inline std::string HrToString(HRESULT hr)
+	{
+		char s_str[64] = {};
+		sprintf_s(s_str, "HRESULT of 0x%08X", static_cast<UINT>(hr));
+		return std::string(s_str);
+	}
+
+	class HrException : public std::runtime_error
+	{
+	public:
+		HrException(HRESULT hr) : std::runtime_error(HrToString(hr)), m_hr(hr) {}
+		HrException(HRESULT hr, const std::string& mess) :
+			std::runtime_error(HrToString(hr) + mess),
+			m_hr(hr)
+		{}
+		HRESULT Error() const { return m_hr; }
+	private:
+		const HRESULT m_hr;
+	};
+
+	inline void ThrowIfFailed(HRESULT hr)
+	{
+		if (FAILED(hr))
+		{
+			throw HrException(hr);
+		}
+	}
+
+	inline void ThrowIfFailed(HRESULT hr,
+		const std::wstring& wstr1,
+		const std::wstring& wstr2 = std::wstring(),
+		const std::wstring& wstr3 = std::wstring()
+	)
+	{
+		if (FAILED(hr))
+		{
+			throw HrException(hr, Util::WStoRetMB(wstr1) + Util::WStoRetMB(wstr2) + Util::WStoRetMB(wstr3));
+		}
+	}
+
+	inline void ThrowIfFailed(HRESULT hr,
+		const std::string& str1,
+		const std::string& str2 = std::string(),
+		const std::string& str3 = std::string()
+	)
+	{
+		if (FAILED(hr))
+		{
+			throw HrException(hr, str1 + str2 + str3);
+		}
+	}
+
+	//--------------------------------------------------------------------------------------
+	/// 例外クラス
+	//--------------------------------------------------------------------------------------
+	class BaseException : public exception
+	{
+		// メッセージ変数
+		string m_Message;
+	public:
+		BaseException(const wstring& m1, const wstring& m2 = wstring(L""), const wstring& m3 = wstring(L"")) {
+			m_Message = Util::WStoRetMB(m1);
+			m_Message += "\r\n";
+			m_Message += Util::WStoRetMB(m2);
+			m_Message += "\r\n";
+			m_Message += Util::WStoRetMB(m3);
+		}
+		BaseException(const string& m1, const string& m2 = string(""), const string& m3 = string("")) {
+			m_Message = m1;
+			m_Message += "\r\n";
+			m_Message += m2;
+			m_Message += "\r\n";
+			m_Message += m3;
+		}
+		const char* what() const throw() {
+			return m_Message.c_str();
+		}
+	};
 
 	//--------------------------------------------------------------------------------------
 	///	Objectインターフェイス

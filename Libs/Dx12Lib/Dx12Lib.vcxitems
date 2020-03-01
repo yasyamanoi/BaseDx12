@@ -17,6 +17,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)App.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)BaseMath.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)BaseMathInc.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Camera.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)CommonDx12.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)d3dx12.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Device.h" />
@@ -24,6 +25,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Mesh.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Texture.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Helper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Light.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)MeshHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)SceneBase.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)SimpleCamera.h" />
@@ -32,10 +34,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)App.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Camera.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Dx12Device.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Dx12Helper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Dx12Pipeline.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Dx12Texture.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Light.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)MeshHelper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SimpleCamera.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)VertexHelper.cpp" />

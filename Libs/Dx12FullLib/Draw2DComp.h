@@ -10,7 +10,29 @@ namespace basedx12 {
     DECLARE_DX12SHADER(PSPTSprite)
 
 
-    //コンスタントバッファ
+
+
+    //--------------------------------------------------------------------------------------
+    ///	描画コンポーネント親
+    //--------------------------------------------------------------------------------------
+    class DrawComponent : public Component {
+    protected:
+        explicit DrawComponent(const shared_ptr<GameObject>& gameObjectPtr) :
+            Component(gameObjectPtr) {}
+        virtual ~DrawComponent() {}
+        shared_ptr<Dx12Mesh> m_mesh;
+        ComPtr<ID3D12PipelineState> m_pipelineState;
+        //コンスタントバッファ
+        shared_ptr<ConstantBuffer> m_constantBuffer;
+        //コンスタントバッファのインデックス
+        UINT m_constBuffIndex;
+    public:
+        void SetMesh(const shared_ptr<Dx12Mesh>& mesh) {
+            m_mesh = mesh;
+        }
+    };
+
+    //2Dコンスタントバッファ
     struct SpriteConstantBuffer
     {
         Mat4x4 World;
@@ -24,34 +46,26 @@ namespace basedx12 {
         };
     };
 
-
     //--------------------------------------------------------------------------------------
-    ///	描画コンポーネント親
+    ///	2D描画コンポーネント
     //--------------------------------------------------------------------------------------
-    class DrawComponent : public Component {
+    class Draw2D : public DrawComponent {
     protected:
-        explicit DrawComponent(const shared_ptr<GameObject>& gameObjectPtr) :
-            Component(gameObjectPtr) {}
-        virtual ~DrawComponent() {}
-        shared_ptr<Dx12Mesh> m_mesh;
-        ComPtr<ID3D12PipelineState> m_pipelineState;
         //コンスタントバッファの実体
         SpriteConstantBuffer m_constantBufferData;
-        //コンスタントバッファ
-        shared_ptr<ConstantBuffer> m_constantBuffer;
-        //コンスタントバッファのインデックス
-        UINT m_consrBuffIndex;
+        explicit Draw2D(const shared_ptr<GameObject>& gameObjectPtr) :
+            DrawComponent(gameObjectPtr)
+        {}
+        virtual ~Draw2D() {}
     public:
-        void SetMesh(const shared_ptr<Dx12Mesh>& mesh) {
-            m_mesh = mesh;
-        }
     };
+
 
 
 	//--------------------------------------------------------------------------------------
 	///	PC頂点Sprite描画コンポーネント
 	//--------------------------------------------------------------------------------------
-	class PCSpriteDraw : public DrawComponent {
+	class PCSpriteDraw : public Draw2D {
     public:
         explicit PCSpriteDraw(const shared_ptr<GameObject>& gameObjectPtr);
         virtual ~PCSpriteDraw();
@@ -64,7 +78,7 @@ namespace basedx12 {
     //--------------------------------------------------------------------------------------
     ///	PT頂点Sprite描画コンポーネント
     //--------------------------------------------------------------------------------------
-    class PTSpriteDraw : public DrawComponent {
+    class PTSpriteDraw : public Draw2D {
         //テクスチャ
         shared_ptr<Dx12Texture> m_texture;
         wstring m_textureFileName;

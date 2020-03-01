@@ -18,7 +18,7 @@ namespace basedx12 {
     ///	PC頂点Sprite描画コンポーネント
     //--------------------------------------------------------------------------------------
     PCSpriteDraw::PCSpriteDraw(const shared_ptr<GameObject>& gameObjectPtr) :
-        DrawComponent(gameObjectPtr)
+        Draw2D(gameObjectPtr)
 	{}
     PCSpriteDraw::~PCSpriteDraw() {}
 
@@ -38,10 +38,10 @@ namespace basedx12 {
         }
         //コンスタントバッファ
         //コンスタントバッファハンドルを作成
-        m_consrBuffIndex = Device->GetConstBuffNextIndex();
+        m_constBuffIndex = Device->GetConstBuffNextIndex();
         CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
             Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-            m_consrBuffIndex,
+            m_constBuffIndex,
             Device->GetCbvSrvDescriptorHandleIncrementSize()
         );
         m_constantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
@@ -83,7 +83,7 @@ namespace basedx12 {
         //Cbv
         CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
             Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-            m_consrBuffIndex,
+            m_constBuffIndex,
             Device->GetCbvSrvDescriptorHandleIncrementSize()
         );
         //csv
@@ -99,7 +99,7 @@ namespace basedx12 {
     ///	PT頂点Sprite描画コンポーネント
     //--------------------------------------------------------------------------------------
     PTSpriteDraw::PTSpriteDraw(const shared_ptr<GameObject>& gameObjectPtr) :
-        DrawComponent(gameObjectPtr)
+        Draw2D(gameObjectPtr)
     {}
     PTSpriteDraw::~PTSpriteDraw() {}
 
@@ -119,10 +119,10 @@ namespace basedx12 {
         }
         //コンスタントバッファ
         //コンスタントバッファハンドルを作成
-        m_consrBuffIndex = Device->GetConstBuffNextIndex();
+        m_constBuffIndex = Device->GetConstBuffNextIndex();
         CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
             Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-            m_consrBuffIndex,
+            m_constBuffIndex,
             Device->GetCbvSrvDescriptorHandleIncrementSize()
         );
         m_constantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
@@ -178,7 +178,7 @@ namespace basedx12 {
         //Cbv
         CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
             Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-            m_consrBuffIndex,
+            m_constBuffIndex,
             Device->GetCbvSrvDescriptorHandleIncrementSize()
         );
         //csv

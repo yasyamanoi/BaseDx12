@@ -30,6 +30,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Device2D.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Device3D.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Draw2DComp.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Draw3DComp.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)GameObject.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SceneEx.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Stage.cpp" />

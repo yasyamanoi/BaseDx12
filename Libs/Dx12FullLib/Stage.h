@@ -15,10 +15,11 @@ namespace basedx12 {
 		vector<shared_ptr<GameObject>> m_gameObjects;
 		vector<shared_ptr<GameObject>> m_waitAddObjects;
 		vector<shared_ptr<GameObject>> m_waitRemoveObjects;
+		map<wstring, shared_ptr<Camera>> m_cameraMap;
+		map<wstring, shared_ptr<LightSet>> m_lightSetMap;
 	protected:
 		Stage() {}
 		virtual ~Stage() {}
-
 	public:
 		template<typename T, typename... Ts>
 		shared_ptr<T> AddGameObject(Ts&&... params) {
@@ -31,6 +32,11 @@ namespace basedx12 {
 				throw;
 			}
 		}
+		void AddCamera(const shared_ptr<Camera>& camera, const wstring& key);
+		shared_ptr<Camera> GetCamera(const wstring& key)const;
+		void AddLightSet(const shared_ptr<LightSet>& lightSet, const wstring& key);
+		shared_ptr<LightSet> GetLightSet(const wstring& key)const;
+
 		virtual void UpdateGameObjects();
 		virtual void DrawGameObjects();
 		virtual void DestroyGameObjects();

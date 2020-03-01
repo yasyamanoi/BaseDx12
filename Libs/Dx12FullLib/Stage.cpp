@@ -89,6 +89,46 @@ namespace basedx12 {
 		}
 	}
 
+	void Stage::AddCamera(const shared_ptr<Camera>& camera, const wstring& key) {
+		m_cameraMap[key] = camera;
+	}
+
+	shared_ptr<Camera> Stage::GetCamera(const wstring& key) const{
+		auto it = m_cameraMap.find(key);
+		if (it != m_cameraMap.end()) {
+			return it->second;
+		}
+		else {
+			throw BaseException(
+				L"指定のキーのカメラが見つかりません",
+				key,
+				L"Stage::GetCamera()"
+			);
+		}
+		return nullptr;
+	}
+
+	void Stage::AddLightSet(const shared_ptr<LightSet>& lightSet, const wstring& key) {
+		m_lightSetMap[key] = lightSet;
+
+	}
+	shared_ptr<LightSet> Stage::GetLightSet(const wstring& key)const {
+		auto it = m_lightSetMap.find(key);
+		if (it != m_lightSetMap.end()) {
+			return it->second;
+		}
+		else {
+			throw BaseException(
+				L"指定のキーのライトセットが見つかりません",
+				key,
+				L"Stage::GetLightSet()"
+			);
+		}
+		return nullptr;
+	}
+
+
+
 
 
 }

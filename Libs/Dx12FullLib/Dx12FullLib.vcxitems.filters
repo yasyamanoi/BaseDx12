@@ -68,6 +68,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Device3D.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Draw3DComp.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)Shaders\INCStructs.hlsli">

@@ -18,8 +18,7 @@ namespace basedx12 {
         compPtr->SetMesh(mesh);
         auto ptrTrans = GetComponent<Transform>();
         ptrTrans->SetScale(Float3(256.0f, 256.0f, 1.0f));
-        auto pos = ptrTrans->GetPosition();
-        pos.z = 0.2f;
+        Float3 pos(0, -200.0, 0.002f);
         ptrTrans->SetPosition(pos);
     }
     void MoveTriangle::OnUpdate() {
@@ -47,8 +46,7 @@ namespace basedx12 {
         compPtr->SetMesh(mesh);
         auto ptrTrans = GetComponent<Transform>();
         ptrTrans->SetScale(Float3(256.0f, 256.0f, 1.0f));
-        auto pos = ptrTrans->GetPosition();
-        pos.z = 0.1f;
+        Float3 pos(0, -200.0, 0.001f);
         ptrTrans->SetPosition(pos);
     }
     void MoveTriangle2::OnUpdate() {
@@ -89,8 +87,7 @@ namespace basedx12 {
         }
         auto ptrTrans = GetComponent<Transform>();
         ptrTrans->SetScale(Float3(128.0f, 128.0f, 1.0f));
-        auto pos = ptrTrans->GetPosition();
-        pos.z = 0.0f;
+        Float3 pos(0, -200.0, 0.0f);
         ptrTrans->SetPosition(pos);
     }
     void MoveSquare::OnUpdate() {
@@ -102,6 +99,42 @@ namespace basedx12 {
         }
         ptrTrans->SetPosition(pos);
     }
+
+
+    void MoveBox::OnInit() {
+        auto Device = App::GetDx12Device();
+        auto compPtr = AddComponent<PNTStaticDraw>();
+        //メッシュ
+        vector<VertexPositionNormalTexture> vertices;
+        vector<uint32_t> indices;
+        MeshUtill::CreateCube(1.0f, vertices, indices);
+        auto mesh = Dx12Mesh::CreateDx12Mesh<VertexPositionNormalTexture>(vertices, indices);
+        compPtr->SetMesh(mesh);
+        //テクスチャ
+        auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";
+        compPtr->SetTextureFile(TexFile);
+        compPtr->SetCameraKey(L"MainCamera");
+        compPtr->SetLightSetKey(L"MainLightSet");
+
+        auto ptrTrans = GetComponent<Transform>();
+        ptrTrans->SetScale(Float3(1.0f));
+        ptrTrans->SetPosition(Float3(0.0f));
+    }
+    void MoveBox::OnUpdate() {
+        auto ptrTrans = GetComponent<Transform>();
+        auto qt = ptrTrans->GetQuaternion();
+        Quat qtspan(Float3(0, 1, 1), -0.02f);
+        qt *= qtspan;
+        qt.normalize();
+        ptrTrans->SetQuaternion(qt);
+        auto pos = ptrTrans->GetPosition();
+        pos.x += m_posSpan;
+        if (abs(pos.x) >= 5.0f) {
+            m_posSpan *= -1.0f;
+        }
+        ptrTrans->SetPosition(pos);
+    }
+
 
 }
 //end basedx12
