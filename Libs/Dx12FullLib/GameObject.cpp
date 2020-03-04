@@ -47,6 +47,7 @@ namespace basedx12 {
 
 	void GameObject::ComponentUpdate() {
 		auto Transptr = GetComponent<Transform>();
+		auto RightPtr = GetComponent<Rigidbody>(false);
 		//マップを検証してUpdate
 		list<type_index>::iterator it = m_CompOrder.begin();
 		while (it != m_CompOrder.end()) {
@@ -56,11 +57,15 @@ namespace basedx12 {
 				//指定の型のコンポーネントが見つかった
 				if (it2->second->IsUpdateActive()
 					&& (it2->second != Transptr)
+					&& (it2->second != RightPtr)
 					) {
 					it2->second->OnUpdate();
 				}
 			}
 			it++;
+		}
+		if (RightPtr && RightPtr->IsUpdateActive()) {
+			RightPtr->OnUpdate();
 		}
 		//TransformのUpdate
 		if (Transptr->IsUpdateActive()) {
@@ -72,6 +77,7 @@ namespace basedx12 {
 	void GameObject::ComponentDraw() {
 		//Transformがなければ例外
 		auto Transptr = GetComponent<Transform>();
+		auto RightPtr = GetComponent<Rigidbody>(false);
 		//マップを検証してDraw
 		list<type_index>::iterator it = m_CompOrder.begin();
 		while (it != m_CompOrder.end()) {
@@ -80,12 +86,22 @@ namespace basedx12 {
 			//指定の型のコンポーネントが見つかった
 			if (it2 != m_CompMap.end()) {
 				if (it2->second->IsDrawActive()
+					&& (it2->second != Transptr)
+					&& (it2->second != RightPtr)
 					) {
 					it2->second->OnDraw();
 				}
 			}
 			it++;
 		}
+		if (RightPtr && RightPtr->IsDrawActive()) {
+			//RigidbodyがあればDraw()
+			RightPtr->OnDraw();
+		}
+		if (Transptr->IsDrawActive()) {
+			Transptr->OnDraw();
+		}
+
 	}
 
 
@@ -109,7 +125,7 @@ namespace basedx12 {
 			}
 			it++;
 		}
-		//TransformのUpdate
+		//TransformのOnDestroy
 		if (Transptr->IsUpdateActive()) {
 			Transptr->OnDestroy();
 		}

@@ -3,10 +3,10 @@
 namespace basedx12 {
 
     Dx12Device::Dx12Device(UINT frameCount) :
-        m_FrameCount(frameCount),
-        m_fenceValues(m_FrameCount),
-        m_renderTargets(m_FrameCount),
-        m_commandAllocators(m_FrameCount),
+        m_frameCount(frameCount),
+        m_fenceValues(m_frameCount),
+        m_renderTargets(m_frameCount),
+        m_commandAllocators(m_frameCount),
         m_viewport(0.0f, 0.0f, static_cast<float>(App::GetGameWidth()), static_cast<float>(App::GetGameHeight())),
         m_scissorRect(0, 0, static_cast<LONG>(App::GetGameWidth()), static_cast<LONG>(App::GetGameHeight())),
         m_constBuffMax(1024),
@@ -58,21 +58,6 @@ namespace basedx12 {
         }
 
         *ppAdapter = adapter.Detach();
-    }
-
-    void Dx12Device::CreateRTVandCmdAllocators() {
-        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-
-        // Create a RTV and a command allocator for each frame.
-        for (UINT n = 0; n < m_FrameCount; n++)
-        {
-            ThrowIfFailed(GetIDXGISwapChain3()->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
-            GetID3D12Device()->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
-            rtvHandle.Offset(1, m_rtvDescriptorSize);
-            //コマンドアロケータ
-            m_commandAllocators[n] = CommandAllocator::CreateDefault();
-        }
-
     }
 
     void Dx12Device::SyncAndWaitForGpu() {

@@ -17,6 +17,10 @@ namespace basedx12 {
 		vector<shared_ptr<GameObject>> m_waitRemoveObjects;
 		map<wstring, shared_ptr<Camera>> m_cameraMap;
 		map<wstring, shared_ptr<LightSet>> m_lightSetMap;
+		//物理計算
+		BasePhysics m_basePhysics;
+		//物理計算で使う空物理オブジェクトのset
+		set<uint16_t> m_VacantPhysicsIndices;
 	protected:
 		Stage() {}
 		virtual ~Stage() {}
@@ -36,6 +40,20 @@ namespace basedx12 {
 		shared_ptr<Camera> GetCamera(const wstring& key)const;
 		void AddLightSet(const shared_ptr<LightSet>& lightSet, const wstring& key);
 		shared_ptr<LightSet> GetLightSet(const wstring& key)const;
+		const BasePhysics& GetBasePhysics() const {
+			return m_basePhysics;
+		}
+		BasePhysics& GetBasePhysics(){
+			return m_basePhysics;
+		}
+		vector<shared_ptr<GameObject>>& GetGameObjects() {
+			return m_gameObjects;
+		}
+		const vector<shared_ptr<GameObject>>& GetGameObjects()const {
+			return m_gameObjects;
+		}
+		uint16_t GetVacantPhysicsIndex();
+		void SetVacantPhysicsIndex(uint16_t index);
 
 		virtual void UpdateGameObjects();
 		virtual void DrawGameObjects();

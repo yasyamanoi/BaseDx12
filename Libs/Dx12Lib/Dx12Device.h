@@ -14,7 +14,7 @@ namespace basedx12 {
     public:
         UINT GetConstBuffNextIndex();
         UINT GetFrameCount()const {
-            return m_FrameCount;
+            return m_frameCount;
         }
         UINT GetFrameIndex() const {
             return m_frameIndex;
@@ -89,7 +89,7 @@ namespace basedx12 {
         //3Dデバイスかどうか
         bool m_Is3DDevice;
         //フレーム関連
-        const UINT m_FrameCount;
+        const UINT m_frameCount;
         UINT m_frameIndex = 0;
         //ラップアダプターを使うかどうか（false）
         bool m_useWarpDevice = false;
@@ -134,7 +134,6 @@ namespace basedx12 {
         void GetHardwareAdapter(_In_ IDXGIFactory2* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
         void MoveToNextFrame();
         void WaitForGpu();
-        void CreateRTVandCmdAllocators();
         void SyncAndWaitForGpu();
     };
 

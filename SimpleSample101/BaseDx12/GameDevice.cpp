@@ -27,7 +27,7 @@ namespace basedx12 {
 //コマンドキュー
         m_commandQueue = CommandQueue::CreateDefault();
         //スワップチェーン(親クラスにある)
-        m_swapChain = SwapChain::CreateDefault(m_commandQueue, m_FrameCount);
+        m_swapChain = SwapChain::CreateDefault(m_commandQueue, m_frameCount);
 
         // This sample does not support fullscreen transitions.
         ThrowIfFailed(factory->MakeWindowAssociation(App::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
@@ -37,11 +37,19 @@ namespace basedx12 {
         // デスクプリタヒープ
         {
             // レンダリングターゲットビュー
-            m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_FrameCount);
+            m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_frameCount);
             m_rtvDescriptorSize = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
         }
         // RTVとコマンドアロケータ
-        CreateRTVandCmdAllocators();
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        for (UINT n = 0; n < m_frameCount; n++)
+        {
+            ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
+            m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
+            rtvHandle.Offset(1, m_rtvDescriptorSize);
+            //コマンドアロケータ
+            m_commandAllocators[n] = CommandAllocator::CreateDefault();
+        }
     }
 
     // 個別アセットの構築
@@ -64,8 +72,7 @@ namespace basedx12 {
         //同期オブジェクトおよびＧＰＵの処理待ち
         SyncAndWaitForGpu();
     }
-
-    // Update frame-based values.
+    //更新処理
     void GameDivece::OnUpdate()
     {
         App::GetSceneBase().OnUpdate();

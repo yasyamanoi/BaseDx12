@@ -27,14 +27,14 @@ namespace basedx12 {
         //コマンドキュー
         m_commandQueue = CommandQueue::CreateDefault();
         //スワップチェーン
-        m_swapChain = SwapChain::CreateDefault(m_commandQueue, m_FrameCount);
+        m_swapChain = SwapChain::CreateDefault(m_commandQueue, m_frameCount);
         // This sample does not support fullscreen transitions.
         ThrowIfFailed(factory->MakeWindowAssociation(App::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
         m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
         // デスクプリタヒープ
         {
             // レンダリングターゲットビュー
-            m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_FrameCount);
+            m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_frameCount);
             m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
             //CbvSrvデスクプリタヒープ(コンスタントバッファとシェーダリソース)
@@ -48,7 +48,15 @@ namespace basedx12 {
         }
 
         // RTVとコマンドアロケータ
-        CreateRTVandCmdAllocators();
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        for (UINT n = 0; n < m_frameCount; n++)
+        {
+            ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
+            m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
+            rtvHandle.Offset(1, m_rtvDescriptorSize);
+            //コマンドアロケータ
+            m_commandAllocators[n] = CommandAllocator::CreateDefault();
+        }
     }
 
     // 個別アセットの構築
@@ -140,8 +148,6 @@ namespace basedx12 {
         );
         //csv
         m_commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
-
-
 
         // バックバッファを使うためのバリア
         m_commandList->ResourceBarrier(

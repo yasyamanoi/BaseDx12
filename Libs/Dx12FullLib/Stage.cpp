@@ -61,9 +61,12 @@ namespace basedx12 {
 				v2->SetToBefore();
 			}
 		}
+		//物理オブジェクトのフォースの初期化
+		m_basePhysics.InitForce();
 		for (auto& v : m_gameObjects) {
 			v->OnUpdate();
 		}
+		m_basePhysics.Update(false);
 		for (auto& v : m_gameObjects) {
 			if (v->IsUpdateActive()) {
 				v->ComponentUpdate();
@@ -128,6 +131,21 @@ namespace basedx12 {
 	}
 
 
+	uint16_t Stage::GetVacantPhysicsIndex() {
+		uint16_t ret = UINT16_MAX;
+		if (m_VacantPhysicsIndices.size() > 0) {
+			//空いているIDがある。先頭を取得
+			auto it = m_VacantPhysicsIndices.begin();
+			ret = *it;
+			//IDを使うのでそのIDを削除
+			m_VacantPhysicsIndices.erase(ret);
+		}
+		return ret;
+	}
+
+	void Stage::SetVacantPhysicsIndex(uint16_t index) {
+		m_VacantPhysicsIndices.insert(index);
+	}
 
 
 

@@ -1,5 +1,5 @@
-# Dx12研究（BaseDx12）
-Dx12研究レポジトリにようこそ！  
+# BaseDx12（Dx12研究とフレームワーク）
+BaseDx12レポジトリにようこそ！  
 また、ドキュメント部分はオンライン公開されています。(GitHub Pages)  
 https://yasyamanoi.github.io/BaseDx12/  
 

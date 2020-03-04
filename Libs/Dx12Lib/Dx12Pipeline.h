@@ -7,46 +7,33 @@ namespace basedx12 {
 	//--------------------------------------------------------------------------------------
 	///	ブレンドステート
 	//--------------------------------------------------------------------------------------
-	enum class BlendState {
-		Opaque,
-		AlphaBlend,
-		Additive,
-		NonPremultiplied,
-	};
+	//enum class BlendState {
+	//	Opaque,
+	//	AlphaBlend,
+	//	Additive,
+	//	NonPremultiplied,
+	//};
 
 	//--------------------------------------------------------------------------------------
 	///	デプスステンシルステート
 	//--------------------------------------------------------------------------------------
-	enum class DepthStencilState {
-		None,
-		Default,
-		Read,
-	};
+	//enum class DepthStencilState {
+	//	None,
+	//	Default,
+	//	Read,
+	//};
 
 	//--------------------------------------------------------------------------------------
 	///	ラスタライザステート
 	//--------------------------------------------------------------------------------------
-	enum class RasterizerState {
-		CullNone,
-		CullFront,
-		CullBack,
-		Wireframe,
-		DoubleDraw,	//背面描画の後、前面描画
-	};
+	//enum class RasterizerState {
+	//	CullNone,
+	//	CullFront,
+	//	CullBack,
+	//	Wireframe,
+	//	DoubleDraw,	//背面描画の後、前面描画
+	//};
 
-	//--------------------------------------------------------------------------------------
-	///	サンプラーステート
-	//--------------------------------------------------------------------------------------
-	enum class SamplerState {
-		SamplerNone,
-		PointWrap,
-		PointClamp,
-		LinearWrap,
-		LinearClamp,
-		AnisotropicWrap,
-		AnisotropicClamp,
-		ComparisonLinear,
-	};
 
 	//--------------------------------------------------------------------------------------
 	/// ファクトリーユーティリティ
@@ -354,6 +341,20 @@ namespace basedx12 {
 
 
 	}
+
+	//--------------------------------------------------------------------------------------
+	///	サンプラーステート
+	//--------------------------------------------------------------------------------------
+	enum class SamplerState {
+		SamplerNone,
+		PointWrap,
+		PointClamp,
+		LinearWrap,
+		LinearClamp,
+		AnisotropicWrap,
+		AnisotropicClamp,
+		ComparisonLinear,
+	};
 
 	//--------------------------------------------------------------------------------------
 	/// サンプラーユーティリティ（変更可能）
