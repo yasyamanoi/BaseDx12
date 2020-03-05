@@ -9,7 +9,7 @@ LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 //定数
 const wchar_t* pClassName = L"BaseDx12Class";
 const wchar_t* pWndTitle = L"BaseDx12Title";
-//ウィンドウモードの時の幅と高さ
+//幅と高さ
 int g_ClientWidth = 1280;
 int g_ClientHeight = 720;
 
@@ -53,58 +53,32 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //        この関数で、グローバル変数でインスタンス ハンドルを保存し、
 //        メイン プログラム ウィンドウを作成および表示します。
 //--------------------------------------------------------------------------------------
-HWND InitInstance(HINSTANCE hInstance, int nCmdShow, bool isFullScreen, int iClientWidth, int iClientHeight)
+HWND InitInstance(HINSTANCE hInstance, int nCmdShow, int iClientWidth, int iClientHeight)
 {
 
 	HWND hWnd = 0;
 	// ウィンドウの作成
-	if (isFullScreen) {
-		// フルスクリーン
-		//ボーダーレスウインドウを使用
-		iClientWidth = GetSystemMetrics(SM_CXSCREEN);
-		iClientHeight = GetSystemMetrics(SM_CYSCREEN);
-		hWnd = CreateWindow(
-			pClassName,			// 登録されているクラス名
-			pWndTitle,			// ウインドウ名
-			WS_POPUP,			// ウインドウスタイル（ポップアップウインドウを作成）
-			0,					// ウインドウの横方向の位置
-			0,					// ウインドウの縦方向の位置
-			iClientWidth,		// フルスクリーンウインドウの幅
-			iClientHeight,		// フルスクリーンウインドウの高さ
-			nullptr,				// 親ウインドウのハンドル（なし）
-			nullptr,				// メニューや子ウインドウのハンドル
-			hInstance,			// アプリケーションインスタンスのハンドル
-			nullptr				// ウインドウの作成データ
-		);
-		if (!hWnd) {
-			//失敗した
-			MessageBox(nullptr, L"ウインドウ作成に失敗しました", L"エラー", MB_OK);
-			return 0;   //エラー終了
-		}
-	}
-	else {
-		//ウインドウのサイズ調整
-		RECT rc = { 0, 0, iClientWidth, iClientHeight };
-		AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-		//ウインドウの作成
-		hWnd = CreateWindow(
-			pClassName,				// 登録されているクラス名
-			pWndTitle,				// ウインドウ名
-			WS_OVERLAPPEDWINDOW,	// ウインドウスタイル（オーバーラップウインドウを作成）
-			CW_USEDEFAULT,			//位置はWindowsに任せる
-			CW_USEDEFAULT,			//位置はWindowsに任せる
-			rc.right - rc.left,		//幅指定
-			rc.bottom - rc.top,		//高さ指定
-			nullptr,					// 親ウインドウのハンドル（なし）
-			nullptr,					// メニューや子ウインドウのハンドル
-			hInstance,				// アプリケーションインスタンスのハンドル
-			nullptr					// ウインドウの作成データ
-		);
-		if (!hWnd) {
-			//失敗した
-			MessageBox(nullptr, L"ウインドウ作成に失敗しました", L"エラー", MB_OK);
-			return 0;   //エラー終了
-		}
+	RECT rc = { 0, 0, iClientWidth, iClientHeight };
+	//ウインドウ大きさの調整
+	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+	//ウインドウの作成
+	hWnd = CreateWindow(
+		pClassName,				// 登録されているクラス名
+		pWndTitle,				// ウインドウ名
+		WS_OVERLAPPEDWINDOW,	// ウインドウスタイル（オーバーラップウインドウを作成）
+		CW_USEDEFAULT,			//位置はWindowsに任せる
+		CW_USEDEFAULT,			//位置はWindowsに任せる
+		rc.right - rc.left,		//幅指定
+		rc.bottom - rc.top,		//高さ指定
+		nullptr,					// 親ウインドウのハンドル（なし）
+		nullptr,					// メニューや子ウインドウのハンドル
+		hInstance,				// アプリケーションインスタンスのハンドル
+		nullptr					// ウインドウの作成データ
+	);
+	if (!hWnd) {
+		//失敗した
+		MessageBox(nullptr, L"ウインドウ作成に失敗しました", L"エラー", MB_OK);
+		return 0;   //エラー終了
 	}
 	//ウインドウの表示
 	ShowWindow(
@@ -119,7 +93,7 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow, bool isFullScreen, int iCli
 //	int MainLoop(HINSTANCE hInstance, HWND hWnd, bool isFullScreen, int iClientWidth, int iClientHeight);
 //	用途: メインループ
 //--------------------------------------------------------------------------------------
-int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, bool isFullScreen, int iClientWidth, int iClientHeight) {
+int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int iClientHeight) {
 	//終了コード
 	int RetCode = 0;
 	//ウインドウ情報。メッセージボックス表示チェックに使用
@@ -195,24 +169,16 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 	//ロケールの設定
 	setlocale(LC_ALL, "JPN");
 
-	// フルスクリーンにするかどうかの判定
-	// コマンドラインに/fが設定されていたらフルスクリーンにする
-	bool isFullScreen = false;
-	wstring wstrcmd = lpCmdLine;
-	if (wstrcmd == L"/f" || wstrcmd == L"/F") {
-		isFullScreen = true;     // フラグをtrueに設定
-	}
-
 	MyRegisterClass(hInstance);
 	// アプリケーションの初期化を実行します:
-	HWND hWnd = InitInstance(hInstance, nCmdShow, isFullScreen, g_ClientWidth, g_ClientHeight);
+	HWND hWnd = InitInstance(hInstance, nCmdShow, g_ClientWidth, g_ClientHeight);
 
 	if (!hWnd)
 	{
 		return FALSE;
 	}
 
-	return  MainLoop(hInstance, hWnd, nCmdShow, isFullScreen, g_ClientWidth, g_ClientHeight);
+	return  MainLoop(hInstance, hWnd, nCmdShow, g_ClientWidth, g_ClientHeight);
 
 }
 

@@ -115,10 +115,10 @@ namespace basedx12 {
 	namespace SwapChain {
 		static inline ComPtr<IDXGISwapChain3> 
 		CreateDirect(
+			ComPtr<IDXGIFactory4> factory,
 			const DXGI_SWAP_CHAIN_DESC1& desc,
 			ComPtr<ID3D12CommandQueue> queue
 		) {
-			auto factory = Dx12Factory::CreateDirect();
 			ComPtr<IDXGISwapChain1> swapChain;
 			ThrowIfFailed(factory->CreateSwapChainForHwnd(
 				queue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
@@ -128,12 +128,14 @@ namespace basedx12 {
 				nullptr,
 				&swapChain
 			));
+			//Alt+Enterでフルスクリーンにならない
+			ThrowIfFailed(factory->MakeWindowAssociation(App::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
 			ComPtr<IDXGISwapChain3> swapChain3;
 			ThrowIfFailed(swapChain.As(&swapChain3));
 			return swapChain3;
 		}
 		static inline ComPtr<IDXGISwapChain3>
-		CreateDefault(ComPtr<ID3D12CommandQueue> queue,UINT framecount) {
+		CreateDefault(ComPtr<IDXGIFactory4> factory,ComPtr<ID3D12CommandQueue> queue,UINT framecount) {
 			// Describe and create the swap chain.
 			DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 			swapChainDesc.BufferCount = framecount;
@@ -143,7 +145,7 @@ namespace basedx12 {
 			swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 			swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 			swapChainDesc.SampleDesc.Count = 1;
-			return CreateDirect(swapChainDesc, queue);
+			return CreateDirect(factory,swapChainDesc, queue);
 		}
 	}
 

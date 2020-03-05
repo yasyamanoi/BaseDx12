@@ -26,9 +26,8 @@ namespace basedx12 {
         //コマンドキュー
         m_commandQueue = CommandQueue::CreateDefault();
         //スワップチェーン
-        m_swapChain = SwapChain::CreateDefault(m_commandQueue, m_frameCount);
-        // This sample does not support fullscreen transitions.
-        ThrowIfFailed(factory->MakeWindowAssociation(App::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
+        m_swapChain = SwapChain::CreateDefault(factory,m_commandQueue, m_frameCount);
+        //フレームインデックスの初期値
         m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
         // デスクプリタヒープ
         {
@@ -37,7 +36,7 @@ namespace basedx12 {
             m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
             //CbvSrvデスクプリタヒープ(コンスタントバッファとシェーダリソース)
-            m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(1 + m_constBuffMax);
+            m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(1 + GetConstBuffMax());
             m_CbvSrvDescriptorHandleIncrementSize
                 = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             //サンプラーデスクリプタヒープ

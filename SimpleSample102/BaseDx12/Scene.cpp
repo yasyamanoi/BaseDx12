@@ -35,6 +35,7 @@ namespace basedx12 {
     void FixedTriangle::OnRender() {
         auto Device = App::GetDx12Device();
         auto commandList = Device->GetCommandList();
+        //GraphicsRootDescriptorTableの設定はしなくてもよい（SRVもSamplerもCSVもシェーダに渡さないので）
         commandList->SetPipelineState(m_pcPipelineState.Get());
         commandList->IASetVertexBuffers(0, 1, &m_pcTriangleMesh->GetVertexBufferView());
         commandList->DrawInstanced(3, 1, 0, 0);
@@ -50,19 +51,45 @@ namespace basedx12 {
             = PipelineState::CreateDefault2D<VertexPositionColor, VSPCConstSprite, PSPCConstSprite>(Device->GetRootSignature(), PipeLineDesc);
         vector<VertexPositionColor> vertex =
         {
-            { Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 0.0f, 1.0f) },
-            { Float3(0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 1.0f, 0.0f, 1.0f) },
-            { Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) }
+            { Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(0.0f, 1.0f, 0.0f, 1.0f) },
+            { Float3(0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) },
+            { Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 0.0f, 1.0f) }
         };
         //三角形メッシュ作成
         m_pcTriangleMesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(vertex);
 
+        //コンスタントバッファハンドルを作成
+        m_constBuffIndex = Device->GetConstBuffNextIndex();
+        CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
+            Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+            m_constBuffIndex,
+            Device->GetCbvSrvDescriptorHandleIncrementSize()
+        );
+        m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
     }
     void MoveTriangle::OnUpdate() {
+        const float translationSpeed = 0.005f;
+        const float offsetBounds = 1.25f;
+        m_constantBufferData.offset.x += translationSpeed;
+        if (m_constantBufferData.offset.x > offsetBounds)
+        {
+            m_constantBufferData.offset.x = -offsetBounds;
+        }
+        m_ConstantBuffer->Copy(m_constantBufferData);
     }
     void MoveTriangle::OnRender() {
         auto Device = App::GetDx12Device();
         auto commandList = Device->GetCommandList();
+        //GraphicsRootDescriptorTableへセット。
+        //Cbv
+        CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
+            Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+            m_constBuffIndex,
+            Device->GetCbvSrvDescriptorHandleIncrementSize()
+        );
+        //csv。RootSignature上のIDは2番
+        commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
+
         commandList->SetPipelineState(m_pcConstPipelineState.Get());
         commandList->IASetVertexBuffers(0, 1, &m_pcTriangleMesh->GetVertexBufferView());
         commandList->DrawInstanced(3, 1, 0, 0);
@@ -92,7 +119,7 @@ namespace basedx12 {
         }
         //テクスチャ
         {
-            auto TexFile = App::GetDataPath() + L"sky.jpg";
+            auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";
             //テクスチャの作成
             //シェーダリソースハンドルを作成
             CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(
@@ -108,13 +135,56 @@ namespace basedx12 {
             auto SamplerDescriptorHandle = Device->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
             Sampler::CreateSampler(SamplerState::LinearClamp, SamplerDescriptorHandle);
         }
+        //コンスタントバッファハンドルを作成
+        m_constBuffIndex = Device->GetConstBuffNextIndex();
+        CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
+            Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+            m_constBuffIndex,
+            Device->GetCbvSrvDescriptorHandleIncrementSize()
+        );
+        m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
+
     }
     void MoveSquare::OnUpdate() {
-
+        const float translationSpeed = 0.01f;
+        const float offsetBounds = 1.25f;
+        m_constantBufferData.offset.x += translationSpeed;
+        if (m_constantBufferData.offset.x > offsetBounds)
+        {
+            m_constantBufferData.offset.x = -offsetBounds;
+        }
+        m_ConstantBuffer->Copy(m_constantBufferData);
     }
     void MoveSquare::OnRender() {
         auto Device = App::GetDx12Device();
         auto commandList = Device->GetCommandList();
+
+        //GraphicsRootDescriptorTableへセット。
+        //Srv
+        CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle(
+            Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+            0,
+            0
+        );
+        //srv。RootSignature上のIDは0番
+        commandList->SetGraphicsRootDescriptorTable(0, SrvHandle);
+        //Sampler
+        CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
+            Device->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+            0,
+            0
+        );
+        //sampler。RootSignature上のIDは1番
+        commandList->SetGraphicsRootDescriptorTable(1, SamplerHandle);
+        //Cbv
+        CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
+            Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+            m_constBuffIndex,
+            Device->GetCbvSrvDescriptorHandleIncrementSize()
+        );
+        //csv。RootSignature上のIDは2番
+        commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
+
         commandList->SetPipelineState(m_ptConstPipelineState.Get());
         m_SkyTexture->UpdateSRAndCreateSRV(commandList);
         commandList->IASetVertexBuffers(0, 1, &m_ptSquareMesh->GetVertexBufferView());
@@ -138,30 +208,14 @@ namespace basedx12 {
             m_MoveTriangle.OnInit();
             m_MoveSquare.OnInit();
         }
-        //コンスタントバッファ
-        {
-            //コンスタントバッファハンドルを作成
-            //三角形四角形共通
-            CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
-                Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-                1,
-                Device->GetCbvSrvDescriptorHandleIncrementSize()
-            );
-            m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
-        }
 	}
 
 	void Scene::OnUpdate() {
-        const float translationSpeed = 0.005f;
-        const float offsetBounds = 1.25f;
-        m_constantBufferData.offset.x += translationSpeed;
-        if (m_constantBufferData.offset.x > offsetBounds)
-        {
-            m_constantBufferData.offset.x = -offsetBounds;
-        }
+        m_MoveTriangle.OnUpdate();
+        m_MoveSquare.OnUpdate();
     }
 	void Scene::OnDraw() {
-        m_ConstantBuffer->Copy(m_constantBufferData);
+        //m_ConstantBuffer->Copy(m_constantBufferData);
         auto Device = App::GetDx12Device();
         auto commandList = Device->GetCommandList();
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

@@ -2,14 +2,14 @@
 
 namespace basedx12 {
 
-    Dx12Device::Dx12Device(UINT frameCount) :
+    Dx12Device::Dx12Device(UINT frameCount, UINT constBuffMax) :
         m_frameCount(frameCount),
         m_fenceValues(m_frameCount),
         m_renderTargets(m_frameCount),
         m_commandAllocators(m_frameCount),
         m_viewport(0.0f, 0.0f, static_cast<float>(App::GetGameWidth()), static_cast<float>(App::GetGameHeight())),
         m_scissorRect(0, 0, static_cast<LONG>(App::GetGameWidth()), static_cast<LONG>(App::GetGameHeight())),
-        m_constBuffMax(1024),
+        m_constBuffMax(constBuffMax),
         m_constBuffSendIndex(0)
     {
         m_aspectRatio = static_cast<float>(App::GetGameWidth()) / static_cast<float>(App::GetGameHeight());

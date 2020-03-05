@@ -3,7 +3,6 @@
 
 namespace basedx12 {
 
-
     class GameDivece : public Dx12Device {
         void LoadPipeline();
         void LoadAssets();

@@ -38,6 +38,12 @@ namespace basedx12 {
         shared_ptr<Dx12Mesh> m_pcTriangleMesh;
         //PositionColor用パイプラインステート（コンスタントバッファあり）
         ComPtr<ID3D12PipelineState> m_pcConstPipelineState;
+        //コンスタントバッファ構造体の実体
+        SceneConstantBuffer m_constantBufferData;
+        //コンスタントバッファ
+        shared_ptr<ConstantBuffer> m_ConstantBuffer;
+        //コンスタントバッファのインデックス
+        UINT m_constBuffIndex;
     public:
         MoveTriangle(){}
         ~MoveTriangle() {}
@@ -53,6 +59,12 @@ namespace basedx12 {
         shared_ptr<Dx12Texture> m_SkyTexture;
         //PositionTexture用パイプラインステート（コンスタントバッファあり）
         ComPtr<ID3D12PipelineState> m_ptConstPipelineState;
+        //コンスタントバッファ構造体の実体
+        SceneConstantBuffer m_constantBufferData;
+        //コンスタントバッファ
+        shared_ptr<ConstantBuffer> m_ConstantBuffer;
+        //コンスタントバッファのインデックス
+        UINT m_constBuffIndex;
     public:
         MoveSquare() {}
         ~MoveSquare() {}
@@ -65,10 +77,6 @@ namespace basedx12 {
         FixedTriangle m_FixedTriangle;
         MoveTriangle m_MoveTriangle;
         MoveSquare m_MoveSquare;
-        //コンスタントバッファの実体
-        SceneConstantBuffer m_constantBufferData;
-        //コンスタントバッファ
-        shared_ptr<ConstantBuffer> m_ConstantBuffer;
 	public:
 		Scene() :SceneBase() {}
 		virtual ~Scene() {}

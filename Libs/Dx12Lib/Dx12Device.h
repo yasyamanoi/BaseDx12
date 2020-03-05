@@ -7,12 +7,17 @@ namespace basedx12 {
     ///	Dx12デバイスクラス
     //--------------------------------------------------------------------------------------
     class Dx12Device : public ObjectInterface {
+        //コンスタントバッファのMAXサイズ
+        const UINT m_constBuffMax;
         UINT m_constBuffSendIndex;
     protected:
-        Dx12Device(UINT frameCount);
+        Dx12Device(UINT frameCount,UINT constBuffMax = 1024);
         virtual ~Dx12Device();
     public:
         UINT GetConstBuffNextIndex();
+        UINT GetConstBuffMax() const {
+            return m_constBuffMax;
+        }
         UINT GetFrameCount()const {
             return m_frameCount;
         }
@@ -122,8 +127,6 @@ namespace basedx12 {
         ComPtr<ID3D12DescriptorHeap> m_CbvSrvUavDescriptorHeap;
         //CbvSrvのデスクプリタハンドルのインクリメントサイズ
         UINT m_CbvSrvDescriptorHandleIncrementSize{ 0 };
-        //コンスタントバッファのMAXサイズ
-        const UINT m_constBuffMax;
         //サンプラー用
         ComPtr<ID3D12DescriptorHeap> m_SamplerDescriptorHeap;
         //コマンドリスト

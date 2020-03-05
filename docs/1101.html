@@ -13,24 +13,174 @@
 </header>
 <!-- contents　-->
 <div id="contents">
-<h1>【第1部】シンプルなフレームワーク編</h1>
-<h1 class="pagetitle">１１０１．シンプルな三角形の描画</h1>
-<h4></h4>
-　「SimpleSample101」というディレクトリ内の「BaseDx12.sln」を「VS2019」で開いてください。<br />
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１１０１．シンプルな三角形の描画（１）</h1>
+<h4>サンプルの実行</h4>
+　<b>BaseDx12</b>には<b>シンプルバージョン</b>と<b>フルバージョン</b>という2つのバージョンがあります。<br />
+　前者は<b>Dx12</b>の機能を実装するための<b>サポート</b>的な内容となります。ですので<b>衝突判定</b>や<b>物理エンジン</b>などの機能は持ってません。<br />
+　後者は<b>Dx12</b>の知識はなくても<b>C++</b>の知識があれば、コンテンツをある程度実装できると思います。こちらには<b>衝突判定、物理エンジン、補間処理、ユーティリティ的な行動</b>などが実装されます。また、<b>モデルの描画</b>や<b>モデルのアニメーション</b>なども、比較的簡単に実装できます。<br />
+　<b>【第1部】シンプルバージョン編</b>では、前者の解説です。フルバージョンを試してみたい方は<b>【第2部】フルバージョン編</b>を参照してください。<br />
+　<b>SimpleSample101</b>というディレクトリ内の<b>BaseDx12.sln</b>を<b>VS2019</b>で開いてください。<br />
 　リビルドして実行すると、以下の画面が出てきます。
 <p>&nbsp;</p>
 <img src="img/1101a.png" width="60%"/>
 <p>図1101a</p>
 <p>&nbsp;</p>
-
+<h4>シンプルバージョンについて</h4>
+　このサンプルの説明を始める前に、<b>BaseDx12フレームワーク</b>の<b>シンプルバージョン</b>について少し説明します。<br />
+　もしよければ、本家、マイクロソフト社のサンプル、<b>DirectX-Graphics-Samples</b>をダウンロードし（GitHub公開されています。検索ですぐに見つかります）、その中の<b>D3D12HelloWorld</b>内の<b>HelloTriangle</b>と比較しながら見ていただくと良いと思います。<br />
+　<b>Dx12</b>でGPUにレンダリングするには、様々な設定が必要です。<br />
+　主なものを以下にあげます。
 <div class="box1">
 <pre>
+＊Dx12デバイス
+＊コマンドキュー
+＊スワップチェーン
+＊デスクプリタヒープ
+＊レンダーターゲットビュー
+＊コマンドアロケーター
+＊ルートシグネチャー
+＊コマンドリスト
+＊パイプラインステート
+＊シェーダ（最低限、頂点とピクセル）
+＊メッシュ
+＊テクスチャ（必要に応じて）とシェーダリソースビュー
+＊サンプラー（必要に応じて）
 </pre>
 </div>
-
-
-
-
+　これらのオブジェクト（リソース）を、初期化し、レンダリング時にそれぞれを組み合わせながら、GPUのパイプラインに描画命令（コマンド）を発行します。<br />
+　<b>HelloTriangle</b>のソースを見るとわかりますが、たった一つの三角形を描画するだけなのに、実に多くの準備や命令が必要なのがわかります。<br />
+　<b>BaseDx12シンプルバージョン</b>では、プログラマの自由度を最大限守りながら、どうしたら効率よく、リソースの作成やコマンド発行できるか、を考えて作成したつもりです。<br />
+<h4>ライブラリを見る</h4>
+　まず最初に<b>ソリューション</b>内にある<b>Libs</b>というフィルタを見てください。<br />
+　閉じている場合はクリックすると、以下の様な内容になっています。
+<p>&nbsp;</p>
+<img src="img/1101b.png" width="30%"/>
+<p>図1101b</p>
+<p>&nbsp;</p>
+　シンプルとはいえ、結構な量のファイル構成になっています。<br />
+　それぞれ、意味があって記述しているので、皆重要は重要なのですが、リソース構築時は<b>Dx12Device.h/cpp</b>と<b>Dx12Pipeline.h/cpp</b>が重要な役割をはたします。<br />
+<h4>ウインドウの作成とメッセージループ</h4>
+　まず、ライブラリ側ではなく<b>BaseDx12プロジェクト</b>内にある、<b>WinMain.cpp</b>を見てください。<br />
+　ここでは、ウインドウを作成して、メッセージループを起動します。その際、<b>シーン</b>というオブジェクトを作成します。その記述が、<b>MainLoop()関数</b>内にあります。以下が実体です。<br />
+　<b>Dx12</b>にかかわる部分は、赤くなっています。
+<div class="box1">
+<pre>
+int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, bool isFullScreen, int iClientWidth, int iClientHeight) {
+    //終了コード
+    int RetCode = 0;
+    //ウインドウ情報。メッセージボックス表示チェックに使用
+    WINDOWINFO WinInfo;
+    ZeroMemory(&WinInfo, sizeof(WinInfo));
+    //例外処理開始
+    try {
+        //COMの初期化
+        //サウンドなどで使用する
+        if (FAILED(::CoInitialize(nullptr))) {
+            // 初期化失敗
+            throw exception("Com初期化に失敗しました。");
+        }
+        <span class="red">basedx12::Scene scene;
+        basedx12::App::Init(hWnd, &scene, hInstance, nCmdShow, iClientWidth, iClientHeight);</span>
+        //メッセージループ
+        MSG msg = { 0 };
+        while (WM_QUIT != msg.message) {
+            //キー状態が何もなければウインドウメッセージを得る
+            if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+            <span class="red">//更新描画処理
+            basedx12::App::UpdateDraw();</span>
+        }
+        //msg.wParamには終了コードが入っている
+        <span class="red">basedx12::App::Destroy();</span>
+        RetCode = (int)msg.wParam;
+    }
+    catch (exception & e) {
+        //STLエラー
+        //マルチバイトバージョンのメッセージボックスを呼ぶ
+        if (GetWindowInfo(hWnd, &WinInfo)) {
+            MessageBoxA(hWnd, e.what(), "エラー", MB_OK);
+        }
+        else {
+            MessageBoxA(nullptr, e.what(), "エラー", MB_OK);
+        }
+        RetCode = 1;
+    }
+    catch (...) {
+        //原因不明失敗した
+        if (GetWindowInfo(hWnd, &WinInfo)) {
+            MessageBox(hWnd, L"原因不明のエラーです", L"エラー", MB_OK);
+        }
+        else {
+            MessageBox(nullptr, L"原因不明のエラーです", L"エラー", MB_OK);
+        }
+        RetCode = 1;
+    }
+    //例外処理終了
+    //COMのリリース
+    ::CoUninitialize();
+    return RetCode;
+}
+</pre>
+</div>
+<h4>アプリケーションクラス</h4>
+　ここで、構築部を見てみましょう
+<div class="box1">
+<pre>
+        <span class="red">basedx12::Scene scene;
+        basedx12::App::Init(hWnd, &scene, hInstance, nCmdShow, iClientWidth, iClientHeight);</span>
+</pre>
+</div>
+　という記述は<b>Sceneクラス</b>の<b>scene</b>というインスタンスを定義しています。<br />
+　<b>basedx12</b>というのは<b>BaseDx12</b>全体のネームスペースです。ライブラリ及びコンテンツは、すべてこのネームスペースに含まれます。<br />
+　しかし<b>WinMain.cpp</b>内の関数は<b>グローバル領域</b>に置かれますので、<b>basedx12::Scene scene;</b>という記述が必要になります。<br />
+　<b>scene</b>インスタンスを定義したら、そのポインタを渡して<b>basedx12::App::Init()関数</b>を呼び出します。<br />
+　<b>Appクラス</b>はいわゆる<b>アプリケーションクラス</b>なのですが、<b>BaseDx12</b>では、クラスの実体は作らずに<b>App::Init()</b>のように、<b>すべてスタティック呼び出しの関数</b>が含まれます。そういう意味では<b>クラス</b>ではなく<b>ネームスペース</b>でもよいのですが、ネームスペースですとヘッダファイルへの記述が、ちょっとややこしくなるので、<b>クラス</b>にしてあります。<br />
+　<b>basedx12::App::Init()関数</b>内では<b>BaseDx12プロジェクト</b>内の<b>Scene.h/cpp</b>に記述がある、<b>Scene::OnInit()関数</b>を呼び出します。<br />
+　今後、プロジェクト側を<b>コンテンツ側</b>と称します。同様、フレームワーク側は<b>ライブラリ側</b>と称します。<br />
+<h4>Sceneクラス</h4>
+　<b>Sceneクラス</b>は、以下のような宣言になっています。
+<div class="box1">
+<pre>
+    class Scene :public SceneBase {
+        ComPtr&lt;ID3D12PipelineState> m_pipelineState;
+        shared_ptr&lt;Dx12Mesh> m_Dx12Mesh;
+    public:
+        Scene() :SceneBase() {}
+        virtual ~Scene() {}
+        virtual void OnInit()override;
+        virtual void OnInitAssets()override;
+        virtual void OnUpdate()override;
+        virtual void OnDraw()override;
+        virtual void OnDestroy()override;
+    };
+</pre>
+</div>
+　このように<b>SceneBaseクラス</b>を継承して作成されています。<br />
+　<b>SceneBaseクラス</b>は、ライブラリ部の<b>SceneBase.h/cpp</b>に記述があります。<b>ゲームシーン</b>を表現すると思ってもらえればよいです。<br />
+　この中で
+<div class="box1">
+<pre>
+        virtual void OnInit()override;
+</pre>
+</div>
+　という仮想関数があります。<br />
+　この関数が<b>basedx12::App::Init()関数</b>から呼び出されます。<br />
+　<b>Scene::OnInit()関数</b>の記述は以下になります。
+<div class="box1">
+<pre>
+    void Scene::OnInit() {
+        ResetActiveDx12Device&lt;GameDivece>(2);
+    }
+</pre>
+</div>
+　このように<b>GameDiveceクラス</b>をテンプレート引数に持った、<b>テンプレート関数呼び出し</b>となります。<br />
+　この関数は、指定のクラス（ここではGameDeviceクラス）のインスタンスを作成して<b>Appクラス</b>に登録します。こうすることにより<b>Appクラス経由</b>で<b>GameDeviceクラスのインスタンス</b>にアクセスできる形になります。<br />
+　<b>ResetActiveDx12Device()関数</b>では、そのあと<b>GameDivece::OnInit()関数</b>を呼び出します。<br />
+　この関数こそが、<b>Dx12のリソース群</b>を構築すべき関数となります。<br />
+　<b>GameDiveceクラス</b>は<b>コンテンツ部</b>にある<b>GameDevice.h/cpp</b>です。次項では、その中身を詳しく見てみましょう。
 </div>
 <!-- /contents　-->
 <!-- フッタ　-->

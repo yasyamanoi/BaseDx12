@@ -27,9 +27,7 @@ namespace basedx12 {
         //コマンドキュー
         m_commandQueue = CommandQueue::CreateDefault();
         //スワップチェーン
-        m_swapChain = SwapChain::CreateDefault(m_commandQueue, m_frameCount);
-        // This sample does not support fullscreen transitions.
-        ThrowIfFailed(factory->MakeWindowAssociation(App::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
+        m_swapChain = SwapChain::CreateDefault(factory, m_commandQueue, m_frameCount);
         m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
         // デスクプリタヒープ
         {
@@ -37,8 +35,9 @@ namespace basedx12 {
             m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_frameCount);
             m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-            //CbvSrvデスクプリタヒープ(コンスタントバッファとシェーダリソース)
-            m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(1 + 1);
+            //CbvSrvデスクプリタヒープ(シェーダリソースとコンスタントバッファ)
+            //コンスタントバッファの数はGetConstBuffMax()により取得する
+            m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(1 + GetConstBuffMax());
             m_CbvSrvDescriptorHandleIncrementSize
                 = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             //サンプラーデスクリプタヒープ
@@ -120,35 +119,6 @@ namespace basedx12 {
         m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
         m_commandList->RSSetViewports(1, &m_viewport);
         m_commandList->RSSetScissorRects(1, &m_scissorRect);
-
-        ID3D12DescriptorHeap* ppHeaps[] = { m_CbvSrvUavDescriptorHeap.Get(), m_SamplerDescriptorHeap.Get() };
-        m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-
-        //Srv
-        CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle(
-            GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-            0,
-            0
-        );
-        //srv
-        m_commandList->SetGraphicsRootDescriptorTable(0, SrvHandle);
-        //Sampler
-        CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
-            GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-            0,
-            0
-        );
-        //sampler
-        m_commandList->SetGraphicsRootDescriptorTable(1, SamplerHandle);
-        //Cbv
-        CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
-            GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-            1,
-            GetCbvSrvDescriptorHandleIncrementSize()
-        );
-        //csv
-        m_commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
-
         // バックバッファを使うためのバリア
         m_commandList->ResourceBarrier(
             1,
@@ -157,11 +127,12 @@ namespace basedx12 {
                 D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
             )
         );
-
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
         m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
         const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
         m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+        ID3D12DescriptorHeap* ppHeaps[] = { m_CbvSrvUavDescriptorHeap.Get(), m_SamplerDescriptorHeap.Get() };
+        m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
         // シーンの個別描画
         App::GetSceneBase().OnDraw();
         // フロントバッファに転送するためのバリア
