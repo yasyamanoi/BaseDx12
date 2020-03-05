@@ -3,8 +3,8 @@
 
 namespace basedx12 {
 
-    DECLARE_DX12SHADER(VSPNTStatic)
-    DECLARE_DX12SHADER(PSPNTStatic)
+	DECLARE_DX12SHADER(VSPNTStatic)
+	DECLARE_DX12SHADER(PSPNTStatic)
 
 
 	//--------------------------------------------------------------------------------------
@@ -57,12 +57,12 @@ namespace basedx12 {
 		BasicConstants m_constantBufferData;
 		//カメラのキー
 		wstring m_cameraKey;
-		Draw3D(const shared_ptr<GameObject>& gameObjectPtr):
+		Draw3D(const shared_ptr<GameObject>& gameObjectPtr) :
 			DrawComponent(gameObjectPtr),
 			m_emissive(0.0f),
 			m_diffuse(1.0f),
 			m_alpha(1.0f),
-			m_specularColorAndPower(0,0,0,1)
+			m_specularColorAndPower(0, 0, 0, 1)
 		{}
 		virtual ~Draw3D() {}
 	public:
@@ -72,13 +72,13 @@ namespace basedx12 {
 		void SetCameraKey(const wstring& key) {
 			m_cameraKey = key;
 		}
-		Float4 GetEmissive() const {return m_emissive;}
+		Float4 GetEmissive() const { return m_emissive; }
 		void SetEmissive(const Float4& e) { m_emissive = e; }
 		Float4 GetDiffuse() const { return m_diffuse; }
 		void SetDiffuse(const Float4& d) { m_diffuse = d; }
 		Float3 GetSpecular() const {
 			Float3 sp(m_specularColorAndPower);
-			return sp; 
+			return sp;
 		}
 		void SetSpecular(const Float3& sp) {
 			m_specularColorAndPower.x = sp.x;
@@ -91,36 +91,33 @@ namespace basedx12 {
 		void SetSpecularColorAndPower(const Float4& sp) { m_specularColorAndPower = sp; }
 		float GetAlpha() const { return m_alpha; }
 		void SetAlpha(float f) { m_alpha = f; }
-
 	};
 
-
-    //--------------------------------------------------------------------------------------
-    ///	PNT頂点Static描画コンポーネント
-    //--------------------------------------------------------------------------------------
-    class PNTStaticDraw : public Draw3D {
-        //テクスチャ
-        shared_ptr<Dx12Texture> m_texture;
-        wstring m_textureFileName;
+	//--------------------------------------------------------------------------------------
+	///	PNT頂点Static描画コンポーネント
+	//--------------------------------------------------------------------------------------
+	class PNTStaticDraw : public Draw3D {
+		//テクスチャ
+		shared_ptr<Dx12Texture> m_texture;
+		wstring m_textureFileName;
 		//ライトセットのキー
 		wstring m_lightSetKey;
 		void SetConstants();
 	public:
-        explicit PNTStaticDraw(const shared_ptr<GameObject>& gameObjectPtr);
-        virtual ~PNTStaticDraw();
-        void SetTextureFile(const wstring& textureName);
+		explicit PNTStaticDraw(const shared_ptr<GameObject>& gameObjectPtr);
+		virtual ~PNTStaticDraw();
+		void SetTextureFile(const wstring& textureName);
 		const wstring& GetLightSetKey() const {
 			return m_lightSetKey;
 		}
 		void SetLightSetKey(const wstring& key) {
 			m_lightSetKey = key;
 		}
-        virtual void OnInit()override;
-        virtual void OnUpdate()override {}
-        virtual void OnDraw()override;
-        virtual void OnDestroy()override {}
-    };
-
+		virtual void OnInit()override;
+		virtual void OnUpdate()override {}
+		virtual void OnDraw()override;
+		virtual void OnDestroy()override {}
+	};
 
 }
 //end basedx12

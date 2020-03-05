@@ -4,8 +4,7 @@
 using Microsoft::WRL::ComPtr;
 
 namespace basedx12 {
-
-    struct 	Util {
+	struct 	Util {
 		//--------------------------------------------------------------------------------------
 		/*!
 		@brief	‘å‚«‚¢•û‚ğ‹‚ß‚é.

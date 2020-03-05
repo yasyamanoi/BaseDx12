@@ -14,7 +14,6 @@ namespace basedx12 {
 	void SceneEx::OnDraw() {
 		auto stagePtr = GetActiveStage();
 		stagePtr->DrawGameObjects();
-//		stagePtr->OnDraw();
 	}
 	void SceneEx::OnDestroy() {
 		auto stagePtr = GetActiveStage();

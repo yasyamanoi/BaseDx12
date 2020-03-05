@@ -24,7 +24,7 @@
 #include <DirectXColors.h>
 #include <DirectXCollision.h>
 #include <DirectXTex.h>
-//#include "d3dx12.h"
+#include <xinput.h>
 
 #include <xaudio2.h>	//ƒTƒEƒ“ƒh
 #include <xaudio2fx.h>

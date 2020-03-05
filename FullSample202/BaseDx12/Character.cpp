@@ -109,10 +109,10 @@ namespace basedx12 {
         ptrTrans->SetPosition(Float3(0.0f));
     }
     void MoveBox::OnUpdate() {
-        auto ptrTrans = GetComponent<Transform>();
+		auto ptrTrans = GetComponent<Transform>();
         auto qt = ptrTrans->GetQuaternion();
-        Quat qtspan(Float3(0, 1, 1), -0.02f);
-        qt *= qtspan;
+		Quat qtspan(Float3(0, 1, 1), -0.02f);
+		qt *= qtspan;
         qt.normalize();
         ptrTrans->SetQuaternion(qt);
         auto pos = ptrTrans->GetPosition();

@@ -19,6 +19,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)BaseMathInc.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Camera.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)CommonDx12.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Controler.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)d3dx12.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Device.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Pipeline.h" />
@@ -28,7 +29,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Light.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)MeshHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)SceneBase.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)SimpleCamera.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)StepTimer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)VertexHelper.h" />
   </ItemGroup>
@@ -41,7 +41,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Dx12Texture.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Light.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)MeshHelper.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)SimpleCamera.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)VertexHelper.cpp" />
   </ItemGroup>
 </Project>
