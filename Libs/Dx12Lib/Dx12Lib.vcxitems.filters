@@ -60,6 +60,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Controler.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)TransHelper.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)App.cpp">

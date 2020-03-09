@@ -441,9 +441,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Rigidbody.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)TransHelper.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Device2D.cpp">

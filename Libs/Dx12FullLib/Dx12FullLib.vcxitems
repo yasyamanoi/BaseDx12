@@ -122,7 +122,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)SceneEx.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)GameObject.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Stage.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)TransHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)UpdateComp.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)vectormath\boolInVec.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)vectormath\floatInVec.h" />

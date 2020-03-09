@@ -13,6 +13,7 @@ using namespace basedx12::bsm;
 #include "Dx12Texture.h"
 #include "Dx12Mesh.h"
 #include "Controler.h"
+#include "TransHelper.h"
 #include "SceneBase.h"
 #include "App.h"
 #include "Dx12Pipeline.h"
