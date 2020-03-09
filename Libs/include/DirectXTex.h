@@ -11,9 +11,8 @@
 
 #pragma once
 
-#include <stdint.h>
-
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <vector>
 
@@ -40,7 +39,7 @@ namespace DirectX
 
     //---------------------------------------------------------------------------------
     // DXGI Format Utilities
-    bool __cdecl IsValid(_In_ DXGI_FORMAT fmt) noexcept;
+    constexpr bool __cdecl IsValid(_In_ DXGI_FORMAT fmt) noexcept;
     bool __cdecl IsCompressed(_In_ DXGI_FORMAT fmt) noexcept;
     bool __cdecl IsPacked(_In_ DXGI_FORMAT fmt) noexcept;
     bool __cdecl IsVideo(_In_ DXGI_FORMAT fmt) noexcept;
@@ -784,7 +783,12 @@ namespace DirectX
 #pragma clang diagnostic ignored "-Wswitch-enum"
 #endif
 
+#pragma warning(push)
+#pragma warning(disable : 4619 4616 4061)
+
 #include "DirectXTex.inl"
+
+#pragma warning(pop)
 
 #ifdef __clang__
 #pragma clang diagnostic pop
