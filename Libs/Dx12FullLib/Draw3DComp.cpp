@@ -88,7 +88,7 @@ namespace basedx12 {
 			= PipelineState::CreateDefault3D<VertexPositionNormalTexture, VSPNTStatic, PSPNTStatic>(Device->GetRootSignature(), PipeLineDesc);
 		//コンスタントバッファ
 		//コンスタントバッファハンドルを作成
-		m_constBuffIndex = Device->GetConstBuffNextIndex();
+		m_constBuffIndex = Device->GetCbvSrvUavNextIndex();
 		CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
 			Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
 			m_constBuffIndex,
@@ -106,10 +106,11 @@ namespace basedx12 {
 		auto Device = App::GetDx12Device();
 		//テクスチャの作成
 		//シェーダリソースハンドルを作成
+		m_srvIndex = Device->GetCbvSrvUavNextIndex();
 		CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(
 			Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-			0,
-			0
+			m_srvIndex,
+			Device->GetCbvSrvDescriptorHandleIncrementSize()
 		);
 		//画像ファイルをもとにテクスチャを作成
 		m_texture = Dx12Texture::CreateDx12Texture(m_textureFileName, srvHandle);
@@ -125,8 +126,8 @@ namespace basedx12 {
 		//Srv
 		CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle(
 			Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-			0,
-			0
+			m_srvIndex,
+			Device->GetCbvSrvDescriptorHandleIncrementSize()
 		);
 		commandList->SetGraphicsRootDescriptorTable(0, SrvHandle);
 		//Sampler

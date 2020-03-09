@@ -115,6 +115,7 @@ namespace basedx12 {
 	}
 
 	void  App::UpdateDraw() {
+		m_timer.Tick();
 		m_controler.ResetControlerState();
 		if (m_pSceneBase && m_device)
 		{

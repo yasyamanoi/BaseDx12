@@ -7,16 +7,16 @@ namespace basedx12 {
 	///	Dx12デバイスクラス
 	//--------------------------------------------------------------------------------------
 	class Dx12Device : public ObjectInterface {
-		//コンスタントバッファのMAXサイズ
-		const UINT m_constBuffMax;
-		UINT m_constBuffSendIndex;
+		//コンスタントバッファとシェーダーリソースのMAXサイズ
+		const UINT m_cbvSrvUavMax;
+		UINT m_cbvSrvUavSendIndex;
 	protected:
-		Dx12Device(UINT frameCount, UINT constBuffMax = 1024);
+		Dx12Device(UINT frameCount, UINT cbvSrvUavMax = 1024);
 		virtual ~Dx12Device();
 	public:
-		UINT GetConstBuffNextIndex();
-		UINT GetConstBuffMax() const {
-			return m_constBuffMax;
+		UINT GetCbvSrvUavNextIndex();
+		UINT GetCbvSrvUavMax() const {
+			return m_cbvSrvUavMax;
 		}
 		UINT GetFrameCount()const {
 			return m_frameCount;

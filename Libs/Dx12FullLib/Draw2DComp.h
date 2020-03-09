@@ -79,6 +79,8 @@ namespace basedx12 {
 		//テクスチャ
 		shared_ptr<Dx12Texture> m_texture;
 		wstring m_textureFileName;
+		//シェーダリソースのインデックス
+		UINT m_srvIndex;
 	public:
 		explicit PTSpriteDraw(const shared_ptr<GameObject>& gameObjectPtr);
 		virtual ~PTSpriteDraw();

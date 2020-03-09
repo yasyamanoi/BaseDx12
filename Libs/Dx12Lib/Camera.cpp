@@ -2,10 +2,21 @@
 
 namespace basedx12 {
 
-	Camera::Camera(const Float3& eye, const Float3& lookDirection) :
+	void Camera::ThrowIfNotSafe() {
+		auto span = m_at - m_eye;
+		if (span.length() < 0.001f) {
+			throw BaseException(
+				L"カメラ位置とカメラ視点の位置が近すぎます。",
+				L"Camera::ThrowIfNotSafe()"
+			);
+		}
+	}
+
+
+	Camera::Camera(const Float3& eye, const Float3& at) :
 		m_eye(eye),
-		m_lookDirection(lookDirection),
-		m_upDirection(0, 1, 0),
+		m_at(at),
+		m_up(0, 1, 0),
 		m_fovY(XM_PIDIV4),
 		m_nearPlane(1.0f),
 		m_farPlane(1000.0f)
@@ -18,36 +29,12 @@ namespace basedx12 {
 
 	Mat4x4 Camera::GetViewMatrix()
 	{
-		return (Mat4x4)XMMatrixLookToLH(m_eye, m_lookDirection, m_upDirection);
+		return (Mat4x4)XMMatrixLookAtLH(m_eye, m_at, m_up);
 	}
 
 	Mat4x4 Camera::GetProjectionMatrix()
 	{
 		return (Mat4x4)XMMatrixPerspectiveFovLH(m_fovY, m_aspectRatio, m_nearPlane, m_farPlane);
-	}
-
-	shared_ptr<Camera>
-	Camera::CreateCameraWithDir(const Float3& eye, const Float3& lookDirection) {
-		try {
-			shared_ptr<Camera> Ptr = shared_ptr<Camera>(new Camera(eye, lookDirection));
-			return Ptr;
-		}
-		catch (...) {
-			throw;
-		}
-	}
-
-	shared_ptr<Camera>
-	Camera::CreateCameraWithAt(const Float3& eye, const Float3& at) {
-		try {
-			Float3 dir = at - eye;
-			dir.normalize();
-			shared_ptr<Camera> Ptr = shared_ptr<Camera>(new Camera(eye, dir));
-			return Ptr;
-		}
-		catch (...) {
-			throw;
-		}
 	}
 
 }

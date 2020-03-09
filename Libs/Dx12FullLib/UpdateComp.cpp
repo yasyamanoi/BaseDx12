@@ -131,6 +131,14 @@ namespace basedx12 {
 		SetRotation(Float3(x, y, z));
 	}
 
+	void Transform::AddPosition(const Float3& addpos) {
+		if (!addpos.isNaN() && !addpos.isInfinite()) {
+			m_position += addpos;
+			m_dirtyFlg = true;
+		}
+	}
+
+
 	Float3 Transform::GetPosition() const {
 		return m_position;
 	}

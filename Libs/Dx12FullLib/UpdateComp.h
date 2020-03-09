@@ -89,6 +89,7 @@ namespace basedx12 {
 		void SetRotation(const Float3& rot);
 		void SetRotation(float x, float y, float z);
 		Float3 GetPosition() const;
+		void AddPosition(const Float3& addpos);
 		void SetPosition(const Float3& pos);
 		void SetPosition(float x, float y, float z);
 		void ResetPosition(const Float3& pos);

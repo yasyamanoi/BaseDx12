@@ -100,6 +100,8 @@ namespace basedx12 {
 		//テクスチャ
 		shared_ptr<Dx12Texture> m_texture;
 		wstring m_textureFileName;
+		//シェーダリソースのインデックス
+		UINT m_srvIndex;
 		//ライトセットのキー
 		wstring m_lightSetKey;
 		void SetConstants();

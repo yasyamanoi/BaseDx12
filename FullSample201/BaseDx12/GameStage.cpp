@@ -4,7 +4,7 @@
 namespace basedx12 {
 
     void GameStage::OnInit() {
-        auto camera = Camera::CreateCameraWithAt(Float3(0,3.0f,-5.0f), Float3(0, 0, 0));
+        auto camera = Camera::CreateCamera<Camera>(Float3(0,3.0f,-5.0f), Float3(0, 0, 0));
         AddCamera(camera, L"MainCamera");
         auto lightSet = LightSet::CreateDefaultLights();
         AddLightSet(lightSet, L"MainLightSet");

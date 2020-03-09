@@ -37,7 +37,23 @@ namespace basedx12 {
 			}
 		}
 		void AddCamera(const shared_ptr<Camera>& camera, const wstring& key);
+
 		shared_ptr<Camera> GetCamera(const wstring& key)const;
+		template<typename T>
+		shared_ptr<T> GetTypedCamera(const wstring& key)const {
+			shared_ptr<T> ptr = dynamic_pointer_cast<T>(GetCamera(key));
+			if (ptr) {
+				return ptr;
+			}
+			else {
+				throw BaseException(
+					L"カメラがキャストできません",
+					L"Stage::GetTypedCamera()"
+				);
+			}
+			return nullptr;
+		}
+
 		void AddLightSet(const shared_ptr<LightSet>& lightSet, const wstring& key);
 		shared_ptr<LightSet> GetLightSet(const wstring& key)const;
 		const BasePhysics& GetBasePhysics() const {

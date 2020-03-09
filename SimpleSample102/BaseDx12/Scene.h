@@ -55,10 +55,12 @@ namespace basedx12 {
     class MoveSquare {
         //PositionTextureの四角形メッシュ
         shared_ptr<Dx12Mesh> m_ptSquareMesh;
-        //テクスチャ
-        shared_ptr<Dx12Texture> m_SkyTexture;
         //PositionTexture用パイプラインステート（コンスタントバッファあり）
         ComPtr<ID3D12PipelineState> m_ptConstPipelineState;
+        //テクスチャ
+        shared_ptr<Dx12Texture> m_SkyTexture;
+        //テクスチャ（シェーダリソース）のインデックス
+        UINT m_srvIndex;
         //コンスタントバッファ構造体の実体
         SceneConstantBuffer m_constantBufferData;
         //コンスタントバッファ

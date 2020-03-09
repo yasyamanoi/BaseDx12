@@ -2,31 +2,29 @@
 
 namespace basedx12 {
 
-	Dx12Device::Dx12Device(UINT frameCount, UINT constBuffMax) :
+	Dx12Device::Dx12Device(UINT frameCount, UINT cbvSrvUavMax) :
 		m_frameCount(frameCount),
 		m_fenceValues(m_frameCount),
 		m_renderTargets(m_frameCount),
 		m_commandAllocators(m_frameCount),
 		m_viewport(0.0f, 0.0f, static_cast<float>(App::GetGameWidth()), static_cast<float>(App::GetGameHeight())),
 		m_scissorRect(0, 0, static_cast<LONG>(App::GetGameWidth()), static_cast<LONG>(App::GetGameHeight())),
-		m_constBuffMax(constBuffMax),
-		m_constBuffSendIndex(0)
+		m_cbvSrvUavMax(cbvSrvUavMax),
+		m_cbvSrvUavSendIndex(0)
 	{
 		m_aspectRatio = static_cast<float>(App::GetGameWidth()) / static_cast<float>(App::GetGameHeight());
 	}
 
 	Dx12Device::~Dx12Device() {}
 
-	UINT Dx12Device::GetConstBuffNextIndex() {
-		//初期値は1にするSRVのぶんをインクリメント
-		m_constBuffSendIndex++;
-		if (m_constBuffSendIndex >= m_constBuffMax) {
+	UINT Dx12Device::GetCbvSrvUavNextIndex() {
+		if (m_cbvSrvUavSendIndex >= m_cbvSrvUavMax) {
 			throw BaseException(
-				L"これ以上コンスタントバッファは増やせません。\n",
-				L"Default2DDivece::GetConstBuffNextIndex()"
+				L"これ以上シェーダリソースとコンスタントバッファは増やせません。\n",
+				L"Default2DDivece::GetCbvSrvUavNextIndex()"
 			);
 		}
-		return m_constBuffSendIndex;
+		return m_cbvSrvUavSendIndex++;
 	}
 
 

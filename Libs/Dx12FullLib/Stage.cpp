@@ -72,6 +72,10 @@ namespace basedx12 {
 				v->ComponentUpdate();
 			}
 		}
+		//ƒJƒƒ‰‚Ìupdate
+		for (auto it = m_cameraMap.begin(); it != m_cameraMap.end(); it++) {
+			it->second->OnUpdate();
+		}
 	}
 
 

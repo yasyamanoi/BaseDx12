@@ -43,10 +43,6 @@ namespace basedx12 {
 
 		static float GetElapsedTime() {
 			double d = m_timer.GetElapsedSeconds();
-			//0œZ‰ñ”ğ‚Ì‚½‚ß1000•ª‚Ì1–¢–‚Í•Ô‚ç‚È‚¢‚æ‚¤‚É‚·‚é
-			if (d < 0.001) {
-				d = 0.001;
-			}
 			return (float)d;
 		}
 
