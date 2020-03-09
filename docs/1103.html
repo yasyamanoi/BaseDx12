@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
+</head>
+<body>
+<!-- 全体コンテナ　-->
+<div id="container">
+<header>
+<div id="title_words">BaseDx12（Dx12研究とフレームワーク）</div>
+</header>
+<!-- contents　-->
+<div id="contents">
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１１０３．シンプルな三角形の描画（３）</h1>
+　では、前項に続きまして<b>GameDivece::LoadPipeline()関数</b>の中身を解説したいと思います。
+<h4>factory</h4>
+　数々の<b>Dx12オブジェクト</b>の中で、<b>factory</b>はちょっと変わったオブジェクトです。<br />
+　<b>factory</b>問う名前の通り、何かを作成するために存在します。その何か、というのは<b>Dx12デバイス</b>と<b>スワップチェーン</b>です。この2つは<b>factory</b>を使って構築します。<br/>
+　<b>factory</b>の構築は以下の様な記述になっています。
+<div class="box1">
+<pre>
+        //ファクトリ
+        ComPtr&lt;IDXGIFactory4> factory = Dx12Factory::CreateDirect();
+</pre>
+</div>
+　<b>Dx12Factory</b>は<b>ネームスペース</b>となっており、追いかけていくと以下の記述になります。
+<div class="box1">
+<pre>
+    namespace Dx12Factory {
+        static inline ComPtr&lt;IDXGIFactory4> CreateDirect() {
+            UINT dxgiFactoryFlags = 0;
+#if defined(_DEBUG)
+            // Enable the debug layer (requires the Graphics Tools "optional feature").
+            // NOTE: Enabling the debug layer after device creation will invalidate the active device.
+            {
+                ComPtr&lt;ID3D12Debug> debugController;
+                if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+                {
+                    debugController->EnableDebugLayer();
+
+                    // Enable additional debug layers.
+                    dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+                }
+            }
+#endif
+            ComPtr&lt;IDXGIFactory4> factory;
+            <span class="red">ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));</span>
+            return factory;
+        }
+    }
+</pre>
+</div>
+　このように、<b>DirectX-Graphics-Samples</b>の中のサンプルと同様になっています。<br />
+　また、赤くなっている<b>ThrowIfFailed()関数</b>について説明します。<br />
+　実体は以下のようになっています。これも<b>DirectX-Graphics-Samples</b>を習ったものです。
+<div class="box1">
+<pre>
+    inline void ThrowIfFailed(HRESULT hr)
+    {
+        if (FAILED(hr))
+        {
+            throw HrException(hr);
+        }
+    }
+</pre>
+</div>
+　このようにシンプルなものです。<b>Dx12</b>は全体的に<b>COM</b>という技術を利用します。<b>CreateDXGIFactory2()関数</b>などは、<b>COMインターフェイス</b>を作成します。これらの関数は<b>HRESULT</b>という型を返しますが、これが失敗した時は<b>FAILED(hr)</b>でチェックできる形になります。つまり、関数呼び出しに失敗したら、例外をスローしなさい、という意味になります。<br />
+　<b>BaseDx12</b>ではこれをカスタマイズした<b>日本語のエラー文字</b>を送出できるバージョンもあります。以下が実体です。
+<div class="box1">
+<pre>
+    inline void ThrowIfFailed(HRESULT hr,
+        const std::wstring& wstr1,
+        const std::wstring& wstr2 = std::wstring(),
+        const std::wstring& wstr3 = std::wstring()
+    )
+    {
+        if (FAILED(hr))
+        {
+            throw HrException(hr, Util::WStoRetMB(wstr1) + Util::WStoRetMB(wstr2) + Util::WStoRetMB(wstr3));
+        }
+    }
+
+    inline void ThrowIfFailed(HRESULT hr,
+        const std::string& str1,
+        const std::string& str2 = std::string(),
+        const std::string& str3 = std::string()
+    )
+    {
+        if (FAILED(hr))
+        {
+            throw HrException(hr, str1 + str2 + str3);
+        }
+    }
+</pre>
+</div>
+　このように<b>wstring版</b>と<b>string版</b>があります。
+<h4>デバイス</h4>
+　これまでの<b>DirectX</b>のバージョンもそうでしたが、<b>Dx12</b>も中心となる重要なオブジェクトは<b>デバイス</b>です。<br />
+　多くの命令がこの<b>デバイス</b>を通じて行われます。<br />
+　<b>factory</b>の作成が終わりましたら、続いて作成します。以下がそのブロックです。
+<div class="box1">
+<pre>
+        //デバイス
+        m_device = D3D12Device::CreateDefault(factory, m_useWarpDevice);
+</pre>
+</div>
+　ここで、先ほど作成した<b>factory</b>を渡します。<b>m_useWarpDevice</b>というのは<b>ラップデバイスを使うかどうか</b>です。<b>ハードウェアデバイスのみに対応するのでfaise</b>となっています。<br />
+　<b>m_device</b>というのは、親クラスの<b>Dx12Deviceクラス</b>にある<b>protected変数</b>です。<b>protected</b>なので、継承先である<b>GameDiveceクラス</b>からも、直接扱えます。<br />
+　その宣言は以下のようになっています。
+<div class="box1">
+<pre>
+        ComPtr&lt;ID3D12Device> m_device;
+</pre>
+</div>
+　このように<b>ID3D12Deviceインターフェイス</b>が<b>Dx12のデバイス</b>です。<br />
+　デバイスの作成は、以下の様なコードが呼ばれます。
+<div class="box1">
+<pre>
+        static inline ComPtr&lt;ID3D12Device> CreateDefault(ComPtr&lt;IDXGIFactory4> factory, bool useWarpDevice) {
+            ComPtr&lt;ID3D12Device> device;
+            if (useWarpDevice)
+            {
+                ComPtr&lt;IDXGIAdapter> warpAdapter;
+                ThrowIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
+
+                ThrowIfFailed(D3D12CreateDevice(
+                    warpAdapter.Get(),
+                    D3D_FEATURE_LEVEL_11_0,
+                    IID_PPV_ARGS(&device)
+                ));
+            }
+            else
+            {
+                <span class="red">ComPtr&lt;IDXGIAdapter1> hardwareAdapter;
+                GetHardwareAdapter(factory.Get(), &hardwareAdapter);
+
+                ThrowIfFailed(D3D12CreateDevice(
+                    hardwareAdapter.Get(),
+                    D3D_FEATURE_LEVEL_11_0,
+                    IID_PPV_ARGS(&device)
+                ));</span>
+            }
+            return device;
+        }
+</pre>
+</div>
+　ラップモードではありませんので、赤い部分が実行されます。<br />
+　ここで呼ばれている<b>GetHardwareAdapter()関数</b>はサブ関数で、以下の様な内容です。
+<div class="box1">
+<pre>
+_Use_decl_annotations_
+void GetHardwareAdapter(IDXGIFactory2* pFactory, IDXGIAdapter1** ppAdapter)
+{
+    ComPtr&lt;IDXGIAdapter1> adapter;
+    *ppAdapter = nullptr;
+
+    for (UINT adapterIndex = 0; DXGI_ERROR_NOT_FOUND != pFactory->EnumAdapters1(adapterIndex, &adapter); ++adapterIndex)
+    {
+        DXGI_ADAPTER_DESC1 desc;
+        adapter->GetDesc1(&desc);
+
+        if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+        {
+            // Don't select the Basic Render Driver adapter.
+            // If you want a software adapter, pass in "/warp" on the command line.
+            continue;
+        }
+
+        // Check to see if the adapter supports Direct3D 12, but don't create the
+        // actual device yet.
+        if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr)))
+        {
+            break;
+        }
+    }
+
+    *ppAdapter = adapter.Detach();
+}
+</pre>
+</div>
+　ここの記述は<b>DirectX-Graphics-Samples</b>のものとまるで同じですが、この部分をオリジナル化するメリットもありません。<br />
+　着実にお決まりの処理をこなしてくれればいいと思います。<br />
+<br />
+　このようにして、作成された<b>ID3D12Deviceインターフェイス</b>は<b>D3D12Device::CreateDefault()関数</b>によって作成され、<b>GameDivece::LoadPipeline()関数</b>に戻されます。<br />
+<br />
+　それでは次項では<b>スワップチェーン</b>の作成をしましょう。
+</div>
+<!-- /contents　-->
+<!-- フッタ　-->
+<footer>
+<table>
+<tr>
+<td><a href="1102.html">前へ</a></td>
+<td><a href="index.html">目次</a></td>
+<td><a href="1104.html">次へ</a></td>
+</tr>
+</table>
+</footer>
+<!-- /フッタ　-->
+</div>
+<!-- /全体コンテナ　-->
+</body>
+</html>

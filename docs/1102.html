@@ -2,8 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
 <link href="css/main.css" rel="stylesheet" type="text/css">
-<title>BaseDx12（Dx12研究とフレームワーク）</title>
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
 </head>
 <body>
 <!-- 全体コンテナ　-->
@@ -14,9 +19,30 @@
 <!-- contents　-->
 <div id="contents">
 <h1>【第1部】シンプルバージョン編</h1>
-<h1 class="pagetitle">１１０１．シンプルな三角形の描画（２）</h1>
+<h1 class="pagetitle">１１０２．シンプルな三角形の描画（２）</h1>
 <h4>GameDiveceクラス</h4>
-　さて、前項で<b>GameDiveceクラス</b>を紹介しました。コンテンツ側にあるクラスで<b>GameDevice.h/cpp</b>に記述があります。<br />　初期化関数である、<b>GameDivece::OnInit()</b>は<b>GameDevice.cpp</b>にあり、そこには以下の2行が書かれています。
+　さて、前項で<b>GameDiveceクラス</b>を紹介しました。コンテンツ側にあるクラスで<b>GameDevice.h/cpp</b>に記述があります。<br />
+　まずコンストラクタですが、以下の記述になっています。
+<div class="box1">
+<pre>
+    GameDivece::GameDivece(UINT frameCount) :
+        Dx12Device(frameCount)
+    {
+    }
+</pre>
+</div>
+　となっています。<b>frameCount</b>は、前項で出てきた
+<div class="box1">
+<pre>
+    void Scene::OnInit() {
+        ResetActiveDx12Device&lt;GameDivece>(2);
+    }
+</pre>
+</div>
+　の<b>2</b>です。このサンプルでは<b>フレーム数</b>は<b>2個</b>で作成します。<br />
+　<b>フレーム数</b>というのは<b>バックバッファの数</b>と考えて差し支えないでしょう。この後、<b>スワップチェーン</b>や<b>レンダーターゲットビュー</b>そして<b>コマンドアロケータ</b>などの作成に影響します。<br />
+<br />
+　初期化関数である、<b>GameDivece::OnInit()</b>は<b>GameDevice.cpp</b>にあり、そこには以下の2行が書かれています。
 <div class="box1">
 <pre>
     void GameDivece::OnInit()

@@ -274,8 +274,8 @@ ul#clang li,ul#cpp li {
 footer{
 	margin-top: 10px;
 	background-color: #800000;
-	padding: 10px 10px;
-	height: 50px;
+	padding-top: 16px;
+	padding-bottom: 40px;
 	font-size: 10pt;
 	text-align: center;
 	color: #FFFFFF;
