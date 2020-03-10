@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
+</head>
+<body>
+<!-- 全体コンテナ　-->
+<div id="container">
+<header>
+<div id="title_words">BaseDx12（Dx12研究とフレームワーク）</div>
+</header>
+<!-- contents　-->
+<div id="contents">
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１１０４．シンプルな三角形の描画（４）</h1>
+　では、前項に続きまして<b>GameDivece::LoadPipeline()関数</b>の中身を解説したいと思います。
+<h4>コマンドキュー</h4>
+　続いて<b>コマンドキュー</b>を作成します。<br />
+　<b>Dx12</b>は<b>コマンドリスト</b>という<b>描画命令をまとめたもの</b>を積み上げていって、いくつかのタイミングで<b>一気に実行</b>します。<br />
+　その際<b>コマンドリストを実行する</b>という役割を果たすのが<b>コマンドキュー</b>です。<br />
+　<b>コマンドキュー</b>は、以下のように作成します。
+<div class="box1">
+<pre>
+        //コマンドキュー
+        m_commandQueue = CommandQueue::CreateDefault();
+</pre>
+</div>
+　この呼び出しは、以下のようなコードになります。
+<div class="box1">
+<pre>
+    namespace CommandQueue {
+        static inline ComPtr&lt;ID3D12CommandQueue> CreateDirect(const D3D12_COMMAND_QUEUE_DESC& desc) {
+            auto Dev = App::GetID3D12Device();
+            ComPtr&lt;ID3D12CommandQueue> queue;
+            ThrowIfFailed(Dev->CreateCommandQueue(&desc, IID_PPV_ARGS(&queue)));
+            return queue;
+        }
+        static inline ComPtr&lt;ID3D12CommandQueue> <span class="red">CreateDefault()</span> {
+            D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+            queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+            queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+            return CreateDirect(queueDesc);
+        }
+    }
+</pre>
+</div>
+　このように、まず、赤くなってる<b>CommandQueue::CreateDefault()</b>が呼び出され、そこから、<b>CreateDirect()関数</b>を呼び出します。<br />
+　<b>CreateDirect()関数</b>内では
+<div class="box1">
+<pre>
+            ThrowIfFailed(Dev->CreateCommandQueue(&desc, IID_PPV_ARGS(&queue)));
+</pre>
+</div>
+　と実行して、<b>queue</b>を初期化し、そのままリターンします。<br />
+　コマンドキューも特別なパラメータをつける必要もないでしょう（<b>DirectX-Graphics-Samples</b>と同じで良いと思います）。
+<h4>スワップチェーン</h4>
+　続いて<b>スワップチェーン</b>です。GPUは<b>バックバッファ</b>に書き込みが終わると、その<b>バックバッファ</b>を<b>フロントバッファ</b>に交換して<b>プレゼンテーション</b>という処理を行いますが、この処理を行うのが<b>スワップチェーン</b>です。<b>バックバッファ</b>は、複数設定でき、このサンプルでは2つ使用しますが、それらに対して、<b>順番に書き込み</b><b>フロントバッファに移動</b>の処理を、<b>スワッププチェーン</b>は行います。<br />
+　<b>スワッププチェーン</b>に渡すパラメータは、3つ、<b>ファクトリ、コマンドキュー、そして、フレーム数</b>です。
+<div class="box1">
+<pre>
+        //スワップチェーン
+        m_swapChain = SwapChain::CreateDefault(factory,m_commandQueue, m_frameCount);
+</pre>
+</div>
+　のように初期化します。中で行われている処理は、以下の内容です。
+<div class="box1">
+<pre>
+namespace SwapChain {
+    static inline ComPtr&lt;IDXGISwapChain3> 
+    CreateDirect(
+        ComPtr&lt;IDXGIFactory4> factory,
+        const DXGI_SWAP_CHAIN_DESC1& desc,
+        ComPtr&lt;ID3D12CommandQueue> queue
+    ) {
+        ComPtr&lt;IDXGISwapChain1> swapChain;
+        ThrowIfFailed(factory->CreateSwapChainForHwnd(
+            queue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
+            App::GetHwnd(),
+            &desc,
+            nullptr,
+            nullptr,
+            &swapChain
+        ));
+        //Alt+Enterでフルスクリーンにならない
+        ThrowIfFailed(factory->MakeWindowAssociation(App::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
+        ComPtr&lt;IDXGISwapChain3> swapChain3;
+        ThrowIfFailed(swapChain.As(&swapChain3));
+        return swapChain3;
+    }
+    static inline ComPtr&lt;IDXGISwapChain3>
+    <span class="red">CreateDefault(ComPtr&lt;IDXGIFactory4> factory,ComPtr&lt;ID3D12CommandQueue> queue,UINT framecount)</span> {
+        // Describe and create the swap chain.
+        DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+        swapChainDesc.BufferCount = framecount;
+        swapChainDesc.Width = App::GetGameWidth();
+        swapChainDesc.Height = App::GetGameHeight();
+        swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        swapChainDesc.SampleDesc.Count = 1;
+        return CreateDirect(factory,swapChainDesc, queue);
+    }
+}
+</pre>
+</div>
+　赤くなっているところが、<b>GameDivece::LoadPipeline()</b>から呼ばれる関数です。<br />
+　この中では<b>スワップチェーン</b>を作成するために、まとめておく構造体<b>DXGI_SWAP_CHAIN_DESC1</b>を定義します。<br />
+<div class="box1">
+<pre>
+        DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+</pre>
+</div>
+　で、内容を0にします。
+<div class="box1">
+<pre>
+        swapChainDesc.BufferCount = framecount;
+</pre>
+</div>
+　は<b>フレーム数</b>の設定ですね。このサンプルでは<b>2</b>です
+<div class="box1">
+<pre>
+        swapChainDesc.Width = App::GetGameWidth();
+        swapChainDesc.Height = App::GetGameHeight();
+</pre>
+</div>
+　は、ウインドウの大きさです。<b>Appクラス</b>に登録されているので持ってきます。
+<div class="box1">
+<pre>
+        swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+</pre>
+</div>
+　は、RGBA（Red、Green、Blue、Alpha）の、各8ビット正規化整数形式、です。
+<div class="box1">
+<pre>
+        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+</pre>
+</div>
+　は、スワップチェーンが<b>レンダーターゲット出力用</b>として使用する設定です。
+<div class="box1">
+<pre>
+        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+</pre>
+</div>
+　は<b>プレゼント</b>した後に、バックバッファの内容を破棄するよう設定します。
+<div class="box1">
+<pre>
+        swapChainDesc.SampleDesc.Count = 1;
+</pre>
+</div>
+　ピクセルごとのマルチサンプルの数で、ここでは、<b>1</b>を指定しています。<br />
+　ここに出てきてない設定は、
+<div class="box1">
+<pre>
+        DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+</pre>
+</div>
+　で<b>0</b>に初期化されていますので、<b>0</b>や<b>false</b>ふが設定されています。<br />
+<br />
+　設定が終わったら、
+<div class="box1">
+<pre>
+        return CreateDirect(factory,swapChainDesc, queue);
+</pre>
+</div>
+　と<b>CreateDirect()関数</b>を、定義済み構造体を渡して呼び出し、その戻り値を直接返します。<br />
+<br />
+　<b>CreateDirect()関数</b>では、まず、ウィンドウのハンドルをもとに<b>スワップチェーン</b>を作成します。
+<div class="box1">
+<pre>
+        ComPtr&lt;IDXGISwapChain1> swapChain;
+        ThrowIfFailed(factory->CreateSwapChainForHwnd(
+            queue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
+            App::GetHwnd(),
+            &desc,
+            nullptr,
+            nullptr,
+            &swapChain
+        ));
+
+</pre>
+</div>
+　ただここで作成されるのは<b>IDXGISwapChain1インターフェイス</b>です。<br />
+　サンプルで使用するのは<b>IDXGISwapChain3インターフェイス</b>なので、もう少し作業があります。<br />
+　まず、<b>Alt+Enterでフルスクリーンにならない</b>ようにします。<b>DirectX</b>は伝統的に<b>Alt+Enter</b>でフルスクリーンに切り替えができますが、その機能はできなくします。<br />
+　ただしその設定は<b>IDXGISwapChain1インターフェイス</b>を使って設定しますので
+<div class="box1">
+<pre>
+        //Alt+Enterでフルスクリーンにならない
+        ThrowIfFailed(factory->MakeWindowAssociation(App::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
+</pre>
+</div>
+　を実行します。こうすると<b>Alt+Enterでフルスクリーンにならない設定</b>になります。<br />
+　最後に
+<div class="box1">
+<pre>
+        ComPtr&lt;IDXGISwapChain3> swapChain3;
+        ThrowIfFailed(swapChain.As(&swapChain3));
+        return swapChain3;
+</pre>
+</div>
+　と<b>IDXGISwapChain3インターフェイス</b>にバージョンアップして、それをリターンします。<br />
+　このようにして<b>IDXGISwapChain3インターフェイス</b>の作成が終わります。<br />
+<br />
+　<b>GameDivece::LoadPipeline()</b>ではこの戻り値を<b>m_swapChain</b>に代入します。<br />
+　その後
+<div class="box1">
+<pre>
+        //フレームインデックスの初期値
+        m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+</pre>
+</div>
+　と<b>フレームのインデックス</b>を設定します。この値は、m_swapChain経由で取得します。<br />
+<br />
+　次項では、<b>デスクプリタヒープ</b>の設定をします。<br />
+　<b>デスクプリタヒープ</b>は、<b>Dx12</b>の中でも、<b>１，２を争うよくわからないオブジェクト</b>だと思います。<br />
+　しかし、細かく見ていけば、その存在理由もわかってくると思います。
+</div>
+<!-- /contents　-->
+<!-- フッタ　-->
+<footer>
+<table>
+<tr>
+<td><a href="1103.html">前へ</a></td>
+<td><a href="index.html">目次</a></td>
+<td><a href="1105.html">次へ</a></td>
+</tr>
+</table>
+</footer>
+<!-- /フッタ　-->
+</div>
+<!-- /全体コンテナ　-->
+</body>
+</html>
