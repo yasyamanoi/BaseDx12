@@ -195,6 +195,7 @@ namespace basedx12 {
     }
 
 	void Scene::OnInit() {
+        //ƒtƒŒ[ƒ€”‚Í3
 		ResetActiveDx12Device<GameDivece>(3);
 	}
 	void Scene::OnInitAssets() {
