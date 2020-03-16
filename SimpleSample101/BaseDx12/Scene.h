@@ -9,7 +9,7 @@ namespace basedx12 {
 
 	class Scene :public SceneBase {
 		ComPtr<ID3D12PipelineState> m_pipelineState;
-		shared_ptr<Dx12Mesh> m_Dx12Mesh;
+		shared_ptr<Dx12Mesh> m_dx12Mesh;
 	public:
 		Scene() :SceneBase() {}
 		virtual ~Scene() {}

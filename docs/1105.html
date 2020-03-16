@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
+</head>
+<body>
+<!-- 全体コンテナ　-->
+<div id="container">
+<header>
+<div id="title_words">BaseDx12（Dx12研究とフレームワーク）</div>
+</header>
+<!-- contents　-->
+<div id="contents">
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１１０５．シンプルな三角形の描画（５）</h1>
+　では、前項に続きまして<b>GameDivece::LoadPipeline()関数</b>の中身を解説したいと思います。
+<h4>ディスクリプタヒープ</h4>
+　<b>ディスクリプタヒープ</b>はGPUとやり取りをする<b>窓口</b>のようなものと考えられます。<br />
+　で、その窓口はいくつか種類があります。<br />
+<div class="box1">
+<pre>
+＊レンダーターゲットビュー用の窓口（RTV）
+＊デプスステンシルビュー用の窓口（DSV）
+＊サンプラー用の窓口（SAMPLER）
+＊コンスタントバッファ、シェーダリソース、順序指定されないアクセスビュー用の窓口（CBV_SRV_UAV）
+</pre>
+</div>
+　以下のような概念です。<br />
+<p>&nbsp;</p>
+<img src="img/1105a.png" width="80%"/>
+<p>図1105a</p>
+<p>&nbsp;</p>
+　このサンプルでは<b>RTV用</b>しか使いません。<b>RTV</b>はフレームの数だけ作成します。このサンプルでは2つです。<br />
+　<b>サンプラー用</b>と<b>CBV_SRV_UAV用</b>は次のサンプルで説明します。<br />
+　<b>RTV</b>用の<b>ディスクリプタヒープ</b>は<b>フレーム数</b>だけ作成します。以下の様な記述になります。
+<div class="box1">
+<pre>
+    // レンダリングターゲットビュー
+    m_rtvHeap = <span class="red">DescriptorHeap::CreateRtvHeap(m_frameCount);</span>
+    m_rtvDescriptorSize = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+</pre>
+</div>
+　このうち赤くなっている部分は、以下のコードを実行します。
+<div class="box1">
+<pre>
+    namespace DescriptorHeap {
+        static inline ComPtr&lt;ID3D12DescriptorHeap> CreateDirect(const D3D12_DESCRIPTOR_HEAP_DESC& desc) {
+            auto Dev = App::GetID3D12Device();
+            ComPtr&lt;ID3D12DescriptorHeap> Ret;
+            ThrowIfFailed(Dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&Ret)),
+                L"デスクプリタヒープの作成に失敗しました",
+                L"Dev->GetDevice()->CreateDescriptorHeap()",
+                L"DescriptorHeap::CreateDirect()"
+            );
+            return Ret;
+        }
+        static inline ComPtr&lt;ID3D12DescriptorHeap> <span class="red">CreateRtvHeap(UINT FrameCount)</span> {
+            //Rtvデスクプリタヒープ
+            D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+            rtvHeapDesc.NumDescriptors = FrameCount;
+            rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+            rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+            return CreateDirect(rtvHeapDesc);
+        }
+//中略
+    }
+</pre>
+</div>
+　赤くなっている部分が呼び出される関数です。<br />
+　ここでは<b>D3D12_DESCRIPTOR_HEAP_DESC構造体</b>を設定します。
+<div class="box1">
+<pre>
+            rtvHeapDesc.NumDescriptors = FrameCount;
+</pre>
+</div>
+　は、フレーム数です。このサンプルでは<b>2</b>ですね。
+<div class="box1">
+<pre>
+            rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+</pre>
+</div>
+　は種類です。<b>RTV用</b>なので<b>D3D12_DESCRIPTOR_HEAP_TYPE_RTV</b>となります。
+<div class="box1">
+<pre>
+            rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+</pre>
+</div>
+　ここで<b>rtvHeapDesc.Flags</b>は、シェーダーにデータを渡す場合は<b>D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE</b>になります。<br />
+　<b>RTV</b>は、シェーダーに渡すわけではないので<b>D3D12_DESCRIPTOR_HEAP_FLAG_NONE</b>になります。<br />
+　このあと
+<div class="box1">
+<pre>
+            return CreateDirect(rtvHeapDesc);
+</pre>
+</div>
+　と<b>CreateDirect()関数</b>に<b>D3D12_DESCRIPTOR_HEAP_DESC構造体</b>を渡します。<br />
+　<b>CreateDirect()関数</b>では<b>D3D12_DESCRIPTOR_HEAP_DESC構造体</b>をもとに、<b>RTV用</b>の<b>ディスクリプタヒープ</b>を作成します。<br />
+　作り出すのは<b>ID3D12DescriptorHeapインターフェイス</b>です。この時<b>デバイス</b>が必要なので<b>Appクラス</b>から取り出します。
+<div class="box1">
+<pre>
+            auto Dev = App::GetID3D12Device();
+            ComPtr&lt;ID3D12DescriptorHeap> Ret;
+            ThrowIfFailed(Dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&Ret)),
+                L"デスクプリタヒープの作成に失敗しました",
+                L"Dev->GetDevice()->CreateDescriptorHeap()",
+                L"DescriptorHeap::CreateDirect()"
+            );
+            return Ret;
+</pre>
+</div>
+　なぜ<b>Appクラス</b>から参照できるかというと、<b>１１０１．シンプルな三角形の描画（１）</b>で紹介した
+<div class="box1">
+<pre>
+    void Scene::OnInit() {
+        ResetActiveDx12Device&lt;GameDivece>(2);
+    }
+</pre>
+</div>
+　で、<b>ResetActiveDx12Device()関数</b>が、<b>GameDiveceクラス</b>のインスタンスを<b>Appクラス</b>に渡しているからです。<br />
+<br />
+　このようにして作成された<b>RTV用</b>の<b>ディスクリプタヒープ</b>が
+<div class="box1">
+<pre>
+    m_rtvHeap = <span class="red">DescriptorHeap::CreateRtvHeap(m_frameCount);</span>
+</pre>
+</div>
+　と<b>m_rtvHeap</b>に渡されるわけです。<br />
+　このあと
+<div class="box1">
+<pre>
+    m_rtvDescriptorSize = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+</pre>
+</div>
+　で、その<b>ディスクリプタヒープの大きさ</b>を取得します。<b>RTV用</b>の<b>ディスクリプタヒープ</b>は後ほど、複数のフレーム（すなわち複数のレンダーターゲット）と組み合わされるので、<b>ディスクリプタヒープの大きさ</b>が必要です。
+<h4>RTVとコマンドアロケータ</h4>
+　<b>ディスクリプタヒープ</b>の作成が追わったら、複数の<b>RTV用ディスクリプタヒープ</b>と<b>レンダーターゲットビュー</b>を結びつけます。<br />
+　以下がその内容です
+<div class="box1">
+<pre>
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+    for (UINT n = 0; n &lt; m_frameCount; n++)
+    {
+        ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
+        m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
+        rtvHandle.Offset(1, m_rtvDescriptorSize);
+        //コマンドアロケータ
+        m_commandAllocators[n] = CommandAllocator::CreateDefault();
+    }
+</pre>
+</div>
+　ここでは<b>レンダーターゲットビュー</b>のほかに<b>コマンドアロケータ</b>も作成します。<br />
+　<b>コマンドアロケーター</b>は、<b>コマンドリスト</b>を作成するためのユーティリティと考えることができます。<b>アロケーター</b>という名前がついているのは、<b>領域確保</b>するユーティリティだからです。<b>コマンドアロケーター</b>もフレーム数だけ必要なので、一緒に作成します。<br />
+　<b>レンダーターゲットビュー</b>と<b>ディスクリプタヒープ</b>を結びつけるには、<b>ハンドル</b>というのを作成しなければいけません。
+<div class="box1">
+<pre>
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+</pre>
+</div>
+　で、<b>m_rtvHeapのCPU側の先頭位置</b>を<b>ハンドル（rtvHandle）</b>を作成します。<br />
+　続いてループに入るわけですが
+<div class="box1">
+<pre>
+    for (UINT n = 0; n &lt; m_frameCount; n++)
+</pre>
+</div>
+　で、フレーム数だけ（ここでは2回）ループします。ループ内では
+<div class="box1">
+<pre>
+        ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
+</pre>
+</div>
+　で、スワップチェーンから<b>n番目のバッファ</b>を<b>m_renderTargets[n番目]</b>に取得します。<b>n</b>は、最初は<b>0</b>そして、2回目のループで<b>1</b>になりますね。<br />
+　その後
+<div class="box1">
+<pre>
+        m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
+</pre>
+</div>
+　で、<b>m_renderTargets[n番目]</b>と<b>rtvHandle</b>を結びつけてビューを作成します。これが<b>RTV</b>です。<br />
+　そして、最初のフレームの<b>RTV</b>を取得したので
+<div class="box1">
+<pre>
+        rtvHandle.Offset(1, m_rtvDescriptorSize);
+</pre>
+</div>
+　でハンドルを<b>m_rtvDescriptorSize分だけ</b>後ろにずらします。<br />
+　ですので次のループでは<b>rtvHandleは、スタート位置からm_rtvDescriptorSizeだけ後ろ</b>になるので、2つ目のフレームの<b>RTV</b>を作成することができます。<br />
+　ループ内では、一緒に<b>コマンドアロケータ</b>も作成します。コマンドアロケータの<b>m_commandAllocators変数</b>もフレーム数の配列にあっていますので、
+<div class="box1">
+<pre>
+        //コマンドアロケータ
+        m_commandAllocators[n] = CommandAllocator::CreateDefault();
+</pre>
+</div>
+　と書けます。<br />
+　ここで呼びだしている<b>CommandAllocator::CreateDefault()関数</b>は以下です。
+<div class="box1">
+<pre>
+    namespace CommandAllocator {
+        static inline  ComPtr&lt;ID3D12CommandAllocator> CreateDefault() {
+            //デバイスの取得
+            auto Dev = App::GetID3D12Device();
+            ComPtr&lt;ID3D12CommandAllocator> allocator;
+            ThrowIfFailed(
+                Dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&allocator)),
+                L"コマンドアロケータの作成に失敗しました",
+                L"Dev->CreateCommandAllocator()",
+                L"CommandAllocator::CreateDefault()"
+            );
+            return allocator;
+        }
+    }
+
+</pre>
+</div>
+　デバイスを取り出し、そのメンバ関数<b>CreateCommandAllocator()関数</b>で、コマンドアロケータを<b>allocator</b>に取得し、それをリターンします。<br />
+<br />
+　ここまでの処理で<b>GameDivece::LoadPipeline()</b>の処理は終わりです。この関数は、<b>GPU全体</b>にかかわる初期化と考えられます。<br />
+　次項では<b>各描画されるオブジェクト</b>に関する初期化である、<b>GameDivece::LoadAssets()関数</b>の解説を行います。
+
+</div>
+<!-- /contents　-->
+<!-- フッタ　-->
+<footer>
+<table>
+<tr>
+<td><a href="1104.html">前へ</a></td>
+<td><a href="index.html">目次</a></td>
+<td><a href="1106.html">次へ</a></td>
+</tr>
+</table>
+</footer>
+<!-- /フッタ　-->
+</div>
+<!-- /全体コンテナ　-->
+</body>
+</html>

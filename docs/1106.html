@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
+</head>
+<body>
+<!-- 全体コンテナ　-->
+<div id="container">
+<header>
+<div id="title_words">BaseDx12（Dx12研究とフレームワーク）</div>
+</header>
+<!-- contents　-->
+<div id="contents">
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１１０６．シンプルな三角形の描画（６）</h1>
+　この項から個別のオブジェクトの初期化関数である<b>GameDivece::LoadAssets()</b>に入ります。
+<h4>ルートシグネチャー</h4>
+　まず、<b>ルートシグネチャー</b>というインターフェイスを作成します。<br />
+　<b>ルートシグネチャー（直訳すればルート署名）</b>は、<b>シェーダーに何を渡すか</b>を定義します。<br />
+　<b>シェーダー</b>は以下の種類があります。（<b>Shader Model 5</b>の場合）
+<div class="box1">
+<pre>
+＊頂点シェーダ
+＊ピクセルシェーダ
+＊ジオメトリシェーダ
+＊ハルシェーダ
+＊ドメインシェーダ
+＊計算シェーダ
+</pre>
+</div>
+　これらのシェーダを使って、パイプラインに命令を流す場合、<b>どのシェーダにどのような方法でどのデータを渡すのか</b>を、細かく定義するのが<b>ルートシグネチャー</b>と言えます。<br />
+　ここで<b>計算シェーダ</b>は、描画するためのシェーダではなく<b>GPUを使った計算</b>をするためのものなので、ちょっとわきに置いておきます。<br />
+　しかしながら、今回のサンプルでは<b>シェーダに渡すのはメッシュの情報のみ</b>なので、一番シンプルな<b>ルートシグネチャー</b>を作成します。ですので<b>ルートシグネチャー</b>に対する細かい説明は、次のサンプル以降になります。<br/>
+　<b>GameDivece::LoadAssets()</b>に記述がある、<b>ルートシグネチャー</b>の初期化は以下になります。
+<div class="box1">
+<pre>
+        //一番シンプル
+        m_rootSignature = RootSignature::CreateSimple();
+</pre>
+</div>
+　そしてその内容は以下になります。赤くなっている部分が呼ばれる関数です。
+<div class="box1">
+<pre>
+namespace RootSignature {
+    static inline ComPtr&lt;ID3D12RootSignature> CreateDirect(const D3D12_ROOT_SIGNATURE_DESC& desc) {
+        auto Dev = App::GetID3D12Device();
+        D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+        if (FAILED(Dev->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
+        {
+            featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+        }
+        ComPtr&lt;ID3DBlob> signature;
+        ComPtr&lt;ID3DBlob> error;
+        ComPtr&lt;ID3D12RootSignature> Ret;
+        ThrowIfFailed(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error),
+            L"ルートシグネチャのシリアライズに失敗しました",
+            L"D3D12SerializeRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error)",
+            L"RootSignature::CreateDirect()"
+        );
+        ThrowIfFailed(
+            Dev->CreateRootSignature(0, signature->GetBufferPointer(),
+                signature->GetBufferSize(), IID_PPV_ARGS(&Ret)),
+            L"ルートシグネチャの作成に失敗しました",
+            L"Dev->CreateRootSignature()",
+            L"RootSignature::CreateDirect()"
+        );
+        return Ret;
+    }
+    //一番シンプルなルートシグネチャ
+    static inline ComPtr&lt;ID3D12RootSignature> <span class="red">CreateSimple()</span> {
+        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        return CreateDirect(rootSignatureDesc);
+    }
+//中略
+}
+
+</pre>
+</div>
+　ここでは<b>CD3DX12_ROOT_SIGNATURE_DESC構造体</b>を設定します。この構造体は<b>D3D12_ROOT_SIGNATURE_DESC構造体</b>を継承した、ユーティリティクラスです。ライブラリ中の<b>d3dx12.h</b>に記載されています。<br />
+　この構造体には<b>Init</b>というメンバ関数があり、パラメータは以下です。
+
+<div class="box1">
+<pre>
+void inline Init(
+    UINT numParameters,                         //パラメータの数
+    const D3D12_ROOT_PARAMETER* _pParameters,   //パラメータのポインタ
+    UINT numStaticSamplers = 0,                 //スタティックサンプラーの数
+    const D3D12_STATIC_SAMPLER_DESC* _pStaticSamplers = NULL,   //スタティックサンプラーのポインタ
+    D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_NONE   //フラグ
+);
+</pre>
+</div>
+　入力されるパラメータをを見ますと
+<div class="box1">
+<pre>
+    D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_NONE
+</pre>
+</div>
+　だけが、<b>D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT</b>になっているのがわかります。<br />
+　このパラメータは<b>インプットレイアウト</b>がパイプラインに入力されることを意味します。<br />
+　この後<b>CreateSimple()関数</b>は<b>CreateDirect()関数</b>を呼び出すわけですが、この関数は、他のタイプの<b>ルートシグネチャ作成</b>と共有する関数です。
+<h4>ルートシグネチャーはどう作成すべきか</h4>
+　ここでちょっとわき道にそれますが、<b>ルートシグネチャ</b>に関する、MS社のガイドブックには、日本語翻訳として<br />
+<br />
+<p>
+<hr>
+<b>　複数のパイプライン状態オブジェクト (PSO) グループで同じルート署名を共有している状態が理想的です。 パイプラインでルート署名を設定したら、それによって定義されるすべてのバインド (記述子テーブル、記述子、定数) を、バンドルへの継承も含めて個別に設定または変更できます。<br />
+　アプリでは、必要な記述子テーブルの数と、ルート署名に必要なインライン記述子の数 (より多くのスペースを使用するが間接参照を解消) やインライン定数 (間接参照なし) の数の間で独自にバランスを取ることができます。 <br />
+　<span class="red">アプリケーションでは、ルート署名の使用をできるだけ控えて、ヒープや記述子ヒープなどのアプリケーションが制御するメモリを利用してバルク データを表すようにする必要があります。</span></b>
+<hr>
+</p>
+<br />
+　という記述があります。<br />
+<div>
+<a href="https://docs.microsoft.com/ja-jp/windows/win32/direct3d12/root-signatures-overview" target="_blank">https://docs.microsoft.com/ja-jp/windows/win32/direct3d12/root-signatures-overview</a>
+</div>
+　この記述は、非常に重要で、ようは、<b>ルートシグネチャーはあまりたくさんの種類を作るな</b>ということです。<br />
+　ゲームにおける各オブジェクトの描画方法はまちまちです。３Ｄのリアルなオブジェクトもあれば、ライフや残り時間を指すインターフェイスもあります。そして、エフェクトもあります。<br />
+　それらを一括して管理する場合、<b>リアルな３Ｄ用のルートシグネチャー、インターフェイス用のルートシグネチャー、エフェクト用のルートシグネチャー</b>と別に作るのではなく、それらを包括する<b>ルートシグネチャー</b>を最小限の数だけ作成しなさい、ということです。<br />
+　ここで、ＭＳ社のドキュメントが<b>一種類しか作るな</b>と言っているわけではありません。<b>ルート署名の使用をできるだけ控えて</b>というので、ゲーム中に、複数のルートシグネチャーによる描画があってもよいということです。ただその数はあんまり増やさないように、ということです。<br />
+　ですので、このサンプルでは<b>一番シンプルなルートシグネチャー</b>を紹介してますが、これを、実際のゲームの一部として使うのは意味がありません。フレームワーク（つまり、複数タイプのゲーム制作に耐えられるエンジン）を作成するためには、もっと<b>いろんなことが可能なルートシグネチャー</b>を定義する必要があります。<br />
+　これは<b>BaseDx12フルバージョン</b>における、<b>ルートシグネチャー</b>につながります。<br />
+　<b>BaseDx12フルバージョン</b>は、<b>2種類のルートシグネチャー</b>しか定義しません。それは<b>２Ｄオンリー</b>か<b>２Ｄ３Ｄ混在か</b>の２種類です。<br />
+　しかし<b>BaseDx12シンプルバージョン</b>では、ルートシグネチャは<b>コンテンツ側</b>に置かれます。<br />
+　<b>BaseDx12シンプルバージョン</b>をベースに<b>フレームワーク</b>を作成するには、<b>オリジナルなルートシグネチャ</b>をいくつか作成してライブラリ化することで、よりオリジナルな表現を実装することが可能です。<br/>
+<br >
+　<b>ルートシグネチャ</b>の説明はこのサンプルではこのくらいにして、次に移ります。
+</div>
+<!-- /contents　-->
+<!-- フッタ　-->
+<footer>
+<table>
+<tr>
+<td><a href="1105.html">前へ</a></td>
+<td><a href="index.html">目次</a></td>
+<td><a href="1107.html">次へ</a></td>
+</tr>
+</table>
+</footer>
+<!-- /フッタ　-->
+</div>
+<!-- /全体コンテナ　-->
+</body>
+</html>

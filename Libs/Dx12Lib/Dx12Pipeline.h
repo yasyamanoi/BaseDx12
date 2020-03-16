@@ -480,7 +480,7 @@ namespace basedx12 {
 			ZeroMemory(&RetDesc, sizeof(RetDesc));
 			RetDesc.InputLayout = { Vertex::GetVertexElement(), Vertex::GetNumElements() };
 			RetDesc.pRootSignature = rootSignature.Get();
-			RetDesc.VS = CD3DX12_SHADER_BYTECODE(VS::GetPtr()->GetShaderComPtr()->GetBufferPointer(), VS::GetPtr()->GetShaderComPtr()->GetBufferSize());
+			RetDesc.VS = CD3DX12_SHADER_BYTECODE(VS::GetPtr()->GetShaderComPtr()->GetBufferPointer(),VS::GetPtr()->GetShaderComPtr()->GetBufferSize());
 			RetDesc.PS = CD3DX12_SHADER_BYTECODE(PS::GetPtr()->GetShaderComPtr()->GetBufferPointer(), PS::GetPtr()->GetShaderComPtr()->GetBufferSize());
 			RetDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 			RetDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);

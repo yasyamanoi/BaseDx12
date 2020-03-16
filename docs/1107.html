@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
+</head>
+<body>
+<!-- 全体コンテナ　-->
+<div id="container">
+<header>
+<div id="title_words">BaseDx12（Dx12研究とフレームワーク）</div>
+</header>
+<!-- contents　-->
+<div id="contents">
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１１０７．シンプルな三角形の描画（７）</h1>
+　前項に引き続き<b>GameDivece::LoadAssets()関数</b>です。<br />
+<h4>コマンドリスト</h4>
+　<b>Dx12</b>では、GPUに対する命令群（メッシュの作成なども含む）を<b>コマンドリスト</b>という、<b>コマンド（命令）の集合</b>としてためておき、一気に実行するという処理方法を行います。<br />
+　すでに作成した<b>コマンドアロケータ</b>は、この<b>コマンドリスト</b>を作成するためのものです。<br />
+　<b>GameDivece::LoadAssets()関数</b>では<b>ルートシグネチャ</b>の作成に続き、リソース構築用の<b>コマンドリスト</b>を作成します。コードは以下です。<br />
+<div class="box1">
+<pre>
+    m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);
+</pre>
+</div>
+　<b>コマンドアロケータ</b>は、フレームごとに作成したので、<b>コマンドアロケータ</b>配列の現在のインデックスのオブジェクトを使用します。<br />
+　このコードは以下のように展開されます。赤くなっている部分です。
+<div class="box1">
+<pre>
+    namespace CommandList {
+        static inline  ComPtr&lt;ID3D12GraphicsCommandList> 
+        <span class="red">CreateSimple(const ComPtr&lt;ID3D12CommandAllocator>& allocator)</span> {
+            //デバイスの取得
+            auto Dev = App::GetID3D12Device();
+            ComPtr&lt;ID3D12GraphicsCommandList> Ret;
+            ThrowIfFailed(Dev->CreateCommandList(
+                0,
+                D3D12_COMMAND_LIST_TYPE_DIRECT,
+                allocator.Get(),
+                nullptr,
+                IID_PPV_ARGS(&Ret)),
+                L"コマンドリストの作成に失敗しました",
+                L"Dev->GetDevice()->CreateCommandList()",
+                L"CommandList::CreateSimple()"
+            );
+            return Ret;
+        }
+//中略
+    }
+</pre>
+</div>
+　このように作成された<b>コマンドリスト</b>は、リソース構築用のものです。描画用のは、また後程作成します。
+<h4>リソースの構築</h4>
+　今回のサンプルで作成するのは、単純な三角形です。３つの頂点を持ちます。位置情報のほかに、色情報も持ちます。<br />
+　<b>BaseDx</b>では<b>シーン</b>という概念を持っています。<b>デバイス</b>と<b>シーン</b>を分けることで、仕事の分担を明確にしています。<br />
+　ここまでの処理は<b>デバイス</b>の役割です。ここから先は<b>シーン</b>に制御を渡します。
+<div class="box1">
+<pre>
+        App::GetSceneBase().OnInitAssets();
+</pre>
+</div>
+　<b>App::GetSceneBase()</b>で、<b>シーン</b>を所得します（厳密にはSceneクラスの親クラス、SceneBaseクラスのインスタンス）。<br />
+　このクラスには<b>OnInitAssets()</b>という仮想関数があり、この呼び出して<b>Scene::OnInitAssets()関数</b>が呼び出されます。<br />
+<h4>Scene::OnInitAssets()関数</h4>
+　さて、ここからは<b>Scene.cpp</b>にある、<b>Scene::OnInitAssets()関数</b>の処理になります。以下が全体像です。
+
+<div class="box1">
+<pre>
+    void Scene::OnInitAssets() {
+        //ここでシーン上のオブジェクトを構築
+        //必要なパイプラインオブジェクトをデバイスから取得
+        auto Device = App::GetDx12Device();
+        auto commandList = Device->GetCommandList();
+        // ２Ｄの基本的なパイプライン
+        {
+            D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
+            m_pipelineState
+            = PipelineState::CreateDefault2D&lt;VertexPositionColor, VSPCSprite, PSPCSprite>(
+                Device->GetRootSignature(),
+                PipeLineDesc
+            );
+        }
+        // メッシュ
+        {
+            auto aspectRatio = Device->GetAspectRatio();
+            vector&lt;VertexPositionColor> vertex =
+            {
+                { Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 0.0f, 1.0f) },
+                { Float3(0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 1.0f, 0.0f, 1.0f) },
+                { Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) }
+            };
+            //メッシュ作成
+            m_dx12Mesh = Dx12Mesh::CreateDx12Mesh&lt;VertexPositionColor>(vertex);
+        }
+    }
+</pre>
+</div>
+　ここで参照されている<b>m_pipelineState</b>および<b>m_dx12Mesh</b>は、<b>Scene.h</b>に宣言されているものです。以下は<b>Scene.h</b>の<b>Sceneクラス</b>です。
+<div class="box1">
+<pre>
+    class Scene :public SceneBase {
+        <span class="red">ComPtr&lt;ID3D12PipelineState> m_pipelineState;
+        shared_ptr&lt;Dx12Mesh> m_dx12Mesh;</span>
+    public:
+        Scene() :SceneBase() {}
+        virtual ~Scene() {}
+        virtual void OnInit()override;
+        virtual void OnInitAssets()override;
+        virtual void OnUpdate()override;
+        virtual void OnDraw()override;
+        virtual void OnDestroy()override;
+    };
+</pre>
+</div>
+　このように<b>m_pipelineState</b>は<b>ID3D12PipelineStateインターフェイス</b>ですが、<b>m_dx12Mesh</b>は<b>Dx12Meshクラス</b>の<b>shared_ptr</b>になっています。<br />
+　<b>Dx12Meshクラス</b>については、後ほど解説します。<br />
+　<b>Scene::OnInitAssets()関数</b>に戻りますが、まず
+<div class="box1">
+<pre>
+        auto Device = App::GetDx12Device();
+        auto commandList = Device->GetCommandList();
+</pre>
+</div>
+　により、<b>デバイス</b>と、前項で作成した<b>コマンドリスト</b>を取得します。<br />
+<h4>パイプラインステート</h4>
+　続いて
+<div class="box1">
+<pre>
+        // ２Ｄの基本的なパイプライン
+        {
+            D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
+            m_pipelineState
+            = PipelineState::CreateDefault2D&lt;VertexPositionColor, VSPCSprite, PSPCSprite>(
+                Device->GetRootSignature(),
+                PipeLineDesc
+            );
+        }
+</pre>
+</div>
+　により、２Ｄ用の<b>パイプライステート</b>を作成します。<b>CreateDefault2D()関数</b>は、テンプレート関数で、以下のように展開されます。赤くなっている部分です。
+<div class="box1">
+<pre>
+namespace PipelineState {
+    static inline ComPtr&lt;ID3D12PipelineState> CreateDirect(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc) {
+        //デバイスの取得
+        auto Dev = App::GetID3D12Device();
+        ComPtr&lt;ID3D12PipelineState> Ret;
+        ThrowIfFailed(Dev->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&Ret)),
+            L"パイプラインステートの作成に失敗しました",
+            L"Dev->GetDevice()->CreateGraphicsPipelineState()",
+            L"PipelineState::CreateDirect()"
+        );
+        return Ret;
+    }
+    <span class="red">template&lt;typename Vertex, typename VS, typename PS>
+    static inline ComPtr&lt;ID3D12PipelineState>
+    CreateDefault2D(
+        const ComPtr&lt;ID3D12RootSignature>& rootSignature,
+         D3D12_GRAPHICS_PIPELINE_STATE_DESC& RetDesc)</span> {
+        ZeroMemory(&RetDesc, sizeof(RetDesc));
+        RetDesc.InputLayout = { Vertex::GetVertexElement(), Vertex::GetNumElements() };
+        RetDesc.pRootSignature = rootSignature.Get();
+        RetDesc.VS = CD3DX12_SHADER_BYTECODE(
+            VS::GetPtr()->GetShaderComPtr()->GetBufferPointer(),
+            VS::GetPtr()->GetShaderComPtr()->GetBufferSize()
+        );
+        RetDesc.PS = CD3DX12_SHADER_BYTECODE(
+            PS::GetPtr()->GetShaderComPtr()->GetBufferPointer(),
+            PS::GetPtr()->GetShaderComPtr()->GetBufferSize()
+        );
+        RetDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        RetDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        RetDesc.DepthStencilState.DepthEnable = FALSE;
+        RetDesc.DepthStencilState.StencilEnable = FALSE;
+        RetDesc.SampleMask = UINT_MAX;
+        RetDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        RetDesc.NumRenderTargets = 1;
+        RetDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        RetDesc.SampleDesc.Count = 1;
+        return CreateDirect(RetDesc);
+    }
+//中略
+}
+</pre>
+</div>
+　<b>パイプラインステート</b>は、そのオブジェクトの描画に使う<b>シェーダー、頂点の型、ラスタライザ、ブレンド、サンプラー各ステート</b>などを定義するものです。<br />
+　この設定はかなり細かく設定することが可能です。ここでは、関数の引数に
+<div class="box1">
+<pre>
+D3D12_GRAPHICS_PIPELINE_STATE_DESC& RetDesc
+</pre>
+</div>
+　というパラメータを渡しています。これは、作成した<b>パイプライステートの定義構造体</b>を再利用できるためのものです。上記のようにして作成した<b>パイプライステートの定義構造体</b>の一部を修正して、別のパイプラインステートを作成することが可能になります。この場合、再利用して作成した定義構造体は<b>PipelineState::CreateDirect()関数</b>によって、作成することが可能になります。<br/>
+　<b>CreateDefault2D()テンプレート関数</b>の<b>テンプレート引数</b>は、
+<div class="box1">
+<pre>
+template&lt;typename Vertex, typename VS, typename PS>
+</pre>
+</div>
+　です。<b>Vertex</b>は<b>頂点型</b>、<b>VS</b>は<b>頂点シェーダクラス型</b>、<b>PS</b>は<b>ピクセルシェーダクラス型</b>です。<br />
+　<b>Vertex</b>はここでは<b>VertexPositionColor型</b>です。位置情報と色情報を保持する型です。<br />
+　<b>VS</b>は<b>VSPCSprite型</b>で、これは<b>BaseDx12</b>独特のものです。
+<h4>BaseDx12のシェーダの扱い</h4>
+　ここで<b>BaseDx12</b>のシェーダの扱いについて説明します。<br />
+　<b>BaseDx12</b>では、固有の<b>シェーダクラス</b>を持ちます。<br />
+　シェーダは<b>.hlslファイル</b>をそのまま読み込む方法、と<b>.csoファイル</b>を読み込む方法があるかと思います（ほかにもありますが、まあ、代表的なのはこの2つ）。<br />
+　<b>.hlslファイル</b>は、シェーダのソースコードなので、中身的には普通のテキストファイルなので、あんまり安全ではありません。ゲームを遊ぶ人が、直接書き換えることができます。<br />
+　<b>.csoファイル</b>は、VisualStudioによってコンパイルされたバイナリファイルで、だからと言って、決して万全ではありませんが<b>.hlslファイル</b>よりはましです。ですので<b>BaseDx12</b>では<b>.csoファイル</b>を読み込む形になってます。<br />
+　<b>BaseDx12</b>のシェーダクラスは、ヘッダ部と実装部で作成します。<br />
+　クラスを作り出す<b>マクロ</b>が用意されています。<br />
+　<b>Scene.h</b>を見てください。上方に
+<div class="box1">
+<pre>
+    DECLARE_DX12SHADER(VSPCSprite)
+    DECLARE_DX12SHADER(PSPCSprite)
+</pre>
+</div>
+　という記述があります。これは<b>VSPCSpriteクラス</b>あるいは<b>PSPCSpriteクラス</b>のヘッダ部を作り出すマクロです。<br />
+　例えば<b>VSPCSpriteクラス</b>はどのように展開されるかというと
+<div class="box1">
+<pre>
+class VSPCSprite : public Dx12Shader&lt;VSPCSprite>{
+    public:
+        VSPCSprite();
+};
+</pre>
+</div>
+　というクラス宣言になります。<b>Dx12Shaderテンプレートクラス</b>を継承したクラスです。<br />
+　実体部はというと<b>Scene.cpp</b>に記載があり
+<div class="box1">
+<pre>
+    IMPLEMENT_DX12SHADER(VSPCSprite, App::GetShadersPath() + L"vshader.cso")
+    IMPLEMENT_DX12SHADER(PSPCSprite, App::GetShadersPath() + L"pshader.cso")
+</pre>
+</div>
+　という形になります。<b>VSPCSprite</b>の展開は
+<div class="box1">
+<pre>
+unique_ptr&lt;VSPCSprite, VSPCSprite::Deleter> VSPCSprite::m_Ptr;
+
+VSPCSprite::VSPCSprite() : 
+        Dx12Shader(CsoFilename){}
+</pre>
+</div>
+　という形になります。<br/>
+　親クラスである<b>Dx12Shaderテンプレートクラス</b>を調べればわかりますが、各シェーダクラスは<b>シングルトン</b>として作成され、シェーダクラスは、一つのインスタンスを再利用する形となっています。また、使わないシェーダはインスタンスも作成しません。<br />
+　親クラスでは、渡された<b>.csoファイル</b>を展開し、パイプラインステートで使える準備をします。
+<h4>パイプラインステートにシェーダを渡す</h4>
+　このようにしてクラス化されたシェーダは以下のように<b>パイプラインステート</b>に渡します。
+<div class="box1">
+<pre>
+        RetDesc.VS = CD3DX12_SHADER_BYTECODE(
+            VS::GetPtr()->GetShaderComPtr()->GetBufferPointer(),
+            VS::GetPtr()->GetShaderComPtr()->GetBufferSize()
+        );
+        RetDesc.PS = CD3DX12_SHADER_BYTECODE(
+            PS::GetPtr()->GetShaderComPtr()->GetBufferPointer(),
+            PS::GetPtr()->GetShaderComPtr()->GetBufferSize()
+        );
+</pre>
+</div>
+<br />
+　さて、この項では<b>シーン</b>側での初期化作業として、<b>コマンドライン</b>そして<b>パイプラインステート</b>の設定を行いました。<br />
+　次項では<b>メッシュ</b>を作成します。
+
+</div>
+<!-- /contents　-->
+<!-- フッタ　-->
+<footer>
+<table>
+<tr>
+<td><a href="1106.html">前へ</a></td>
+<td><a href="index.html">目次</a></td>
+<td><a href="1108.html">次へ</a></td>
+</tr>
+</table>
+</footer>
+<!-- /フッタ　-->
+</div>
+<!-- /全体コンテナ　-->
+</body>
+</html>
