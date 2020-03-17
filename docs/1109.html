@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
+</head>
+<body>
+<!-- 全体コンテナ　-->
+<div id="container">
+<header>
+<div id="title_words">BaseDx12（Dx12研究とフレームワーク）</div>
+</header>
+<!-- contents　-->
+<div id="contents">
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１１０９．シンプルな三角形の描画（９）</h1>
+<h4>更新描画処理</h4>
+　一般的なゲームのフレームワークでは、各オブジェクトの位置や回転、大きさといった「変化」を実装する「Update処理」と、各オブジェクトを描画する「Draw処理（もしくはRender処理）」を分けて考えます。<br />
+　ゲーム画面には、大量のオブジェクトが配置される可能性があります。それら一つ一つの「Update処理」と「Draw処理」を同時い行うと、何かと不便です。つまり「タスク分け」のような関係になります。<br />
+　「BaseDx12」における「更新描画処理」は、まず、「WinMain.cpp」の以下の部分から始まります。
+
+
+<div class="box1">
+<pre>
+int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int iClientHeight) {
+    //終了コード
+    int RetCode = 0;
+    //ウインドウ情報。メッセージボックス表示チェックに使用
+    WINDOWINFO WinInfo;
+    ZeroMemory(&WinInfo, sizeof(WinInfo));
+    //例外処理開始
+    try {
+        //COMの初期化
+        //サウンドなどで使用する
+        if (FAILED(::CoInitialize(nullptr))) {
+            // 初期化失敗
+            throw exception("Com初期化に失敗しました。");
+        }
+        basedx12::Scene scene;
+        basedx12::App::Init(hWnd, &scene, hInstance, nCmdShow, iClientWidth, iClientHeight);
+        //メッセージループ
+        MSG msg = { 0 };
+        while (WM_QUIT != msg.message) {
+            //キー状態が何もなければウインドウメッセージを得る
+            if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+            //更新描画処理
+            <span class="red">basedx12::App::UpdateDraw();</span>
+        }
+        //msg.wParamには終了コードが入っている
+        basedx12::App::Destroy();
+        RetCode = (int)msg.wParam;
+    }
+    catch (exception & e) {
+        //STLエラー
+        //マルチバイトバージョンのメッセージボックスを呼ぶ
+        if (GetWindowInfo(hWnd, &WinInfo)) {
+            MessageBoxA(hWnd, e.what(), "エラー", MB_OK);
+        }
+        else {
+            MessageBoxA(nullptr, e.what(), "エラー", MB_OK);
+        }
+        RetCode = 1;
+    }
+    catch (...) {
+        //原因不明失敗した
+        if (GetWindowInfo(hWnd, &WinInfo)) {
+            MessageBox(hWnd, L"原因不明のエラーです", L"エラー", MB_OK);
+        }
+        else {
+            MessageBox(nullptr, L"原因不明のエラーです", L"エラー", MB_OK);
+        }
+        RetCode = 1;
+    }
+    //例外処理終了
+    //COMのリリース
+    ::CoUninitialize();
+    return RetCode;
+}
+</pre>
+</div>
+　赤くなっている部分ですが、アイドリングループごとに「basedx12::App::UpdateDraw()関数」が呼ばれます。<br />
+　その内容は以下です。
+
+<div class="box1">
+<pre>
+    void  App::UpdateDraw() {
+        m_timer.Tick();
+        m_controler.ResetControlerState();
+        if (m_pSceneBase && m_device)
+        {
+            m_device->OnUpdate();
+            m_device->OnDraw();
+        }
+    }
+</pre>
+</div>
+　ここでは「タイマーの更新」および「コントローラ」を初期化して、デバイスの「OnUpdate()関数」そして「OnDraw()関数」を呼び出します。
+<h4>更新処理</h4>
+<div class="box1">
+<pre>
+            m_device->OnUpdate();
+</pre>
+</div>
+　は仮想関数ですので、「GameDivece::OnUpdate()関数」が呼ばれます。以下がその内容です。
+<div class="box1">
+<pre>
+    void GameDivece::OnUpdate()
+    {
+        App::GetSceneBase().OnUpdate();
+    }
+</pre>
+</div>
+　このように「シーン」の「OnUpdate()関数」を呼び出します。この関数も「SceneBaseクラス」を親に持つ仮想関数ですので、結果的に「Scene::OnUpdate()関数」が呼ばれます。内容は以下です。
+<div class="box1">
+<pre>
+    void Scene::OnUpdate() {
+    }
+</pre>
+</div>
+　このように「何も」していません。このサンプルは、できるだけ単純にするために、オブジェクトの移動、などの変化はしない内容となっています。次のサンプルからは、ここに記述が入ります。
+<h4>描画処理</h4>
+　「更新処理」は、何もしなくていいのですが、「描画処理」は処理が必要です。<br />
+　「m_device->OnUpdate()」に続いて「m_device->OnDraw()」が呼ばれます。<br />
+　これは以下の様な処理になります。
+<div class="box1">
+<pre>
+</pre>
+</div>
+
+
+<div class="box1">
+<pre>
+</pre>
+</div>
+
+
+</div>
+<!-- /contents　-->
+<!-- フッタ　-->
+<footer>
+<table>
+<tr>
+<td><a href="1108.html">前へ</a></td>
+<td><a href="index.html">目次</a></td>
+<td><a href="1110.html">次へ</a></td>
+</tr>
+</table>
+</footer>
+<!-- /フッタ　-->
+</div>
+<!-- /全体コンテナ　-->
+</body>
+</html>

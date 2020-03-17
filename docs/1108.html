@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
+</head>
+<body>
+<!-- 全体コンテナ　-->
+<div id="container">
+<header>
+<div id="title_words">BaseDx12（Dx12研究とフレームワーク）</div>
+</header>
+<!-- contents　-->
+<div id="contents">
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１１０８．シンプルな三角形の描画（８）</h1>
+　前項に引き続き<b>Scene::OnInitAssets()関数</b>です。<br />
+　今項では<b>メッシュ</b>を作成します。
+<h4>Dx12Meshクラス</h4>
+　<b>メッシュ</b>とは、<b>画面に描画されるオブジェクト</b>です。頂点をつなげたデータのかたまりで、多くは<b>三角形</b>を複数描画することにより、２Ｄあるいは３Ｄを表現します。<br />
+　<b>メッシュ</b>の頂点はオブジェクトによってまちまちです。<b>頂点のみ</b>の場合<b>頂点とカラー情報</b>のみの場合<b>頂点と法線情報（ライティングに使います）</b>の場合などなど、柔軟な構造が要求されます。<br />
+　このような<b>柔軟な頂点構造</b>のことを、<b>FVF（フレキシブル頂点フォーマット）</b>といいます。<br />
+　<b>DirectX</b>は伝統的にこの<b>FVF</b>に対応したエンジンとなっており、例えば<b>BaseDx12</b>のようにフレームワークを作成する場合、<b>FVFへの対応</b>は必須とも言えます。<br />
+　さて<b>C++</b>でこのような可変長のデータ構造に対応する手法として<b>テンプレート（template）</b>という文法は、C++文法と求められる機能が一致する仕組みと考えられます。<br />
+　<b>BaseDx12</b>では<b>メッシュ</b>の表現方法として、テンプレートクラスである、<b>Dx12Meshクラス</b>が実装されています。<br />
+　ここでは<b>Dx12Meshクラス</b>の基本的な使い方を説明しながら<b>メッシュ</b>を作成したいと思います。<br />
+　<b>Scene::OnInitAssets()</b>における、メッシュ作成のブロックは以下です。
+<div class="box1">
+<pre>
+    // メッシュ
+    {
+        auto aspectRatio = Device->GetAspectRatio();
+        vector&lt;VertexPositionColor> vertex =
+        {
+            { Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 0.0f, 1.0f) },
+            { Float3(0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 1.0f, 0.0f, 1.0f) },
+            { Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) }
+        };
+        //メッシュ作成
+        m_dx12Mesh = Dx12Mesh::CreateDx12Mesh&lt;VertexPositionColor>(vertex);
+    }
+</pre>
+</div>
+　まず
+<div class="box1">
+<pre>
+        auto aspectRatio = Device->GetAspectRatio();
+</pre>
+</div>
+　と画面の<b>アスペクト比</b>を取ってきて、頂点の位置の計算に使います。<br />
+　このメッシュは<b>デバイス座標</b>に直接描画されることを想定しています。<br />
+　デバイス座標とはGPUの座標系で、X軸方向に<b>-1.0から1.0</b>、Y軸方向に<b>-1.0から1.0</b>、Z軸方向に<b>0から1.0</b>の範囲を持ちます。<br />
+　３Ｄの描画をする場合、<b>ワールド座標</b>と呼ばれる空間から、カメラ位置を加味したうえで、最終的にデバイス座標系に変換して描画します。その変換処理を行うのが<b>頂点シェーダ</b>とも言えます。<br />
+　このサンプルでは、<b>頂点シェーダ</b>では、その変換作業を行わないので、<b>デバイス座標</b>に合わせた形で<b>メッシュ</b>を作成します。
+<div class="box1">
+<pre>
+        vector&lt;<span class="red">VertexPositionColor</span>> vertex =
+        {
+            { Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 0.0f, 1.0f) },
+            { Float3(0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 1.0f, 0.0f, 1.0f) },
+            { Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) }
+        };
+</pre>
+</div>
+　の<b><span class="red">VertexPositionColor</span></b>は、<b>位置情報と色情報</b>を持った頂点です。<br />
+　ですので、各頂点は
+<div class="box1">
+<pre>
+            { Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 0.0f, 1.0f) },
+</pre>
+</div>
+　のように指定します。3角形なので3つの頂点があります。<br />
+　これを<b>STLのvector（配列）</b>として定義します。<br />
+　それでその配列を<b>Dx12Mesh::CreateDx12Mesh()テンプレート関数</b>に渡せば、<b>メッシュクラス（Dx12Meshクラス）</b>のインスタンスを返します。<br />
+　<b>Dx12Mesh::CreateDx12Mesh()テンプレート関数</b>はこのほかに<b>インデックス</b>も渡すバージョンもあります。<br />
+　このサンプルでは<b>インデックス描画</b>は行わないので<b>頂点のみ</b>で作成するバージョンを使っています。<br />
+　<b>m_dx12Meshメンバ変数</b>は<b>Sceneクラス</b>に<b>パイプラインステート</b>の変数と一緒に宣言されています。（前項を参照ください）<br />
+<br />
+　<b>Scene::OnInitAssets()関数</b>はこれで終わり、呼び出し側の<b>GameDivece::LoadAssets()関数</b>に制御が戻ります。
+<h4>コマンドリストクローズおよびキューの実行</h4>
+　ここで、初期化処理はおおむね終了です。<br />
+　最後に<b>コマンドリストクローズ</b>と<b>キューの実行</b>を行います。具体的には以下の構文です。<br />
+<div class="box1">
+<pre>
+        ThrowIfFailed(m_commandList->Close());
+        ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+        m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+</pre>
+</div>
+　まず、<b>ThrowIfFailed(m_commandList->Close());</b>をクローズします。<br />
+　そして
+<div class="box1">
+<pre>
+        ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+</pre>
+</div>
+　で、クローズ済みの<b>コマンドリストの配列</b>を作成します。ここでは、コマンドリストは1つなので、配列の要素数は1ですね。<br />
+　最後に
+<div class="box1">
+<pre>
+        m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+</pre>
+</div>
+　で、それらを<b>実行</b>します。<br />
+<h4>同期オブジェクトおよびＧＰＵの処理待ち</h4>
+　ここで終了ではなくて、最後の最後に
+<div class="box1">
+<pre>
+        SyncAndWaitForGpu();
+</pre>
+</div>
+　と<b>同期オブジェクトおよびＧＰＵの処理待ち</b>を行います。<br />
+　この関数は<b>DirectX-Graphics-Samples</b>のものを移植したものです。内容的には
+<div class="box1">
+<pre>
+    void Dx12Device::SyncAndWaitForGpu() {
+        ThrowIfFailed(GetID3D12Device()->CreateFence(
+            m_fenceValues[m_frameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence))
+        );
+        m_fenceValues[m_frameIndex]++;
+
+        // Create an event handle to use for frame synchronization.
+        m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        if (m_fenceEvent == nullptr)
+        {
+            ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+        }
+        //GPUの処理待ち
+        WaitForGpu();
+    }
+</pre>
+</div>
+　といったものです。ここは、<b>DirectX-Graphics-Samples</b>そのままで問題ないでしょう。<br />
+　ここではさらに<b>WaitForGpu()関数</b>を呼び出しています。内容は以下です。<br />
+　ここもここは、<b>DirectX-Graphics-Samples</b>そのままです。
+<div class="box1">
+<pre>
+    void Dx12Device::WaitForGpu()
+    {
+        // Schedule a Signal command in the queue.
+        ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]));
+
+        // Wait until the fence has been processed.
+        ThrowIfFailed(
+            m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent)
+        );
+        WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
+
+        // Increment the fence value for the current frame.
+        m_fenceValues[m_frameIndex]++;
+    }
+</pre>
+</div>
+<h4>初期化の終了</h4>
+　さてここまでで<b>三角形を描画</b>する、すべての準備が整いました。<br />
+　次項では<b>更新処理</b>そして<b>描画処理</b>を解説します。
+</div>
+<!-- /contents　-->
+<!-- フッタ　-->
+<footer>
+<table>
+<tr>
+<td><a href="1107.html">前へ</a></td>
+<td><a href="index.html">目次</a></td>
+<td><a href="1109.html">次へ</a></td>
+</tr>
+</table>
+</footer>
+<!-- /フッタ　-->
+</div>
+<!-- /全体コンテナ　-->
+</body>
+</html>

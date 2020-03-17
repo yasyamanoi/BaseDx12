@@ -61,7 +61,7 @@ namespace basedx12 {
 		m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);
 		//シーンに各オブジェクトの構築を任せる
 		App::GetSceneBase().OnInitAssets();
-		//コマンドラインクローズおよびキューの実行
+		//コマンドリストクローズおよびキューの実行
 		ThrowIfFailed(m_commandList->Close());
 		ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
 		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);

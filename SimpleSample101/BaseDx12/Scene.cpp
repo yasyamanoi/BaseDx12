@@ -12,9 +12,8 @@ namespace basedx12 {
 
 	void Scene::OnInitAssets() {
 		//ここでシーン上のオブジェクトを構築
-		//必要なパイプラインオブジェクトをデバイスから取得
+		//デバイスの取得
 		auto Device = App::GetDx12Device();
-		auto commandList = Device->GetCommandList();
 		// ２Ｄの基本的なパイプライン
 		{
 			D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;

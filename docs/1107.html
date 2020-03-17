@@ -75,16 +75,14 @@
 <pre>
     void Scene::OnInitAssets() {
         //ここでシーン上のオブジェクトを構築
-        //必要なパイプラインオブジェクトをデバイスから取得
+        //デバイスの取得
         auto Device = App::GetDx12Device();
-        auto commandList = Device->GetCommandList();
         // ２Ｄの基本的なパイプライン
         {
             D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
             m_pipelineState
-            = PipelineState::CreateDefault2D&lt;VertexPositionColor, VSPCSprite, PSPCSprite>(
-                Device->GetRootSignature(),
-                PipeLineDesc
+                = PipelineState::CreateDefault2D&lt;VertexPositionColor, VSPCSprite, PSPCSprite>(
+                    Device->GetRootSignature(), PipeLineDesc
             );
         }
         // メッシュ
@@ -125,10 +123,9 @@
 <div class="box1">
 <pre>
         auto Device = App::GetDx12Device();
-        auto commandList = Device->GetCommandList();
 </pre>
 </div>
-　により、<b>デバイス</b>と、前項で作成した<b>コマンドリスト</b>を取得します。<br />
+　により、<b>デバイス</b>を取得します。<br />
 <h4>パイプラインステート</h4>
 　続いて
 <div class="box1">
