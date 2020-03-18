@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
+</head>
+<body>
+<!-- 全体コンテナ　-->
+<div id="container">
+<header>
+<div id="title_words">BaseDx12（Dx12研究とフレームワーク）</div>
+</header>
+<!-- contents　-->
+<div id="contents">
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１１１０．シンプルな三角形の描画（１０）</h1>
+<h4>終了処理</h4>
+　<b>WinMain.cpp</b>における、<b>MainLoop()関数</b>では、アイドリングループは<b>Escキー</b>などで終了します。<br />
+　ループを抜けると
+<div class="box1">
+<pre>
+        basedx12::App::Destroy();
+</pre>
+</div>
+　が実行されます。これは<b>終了処理</b>をする呼び出しです。<br />
+　内容は以下になります。
+<div class="box1">
+<pre>
+    void GameDivece::OnDestroy()
+    {
+        //GPUの処理待ち
+        WaitForGpu();
+        CloseHandle(m_fenceEvent);
+    }
+</pre>
+</div>
+　となっています。<b>WaitForGpu()関数</b>は、<b>GameDivece::LoadAssets()</b>のところでも説明しました。<br />
+　GPUの処理を待つ関数を呼びだします。<br />
+<div class="box1">
+<pre>
+        CloseHandle(m_fenceEvent);
+</pre>
+</div>
+　は、<b>フェンスイベント</b>というハンドルをクローズします。これは<b>DirectX-Graphics-Samples</b>に習ったものです。<br />
+　また、もし、シーン側で、<b>OnDestroy処理</b>が必要なら、
+<div class="box1">
+<pre>
+        App::GetSceneBase().OnDestroy();
+</pre>
+</div>
+　と、呼び出すこともできます。<br />
+　このサンプルでは、継承先である<b>Scene::OnDestroy()</b>は<b>空関数</b>となっています。
+<h4>このサンプルの解説を終えて</h4>
+　じつに<b>単純な三角形</b>を描画するために、HTMLページで10ページも消費してしまいました。<br />
+　このように<b>Dx12</b>は、<b>プログラマが自分で実装</b>しなければならない部分が多く、また<b>ルートシグネチャ</b>や<b>ディスクプリタヒープ</b>といった新しい概念も登場します。<br />
+　とはいえ、一つ一つ原理を理解していけば、納得のいく部分も多くなると思います。<br />
+　次項からは、次のサンプル<b>複数のオブジェクトの描画</b>に移ります。<br />
+　今度は<b>複数のオブジェクトの配置と更新処理</b>がテーマです。<br />
+　<b>BaseDx12</b>では、どのような手法で、それらを<b>一般化</b>してるのか。<br />
+　そのあたりを解説できたらいいかなと思っています。
+</div>
+<!-- /contents　-->
+<!-- フッタ　-->
+<footer>
+<table>
+<tr>
+<td><a href="1109.html">前へ</a></td>
+<td><a href="index.html">目次</a></td>
+<td><a href="1111.html">次へ</a></td>
+</tr>
+</table>
+</footer>
+<!-- /フッタ　-->
+</div>
+<!-- /全体コンテナ　-->
+</body>
+</html>

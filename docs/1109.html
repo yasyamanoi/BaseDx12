@@ -21,9 +21,9 @@
 <h1>【第1部】シンプルバージョン編</h1>
 <h1 class="pagetitle">１１０９．シンプルな三角形の描画（９）</h1>
 <h4>更新描画処理</h4>
-　一般的なゲームのフレームワークでは、各オブジェクトの位置や回転、大きさといった「変化」を実装する「Update処理」と、各オブジェクトを描画する「Draw処理（もしくはRender処理）」を分けて考えます。<br />
-　ゲーム画面には、大量のオブジェクトが配置される可能性があります。それら一つ一つの「Update処理」と「Draw処理」を同時い行うと、何かと不便です。つまり「タスク分け」のような関係になります。<br />
-　「BaseDx12」における「更新描画処理」は、まず、「WinMain.cpp」の以下の部分から始まります。
+　一般的なゲームのフレームワークでは、各オブジェクトの位置や回転、大きさといった<b>変化</b>を実装する<b>Update処理</b>と、各オブジェクトを描画する<b>Draw処理（もしくはRender処理）</b>を分けて考えます。<br />
+　ゲーム画面には、大量のオブジェクトが配置される可能性があります。それら一つ一つの<b>Update処理</b>と<b>Draw処理</b>を同時い行うと、何かと不便です。つまり<b>タスク分け</b>のような関係になります。<br />
+　<b>BaseDx12</b>における<b>更新描画処理</b>は、まず、<b>WinMain.cpp</b>の以下の部分から始まります。
 
 
 <div class="box1">
@@ -87,7 +87,7 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 }
 </pre>
 </div>
-　赤くなっている部分ですが、アイドリングループごとに「basedx12::App::UpdateDraw()関数」が呼ばれます。<br />
+　赤くなっている部分ですが、アイドリングループごとに<b>basedx12::App::UpdateDraw()関数</b>が呼ばれます。<br />
 　その内容は以下です。
 
 <div class="box1">
@@ -103,14 +103,14 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
     }
 </pre>
 </div>
-　ここでは「タイマーの更新」および「コントローラ」を初期化して、デバイスの「OnUpdate()関数」そして「OnDraw()関数」を呼び出します。
+　ここでは<b>タイマーの更新</b>および<b>コントローラ</b>を初期化して、デバイスの<b>OnUpdate()関数</b>そして<b>OnDraw()関数</b>を呼び出します。
 <h4>更新処理</h4>
 <div class="box1">
 <pre>
             m_device->OnUpdate();
 </pre>
 </div>
-　は仮想関数ですので、「GameDivece::OnUpdate()関数」が呼ばれます。以下がその内容です。
+　は仮想関数ですので、<b>GameDivece::OnUpdate()関数</b>が呼ばれます。以下がその内容です。
 <div class="box1">
 <pre>
     void GameDivece::OnUpdate()
@@ -119,30 +119,286 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
     }
 </pre>
 </div>
-　このように「シーン」の「OnUpdate()関数」を呼び出します。この関数も「SceneBaseクラス」を親に持つ仮想関数ですので、結果的に「Scene::OnUpdate()関数」が呼ばれます。内容は以下です。
+　このように<b>シーン</b>の<b>OnUpdate()関数</b>を呼び出します。この関数も<b>SceneBaseクラス</b>を親に持つ仮想関数ですので、結果的に<b>Scene::OnUpdate()関数</b>が呼ばれます。内容は以下です。
 <div class="box1">
 <pre>
     void Scene::OnUpdate() {
     }
 </pre>
 </div>
-　このように「何も」していません。このサンプルは、できるだけ単純にするために、オブジェクトの移動、などの変化はしない内容となっています。次のサンプルからは、ここに記述が入ります。
+　このように<b>何も</b>していません。このサンプルは、できるだけ単純にするために、オブジェクトの移動、などの変化はしない内容となっています。次のサンプルからは、ここに記述が入ります。
 <h4>描画処理</h4>
-　「更新処理」は、何もしなくていいのですが、「描画処理」は処理が必要です。<br />
-　「m_device->OnUpdate()」に続いて「m_device->OnDraw()」が呼ばれます。<br />
+　<b>更新処理</b>は、何もしなくていいのですが、<b>描画処理</b>は処理が必要です。<br />
+　<b>m_device->OnUpdate()</b>に続いて<b>m_device->OnDraw()</b>が呼ばれます。<br />
 　これは以下の様な処理になります。
 <div class="box1">
 <pre>
+    void GameDivece::OnDraw()
+    {
+        // 描画のためのコマンドリストを集める
+        PopulateCommandList();
+        // 描画用コマンドリスト実行
+        ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+        m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+        // フロントバッファに表示
+        ThrowIfFailed(GetIDXGISwapChain3()->Present(1, 0));
+        //次のフレームに移動
+        MoveToNextFrame();
+    }
 </pre>
 </div>
-
-
+<h4>コマンドリストを集める</h4>
+　最初に呼ばれる
 <div class="box1">
 <pre>
+        PopulateCommandList();
 </pre>
 </div>
+　は<b>コマンドリストを集める</b>処理です。以下の様な内容です。
+<div class="box1">
+<pre>
+    void GameDivece::PopulateCommandList()
+    {
+        ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
+        //コマンドリストのリセット（パイプライン指定なし）
+        CommandList::Reset(m_commandAllocators[m_frameIndex], m_commandList);
+        // Set necessary state.
+        m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+        m_commandList->RSSetViewports(1, &m_viewport);
+        m_commandList->RSSetScissorRects(1, &m_scissorRect);
+        // Indicate that the back buffer will be used as a render target.
+        m_commandList->ResourceBarrier(
+            1, 
+            &CD3DX12_RESOURCE_BARRIER::Transition(
+                m_renderTargets[m_frameIndex].Get(),
+                D3D12_RESOURCE_STATE_PRESENT, 
+                D3D12_RESOURCE_STATE_RENDER_TARGET
+            )
+        );
 
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
+            m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), 
+            m_frameIndex, m_rtvDescriptorSize
+        );
+        m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
+        // Record commands.
+        const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+        m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+        // シーンに個別描画を任せる
+        App::GetSceneBase().OnDraw();
+        // Indicate that the back buffer will now be used to present.
+        m_commandList->ResourceBarrier(
+            1, 
+            &CD3DX12_RESOURCE_BARRIER::Transition(
+                m_renderTargets[m_frameIndex].Get(), 
+                D3D12_RESOURCE_STATE_RENDER_TARGET,
+                D3D12_RESOURCE_STATE_PRESENT
+            )
+        );
+        ThrowIfFailed(m_commandList->Close());
+    }
+</pre>
+</div>
+　この関数は、基本的に<b>DirectX-Graphics-Samples</b>を参考にしてますが、微妙に違います。<br />
+　<b>DirectX-Graphics-Samples</b>のほうは<b>GameDivece</b>とか<b>Scene</b>とかの概念はないので、この関数内で、コマンドリストに、描画処理を集めてますが、<b>BaseDx12</b>では、個別の描画を<b>シーン</b>に任せます。
+<h4>コマンドアロケータとコマンドリストのリセット</h4>
+　ここではまず
+<div class="box1">
+<pre>
+        ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
+        //コマンドリストのリセット（パイプライン指定なし）
+        CommandList::Reset(m_commandAllocators[m_frameIndex], m_commandList);
+</pre>
+</div>
+　で、<b>コマンドアロケータとコマンドリストのリセット</b>を行います。<br />
+　コマンドリストのリセットは、パイプラインを指定することもできるのですが、個別描画の中で、オブジェクト単位でパイプラインステートを設定することもあるので、この指定はシーン側に任せます。<br />
+<h4>ルートシグネチャと描画領域</h4>
+　このあと
+<div class="box1">
+<pre>
+        m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+        m_commandList->RSSetViewports(1, &m_viewport);
+        m_commandList->RSSetScissorRects(1, &m_scissorRect);
+</pre>
+</div>
+　で<b>ルートシグネチャ</b>の設定を行い<b>ビューポート</b>と<b>シザー矩形</b>を設定します。<br />
+　<b>ビューポート</b>はこれまでの<b>DirectX</b>にあった概念で、<b>GPUのデバイス座標</b>と<b>ウインドウのクライアント座標</b>を結びつけるものです。<br />
+　<b>GameDivece</b>の親クラスである<b>Dx12Deviceクラス</b>のコンストラクタですでに初期化されています。<br />
+　デフォルトは、<b>WinMain.cpp</b>によって作成された、ウインドウの幅、高さが設定されています。奥行（Deps）は<b>0.0から1.0</b>に設定されています。<br />
+　<b>GameDivece</b>の初期化時に再設定することもできます。<br />
+　<b>シザー矩形</b>は、ビューポートのうち、どの領域を描画するかを指定します。画面の中を部分的に描画することもできるように、なっています。デフォルトはビューポート同様<b>Dx12Deviceクラス</b>のコンストラクタで初期化されており、ビューポート全体を描画するようになっています。変更する場合はこちらも、<b>GameDivece</b>の初期化時などに行います。
+<h4>バリアを張る</h4>
+　<b>Dx12</b>では、バックバッファに書き込むタイミングで、他からの書き込みを制限する<b>バリア</b>の実装もプログラマが行います。<br />
+　その記述は以下です。
+<div class="box1">
+<pre>
+        m_commandList->ResourceBarrier(
+            1, 
+            &CD3DX12_RESOURCE_BARRIER::Transition(
+                m_renderTargets[m_frameIndex].Get(),
+                D3D12_RESOURCE_STATE_PRESENT, 
+                D3D12_RESOURCE_STATE_RENDER_TARGET
+            )
+        );
+</pre>
+</div>
+　このバリアは、バックバッファがレンダーターゲットとして使用される、推移時のバリアです。
+<h4>レンダーターゲットビューの作成と設定</h4>
+　この後、<b>レンダーターゲットビュー</b>を、ハンドルという形で作成し、コマンドリストに設定します。
+<div class="box1">
+<pre>
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
+            m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), 
+            m_frameIndex, m_rtvDescriptorSize
+        );
+        m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+</pre>
+</div>
+<h4>背景色の設定</h4>
+　<b>背景色</b>は<b>背景色でクリアする</b>という形で設定します。ここで設定するのは<b>濃い青</b>の背景色です。<br />
+　ここでも<b>コマンドリスト</b>で行います。先ほど作成した<b>rtvHandle</b>も再利用します。
+<div class="box1">
+<pre>
+        const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+        m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+</pre>
+</div>
+<h4>シーンに個別描画を任せる</h4>
+　ここから先は、<b>シーン</b>に個別描画を任せます。
+<div class="box1">
+<pre>
+        App::GetSceneBase().OnDraw();
+</pre>
+</div>
+　この呼び出しで、<b>Scene::OnDraw()関数</b>が呼ばれます。
+<div class="box1">
+<pre>
+    void Scene::OnDraw() {
+        auto Device = App::GetDx12Device();
+        auto commandList = Device->GetCommandList();
+        commandList->SetPipelineState(m_pipelineState.Get());
+        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        commandList->IASetVertexBuffers(0, 1, &m_dx12Mesh->GetVertexBufferView());
+        commandList->DrawInstanced(3, 1, 0, 0);
+    }
+</pre>
+</div>
+　ここでは、まず
+<div class="box1">
+<pre>
+        auto Device = App::GetDx12Device();
+        auto commandList = Device->GetCommandList();
+</pre>
+</div>
+　で、デバイスと、コマンドリストを取り出します。
+<div class="box1">
+<pre>
+        commandList->SetPipelineState(m_pipelineState.Get());
+</pre>
+</div>
+　で、パイプラインステートを設定します。
+<div class="box1">
+<pre>
+        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+</pre>
+</div>
+　ここで<b>3角形として描画する</b>という設定を行います。
+<div class="box1">
+<pre>
+        commandList->IASetVertexBuffers(0, 1, &m_dx12Mesh->GetVertexBufferView());
+</pre>
+</div>
+　で頂点バッファを設定します。<b>m_dx12Mesh->GetVertexBufferView()</b>で<b>D3D12_VERTEX_BUFFER_VIEWの参照</b>が帰りますので、そのアドレスを渡します。<br />
+　そして
+<div class="box1">
+<pre>
+        commandList->DrawInstanced(3, 1, 0, 0);
+</pre>
+</div>
+　で、描画します。パラメータは<b>3つの頂点を1つだけ</b>の意味です。<br />
+　<b>Scene::OnDraw()</b>の処理が終わると<b>GameDivece::PopulateCommandList()関数</b>に制御が戻ります。<br />
+<h4>GameDivece::PopulateCommandList()に戻る</h4>
+　戻ったら、再びバリアを張ります。
+<div class="box1">
+<pre>
+        m_commandList->ResourceBarrier(
+            1, 
+            &CD3DX12_RESOURCE_BARRIER::Transition(
+                m_renderTargets[m_frameIndex].Get(), 
+                D3D12_RESOURCE_STATE_RENDER_TARGET,
+                D3D12_RESOURCE_STATE_PRESENT
+            )
+        );
+</pre>
+</div>
+　これは、バックバッファを表示用に切り替える間のバリアです。<br />
+　最後に
+<div class="box1">
+<pre>
+        ThrowIfFailed(m_commandList->Close());
+</pre>
+</div>
+　で、コマンドリストをクローズします。
+<h4>GameDivece::PopulateCommandList()の終了</h4>
+　<b>PopulateCommandList()</b>が終わると<b>GameDivece::OnDraw()</b>に制御が戻ります。
+<h4>コマンドリストの実行</h4>
+　<b>GameDivece::OnDraw()</b>では<b>コマンドリストの実行</b>を行います。
+<div class="box1">
+<pre>
+        // 描画用コマンドリスト実行
+        ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
+        m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+</pre>
+</div>
+　このように<b>コマンドリストのポインタの配列</b>を作成します。ここでは1つですね。<br />
+　作成したら<b>コマンドキュー</b>でそのコマンドリストを実行します。<br />
+　ここまでで<b>バックバッファ</b>への書き込みは終了です。
+<div class="box1">
+<pre>
+        // フロントバッファに表示
+        ThrowIfFailed(GetIDXGISwapChain3()->Present(1, 0));
+</pre>
+</div>
+　で、そのバックバッファを<b>表示用</b>に切り替えます。<br />
+　これでこのターンでの描画処理は終了です。
+<h4>次のフレームの準備</h4>
+　その後
+<div class="box1">
+<pre>
+        //次のフレームに移動
+        MoveToNextFrame();
+</pre>
+</div>
+　で、次のフレームに移動します。<br />
+　具体的には以下のようになっています。
+<div class="box1">
+<pre>
+    void Dx12Device::MoveToNextFrame()
+    {
+        // Schedule a Signal command in the queue.
+        const UINT64 currentFenceValue = m_fenceValues[m_frameIndex];
+        ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), currentFenceValue));
+
+        // Update the frame index.
+        m_frameIndex = GetIDXGISwapChain3()->GetCurrentBackBufferIndex();
+
+        // If the next frame is not ready to be rendered yet, wait until it is ready.
+        if (m_fence->GetCompletedValue() &lt; m_fenceValues[m_frameIndex])
+        {
+            ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent));
+            WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
+        }
+
+        // Set the fence value for the next frame.
+        m_fenceValues[m_frameIndex] = currentFenceValue + 1;
+    }
+</pre>
+</div>
+　ここは<b>DirectX-Graphics-Samples</b>のものと同じです。<br />
+<br />
+　これで<b>更新、および描画処理</b>の終了です。<br />
+　次項は、終了時の処理を説明します。
 </div>
 <!-- /contents　-->
 <!-- フッタ　-->

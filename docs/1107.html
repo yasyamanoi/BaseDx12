@@ -263,10 +263,115 @@ VSPCSprite::VSPCSprite() :
         );
 </pre>
 </div>
-<br />
-　さて、この項では<b>シーン</b>側での初期化作業として、<b>コマンドライン</b>そして<b>パイプラインステート</b>の設定を行いました。<br />
-　次項では<b>メッシュ</b>を作成します。
+<h4>シェーダーの設定</h4>
+　さてそのように<b>パイプラインステート</b>に渡されるシェーダですが、中身はどうなっているのでしょうか。<br />
+　ソリューションエクスプローラ、で<b>シェーダーーファイル</b>のフィルタを選択すると、以下のようになってます。
+<p>&nbsp;</p>
+<img src="img/1107a.png" width="40%"/>
+<p>図1107a</p>
+<p>&nbsp;</p>
+　このなかの、例えば<b>vshader.hlsl</b>を右クリックし<b>プロパティ</b>を表示すると、以下の設定になっています。<b>全般</b>タブを開いてみましょう。
+<p>&nbsp;</p>
+<img src="img/1107b.png" width="80%"/>
+<p>図1107b</p>
+<p>&nbsp;</p>
+　この設定の意味するところは、エントリポイントは<b>main</b>であり、<b>シェーダーのバージョン</b>は<b>5.0</b>であり、<b>シェーダーの種類</b>は<b>頂点シェーダ</b>である設定になっています。<br />
+　さらに<b>出力ファイル</b>タブを選択すると、以下のように出力先が、
+<div class="box1">
+<pre>
+$(SolutionDir)media\Shaders\%(Filename).cso
+</pre>
+</div>
+　となっています。
+<p>&nbsp;</p>
+<img src="img/1107c.png" width="80%"/>
+<p>図1107c</p>
+<p>&nbsp;</p>
+　これは<b>VisualStdioの設定</b>なのですが、<b>$(SolutionDir)</b>というのは<b>ソリューションファイル</b>があるディレクトリを指し、その中の<b>media\Shaders</b>ディレクトリに<b>%(Filename).cso</b>という名前で、コンパイルしなさい、という設定になっています。<br />
+　つまり、<b>vshader.hlsl</b>はファイルそのものは
+<div class="box1">
+<pre>
+...\BaseDx12\SimpleSample101\BaseDx12\Shaders\vshader.hlsl
+</pre>
+</div>
+　にありますが、これを
+<div class="box1">
+<pre>
+...\BaseDx12\SimpleSample101\media\Shaders\vshader.cso
+</pre>
+</div>
+　にコンパイルしなさい、という設定になります。<br />
+　同様に<b>ピクセルシェーダ</b>である<b>pshader.hlsl</b>のプロパティを見ますと、<b>全般</b>タブは
+<p>&nbsp;</p>
+<img src="img/1107d.png" width="80%"/>
+<p>図1107d</p>
+<p>&nbsp;</p>
+　となっており、<b>出力ファイル</b>タブは
+<p>&nbsp;</p>
+<img src="img/1107e.png" width="80%"/>
+<p>図1107e</p>
+<p>&nbsp;</p>
+　となっています。<br />
+　このように設定することで、<b>Scene.cpp</b>におけるシェーダのマクロは
+<div class="box1">
+<pre>
+    IMPLEMENT_DX12SHADER(VSPCSprite, App::GetShadersPath() + L"vshader.cso")
+    IMPLEMENT_DX12SHADER(PSPCSprite, App::GetShadersPath() + L"pshader.cso")
+</pre>
+</div>
+　と記述できるわけです。
+<h4>頂点シェーダーの記述</h4>
+　それでは<b>頂点シェーダ</b>である<b>vshader.hlsl</b>を見てみましょう。
+<div class="box1">
+<pre>
+struct PSInput
+{
+    float4 position : SV_POSITION;
+    float4 color : COLOR;
+};
 
+PSInput main(float4 position : POSITION, float4 color : COLOR)
+{
+    PSInput result;
+
+    result.position = position;
+    result.color = color;
+
+    return result;
+}
+</pre>
+</div>
+　エントリポイントである<b>main関数</b>は、<b>PSInput構造体</b>をリターンします。<br />
+　入力は
+<div class="box1">
+<pre>
+...float4 position : POSITION, float4 color : COLOR
+</pre>
+</div>
+　となっています。つまり<b>位置情報と色情報</b>です。これを、<b>PSInput</b>型の<b>result</b>連数にそのまま代入して<b>return</b>します。<br />
+　今回のサンプルでは<b>頂点シェーダのリターン</b>はそのまま<b>ピクセルシェーダ</b>に渡されます。
+<h4>ピクセルシェーダーの記述</h4>
+　<b>ピクセルシェーダ</b>では以下の処理になります。
+<div class="box1">
+<pre>
+struct PSInput
+{
+    float4 position : SV_POSITION;
+    float4 color : COLOR;
+};
+
+
+float4 main(PSInput input) : SV_TARGET
+{
+    return input.color;
+}
+</pre>
+</div>
+　このように、頂点シェーダと同じ<b>PSInput</b>が定義され、入力の<b>input</b>の<b>color</b>メンバをそのままリターンします。<br />
+　ピクセルシェーダのリターンはそのまま、該当ピクセルの<b>色</b>になります。グラデーション処理は、パイプラインの中で自動的に行われます。<br />
+<br />
+　さて、この項では<b>シーン</b>側での初期化作業として、<b>コマンドライン</b>そして<b>パイプラインステート</b>、<b>シェーダ</b>の設定を行いました。<br />
+　次項では<b>メッシュ</b>を作成します。
 </div>
 <!-- /contents　-->
 <!-- フッタ　-->
