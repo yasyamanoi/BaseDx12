@@ -15,22 +15,20 @@ namespace basedx12 {
 		//上から降ってくるボックス
 		AddGameObject<ActivePsBox>(Float3(2.0f, 1.0f, 1.0f), Quat(), Float3(2.0f, 1.0f, 4.0f));
 		AddGameObject<ActivePsBox>(Float3(2.0f, 1.0f, 1.0f), qt2, Float3(1.0f, 3.0f, 3.0f));
-
 	}
 
 
-    void GameStage::OnInit() {
-        auto camera = Camera::CreateCamera<MyCamera>(Float3(0, 3.0f, -5.0f), Float3(0, 0, 0));
+	void GameStage::OnInit() {
+		auto camera = Camera::CreateCamera<MyCamera>(Float3(0, 3.0f, -5.0f), Float3(0, 0, 0));
 		AddCamera(camera, L"MainCamera");
-        auto lightSet = LightSet::CreateDefaultLights();
-        AddLightSet(lightSet, L"MainLightSet");
+		auto lightSet = LightSet::CreateDefaultLights();
+		AddLightSet(lightSet, L"MainLightSet");
 
 		CreatePhysicsObjects();
-        AddGameObject<MoveBox>();
-
+		AddGameObject<MoveBox>();
 		AddGameObject<Player>();
 
-    }
+	}
 
 }
 //end basedx12

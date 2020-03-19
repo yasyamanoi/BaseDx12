@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
+</head>
+<body>
+<!-- 全体コンテナ　-->
+<div id="container">
+<header>
+<div id="title_words">BaseDx12（Dx12研究とフレームワーク）</div>
+</header>
+<!-- contents　-->
+<div id="contents">
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１２０１．複数のオブジェクトの描画（１）</h1>
+　今項から、「１２０１．複数のオブジェクトの描画」の解説をしたいと思います。<br />
+　ソリューションは「SimpleSample102」内にあります、「BaseDx12.sln」です。<br />
+　このファイルを「VS2019」で開き、「ビルド－ソリューションのリビルド」でビルドしましょう。
+<h4>まず実行してみる</h4>
+　ビルドが終わったら、「デバッグ－デバッグなしで開始」を選択します。すると、以下の画面が現れます。
+<p>&nbsp;</p>
+<img src="img/1201a.png" width="80%"/>
+<p>図1201a</p>
+<p>&nbsp;</p>
+　3つのオブジェクト（2つの三角形と1つの四角形）が表示され、1つの三角形と四角形は左か右に移動します。<br />
+　右のウインドウ枠の外に出ると左からまた出てきます。
+<h4>オブジェクトごとのパラメータ</h4>
+　ゲーム画面上には、いろんなオブジェクトが配置されます。プレイヤーや敵キャラ、あるいは、障害物や、ライフなどをあらわすインターフェイスなど。<br />
+　それらを1画面に同時に出現させるには、それぞれの大きさや位置情報などを別々に管理しなければなりません。<br />
+　「BaseDx12」の「シンプルバージョン」では、それらを管理する仕組みは、直接は提供しませんが、効率よく書くための環境は用意されています。<br />
+　サンプル「SimpleSample001」でも紹介したような「シーン」の仕組みです。<br />
+　「Scene.h/cpp」あるいは、同じようなセットで「Player.h/cpp」などのファイルを用意し、「キャラクター別のクラス」を記述することで、複数のオブジェクトを画面上に表示させることができます。<br />
+　この項からは、それらを「Dx12」で実現するための方法として「コンスタントバッファ」を記述し、それを「Dx12」に結び付ける方法を紹介したいと思います。
+<h4>デバイスの準備</h4>
+　「SimpleSample001」と同じように「デバイスの初期化」からはじめます。<br />
+　エントリポイントの「WinMain」が含まれる「WinMain.cpp」の記述は変わりません。<br />
+　まず「ソリューションエクスプローラ」を開いて「GameDevice.cpp」を開きましょう。<br />
+　その中の「GameDivece::OnInit()関数」を見てください。<br />
+　<a href="1102.html">１１０２．シンプルな三角形の描画（２）</a>で説明したように、
+<div class="box1">
+<pre>
+    void GameDivece::OnInit()
+    {
+        LoadPipeline();
+        LoadAssets();
+    }
+</pre>
+</div>
+　という記述になっています。「LoadPipeline()関数」は共通のオブジェクトの初期化、「LoadAssets()関数」は、個別のオブジェクトの初期化、の意味合いです。<br />
+<h4>LoadPipeline()関数</h4>
+　「LoadPipeline()関数」から見ていきます。<br />
+　「SimpleSample001」と同じ処理の場合は、説明は省略します。場合によってはそれぞれの解説ページへのリンクも用意しますので、そちらを参考にしてください。<br />
+　「LoadPipeline()関数」は、以下の様な内容です。赤くなっている部分が、今回のサンプルで新たに付け足されたか、あるいは変わった部分です。
+<div class="box1">
+<pre>
+    void GameDivece::LoadPipeline()
+    {
+        //ファクトリ
+        ComPtr&lt;IDXGIFactory4> factory = Dx12Factory::CreateDirect();
+        //デバイス
+        m_device = D3D12Device::CreateDefault(factory, m_useWarpDevice);
+        //コマンドキュー
+        m_commandQueue = CommandQueue::CreateDefault();
+        //スワップチェーン
+        m_swapChain = SwapChain::CreateDefault(factory, m_commandQueue, m_frameCount);
+        m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+        // デスクプリタヒープ
+        {
+            // レンダリングターゲットビュー
+            m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_frameCount);
+            m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+            <span class="red">//CbvSrvデスクプリタヒープ(シェーダリソースとコンスタントバッファ)
+            //CbvSrvデスクプリタヒープの数はGetCbvSrvUavMax()により取得する
+            m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(GetCbvSrvUavMax());
+            m_CbvSrvDescriptorHandleIncrementSize
+            = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            //サンプラーデスクリプタヒープ
+            m_SamplerDescriptorHeap = DescriptorHeap::CreateSamplerHeap(1);</span>
+        }
+        // RTVとコマンドアロケータ
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        for (UINT n = 0; n &lt; m_frameCount; n++)
+        {
+            ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
+            m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
+            rtvHandle.Offset(1, m_rtvDescriptorSize);
+            //コマンドアロケータ
+            m_commandAllocators[n] = CommandAllocator::CreateDefault();
+        }
+    }
+</pre>
+</div>
+
+
+<div class="box1">
+<pre>
+</pre>
+</div>
+
+
+
+
+
+</div>
+<!-- /contents　-->
+<!-- フッタ　-->
+<footer>
+<table>
+<tr>
+<td><a href="1109.html">前へ</a></td>
+<td><a href="index.html">目次</a></td>
+<td><a href="1111.html">次へ</a></td>
+</tr>
+</table>
+</footer>
+<!-- /フッタ　-->
+</div>
+<!-- /全体コンテナ　-->
+</body>
+</html>

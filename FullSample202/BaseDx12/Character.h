@@ -43,19 +43,17 @@ namespace basedx12 {
 		virtual void OnUpdate()override {}
 	};
 
-
-    class MoveBox :public GameObject {
-        float m_posSpan;
-    public:
-        explicit MoveBox(const shared_ptr<Stage>& stage) :
-            GameObject(stage),
-            m_posSpan(0.02f)
-        {}
-        virtual ~MoveBox() {}
-        virtual void OnInit()override;
-        virtual void OnUpdate()override;
-    };
-
+	class MoveBox :public GameObject {
+		float m_posSpan;
+	public:
+		explicit MoveBox(const shared_ptr<Stage>& stage) :
+			GameObject(stage),
+			m_posSpan(0.02f)
+		{}
+		virtual ~MoveBox() {}
+		virtual void OnInit()override;
+		virtual void OnUpdate()override;
+	};
 
 }
 //end basedx12

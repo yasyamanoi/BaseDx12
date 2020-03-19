@@ -2,33 +2,28 @@
 #include "Project.h"
 
 namespace basedx12 {
-    void Player::OnInit() {
+
+	void Player::OnInit() {
 		auto ptr = GetComponent<Transform>();
 		ptr->SetScale(0.25f, 0.25f, 0.25f);	//直径25センチの球体
 		ptr->SetRotation(0.0f, 0.0f, 0.0f);
 		ptr->SetPosition(Float3(0, 0.125f, 0));
-
 		auto compPtr = AddComponent<PNTStaticDraw>();
-
 		//メッシュ
 		vector<VertexPositionNormalTexture> vertices;
 		vector<uint32_t> indices;
 		MeshUtill::CreateSphere(1.0f, 18,vertices, indices);
 		auto mesh = Dx12Mesh::CreateDx12Mesh<VertexPositionNormalTexture>(vertices, indices);
-
 		compPtr->SetMesh(mesh);
 		//テクスチャ
 		auto TexFile = App::GetRelativeAssetsPath() + L"trace.png";
 		compPtr->SetTextureFile(TexFile);
 		compPtr->SetCameraKey(L"MainCamera");
 		compPtr->SetLightSetKey(L"MainLightSet");
-
 		auto camera = GetStage()->GetTypedCamera<MyCamera>(L"MainCamera");
 		camera->SetTargetObject(GetThis<GameObject>());
 		camera->SetTargetToAt(Float3(0, 0.25f, 0));
-
-
-    }
+	}
 
 	Float3 Player::GetMoveVector() const{
 		Float3 angle(0, 0, 0);
