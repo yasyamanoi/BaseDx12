@@ -4,7 +4,7 @@
 namespace basedx12 {
 
 	void MoveTriangle::OnInit() {
-		auto Device = App::GetDx12Device();
+		auto Device = App::GetBaseDevice();
 		auto aspectRatio = Device->GetAspectRatio();
 		auto compPtr = AddComponent<PCSpriteDraw>();
 		vector<VertexPositionColor> vertex =
@@ -14,7 +14,7 @@ namespace basedx12 {
 			{ Float3(-0.5f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) }
 		};
 		//三角形メッシュ作成
-		auto mesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(vertex);
+		auto mesh = BaseMesh::CreateBaseMesh<VertexPositionColor>(vertex);
 		compPtr->SetMesh(mesh);
 		auto ptrTrans = GetComponent<Transform>();
 		ptrTrans->SetScale(Float3(256.0f, 256.0f, 1.0f));
@@ -33,7 +33,7 @@ namespace basedx12 {
 	}
 
 	void MoveTriangle2::OnInit() {
-		auto Device = App::GetDx12Device();
+		auto Device = App::GetBaseDevice();
 		auto aspectRatio = Device->GetAspectRatio();
 		auto compPtr = AddComponent<PCSpriteDraw>();
 		vector<VertexPositionColor> vertex =
@@ -43,7 +43,7 @@ namespace basedx12 {
 			{ Float3(-0.5f, -0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 1.0f, 0.0f) }
 		};
 		//三角形メッシュ作成
-		auto mesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(vertex);
+		auto mesh = BaseMesh::CreateBaseMesh<VertexPositionColor>(vertex);
 		compPtr->SetMesh(mesh);
 		auto ptrTrans = GetComponent<Transform>();
 		ptrTrans->SetScale(Float3(256.0f, 256.0f, 1.0f));
@@ -62,7 +62,7 @@ namespace basedx12 {
 	}
 
 	void MoveSquare::OnInit() {
-		auto Device = App::GetDx12Device();
+		auto Device = App::GetBaseDevice();
 		auto compPtr = AddComponent<PTSpriteDraw>();
 		//メッシュ
 		{
@@ -77,7 +77,7 @@ namespace basedx12 {
 			//インデックス配列
 			vector<uint32_t> indices = { 0, 1, 2, 1, 3, 2 };
 			//四角形メッシュの作成
-			auto mesh = Dx12Mesh::CreateDx12Mesh<VertexPositionTexture>(vertices, indices);
+			auto mesh = BaseMesh::CreateBaseMesh<VertexPositionTexture>(vertices, indices);
 			compPtr->SetMesh(mesh);
 		}
 		//テクスチャ
@@ -103,13 +103,13 @@ namespace basedx12 {
 
 
 	void MoveBox::OnInit() {
-		auto Device = App::GetDx12Device();
+		auto Device = App::GetBaseDevice();
 		auto compPtr = AddComponent<PNTStaticDraw>();
 		//メッシュ
 		vector<VertexPositionNormalTexture> vertices;
 		vector<uint32_t> indices;
 		MeshUtill::CreateCube(1.0f, vertices, indices);
-		auto mesh = Dx12Mesh::CreateDx12Mesh<VertexPositionNormalTexture>(vertices, indices);
+		auto mesh = BaseMesh::CreateBaseMesh<VertexPositionNormalTexture>(vertices, indices);
 		compPtr->SetMesh(mesh);
 		//テクスチャ
 		auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";

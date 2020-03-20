@@ -13,7 +13,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Shaders">
+    <Filter Include="シェーダーファイル">
       <UniqueIdentifier>{4c105afb-04e0-48cb-932b-acd6baffdd40}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -57,22 +57,22 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\pshader.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>シェーダーファイル</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\PsPCConst.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>シェーダーファイル</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\PSPTSprite.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>シェーダーファイル</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\vshader.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>シェーダーファイル</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\VsPCConst.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>シェーダーファイル</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\VSPTSprite.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>シェーダーファイル</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

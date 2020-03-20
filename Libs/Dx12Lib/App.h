@@ -4,7 +4,7 @@
 namespace basedx12 {
 
 	class SceneBase;
-	class Dx12Device;
+	class BaseDevice;
 
 	//--------------------------------------------------------------------------------------
 	///	アプリケーションクラス
@@ -31,14 +31,14 @@ namespace basedx12 {
 		static SceneBase& GetSceneBase() {
 			return *m_pSceneBase;
 		}
-		static shared_ptr<Dx12Device>& GetDx12Device() {
-			return m_device;
+		static shared_ptr<BaseDevice>& GetBaseDevice() {
+			return m_baseDevice;
 		}
-		static void SetDx12Device(const shared_ptr<Dx12Device>& ptr) {
-			m_device = ptr;
+		static void SetBaseDevice(const shared_ptr<BaseDevice>& ptr) {
+			m_baseDevice = ptr;
 		}
 		static ComPtr<ID3D12Device> GetID3D12Device() {
-			return m_device->GetID3D12Device();
+			return m_baseDevice->GetID3D12Device();
 		}
 
 		static float GetElapsedTime() {
@@ -57,7 +57,7 @@ namespace basedx12 {
 		static HWND m_hwnd;
 		static SceneBase* m_pSceneBase;
 
-		static shared_ptr<Dx12Device> m_device;
+		static shared_ptr<BaseDevice> m_baseDevice;
 
 		static int m_width;
 		static int m_height;

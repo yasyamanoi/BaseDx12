@@ -6,7 +6,7 @@ namespace basedx12 {
 	//--------------------------------------------------------------------------------------
 	///	一般的な3Dデバイス
 	//--------------------------------------------------------------------------------------
-	class Default3DDivece : public Dx12Device {
+	class Default3DDivece : public BaseDevice {
 		void LoadPipeline();
 		void LoadAssets();
 		void PopulateCommandList();

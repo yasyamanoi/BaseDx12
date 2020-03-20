@@ -57,7 +57,7 @@
 <h4>LoadPipeline()関数</h4>
 　「LoadPipeline()関数」から見ていきます。<br />
 　「SimpleSample001」と同じ処理の場合は、説明は省略します。場合によってはそれぞれの解説ページへのリンクも用意しますので、そちらを参考にしてください。<br />
-　「LoadPipeline()関数」は、以下の様な内容です。赤くなっている部分が、今回のサンプルで新たに付け足されたか、あるいは変わった部分です。
+　「LoadPipeline()関数」は、以下の様な内容です。赤くなっている部分が、今回のサンプルで新たに付け足された部分です。
 <div class="box1">
 <pre>
     void GameDivece::LoadPipeline()
@@ -76,8 +76,9 @@
             // レンダリングターゲットビュー
             m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_frameCount);
             m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-            <span class="red">//CbvSrvデスクプリタヒープ(シェーダリソースとコンスタントバッファ)
-            //CbvSrvデスクプリタヒープの数はGetCbvSrvUavMax()により取得する
+            <span class="red">//CbvSrvUavデスクプリタヒープ
+            //(コンスタントバッファとシェーダリソースと順序不定のアクセスビュー)
+            //CbvSrvUavデスクプリタヒープの数はGetCbvSrvUavMax()により取得する
             m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(GetCbvSrvUavMax());
             m_CbvSrvDescriptorHandleIncrementSize
             = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -97,13 +98,82 @@
     }
 </pre>
 </div>
-
+　「ファクトリ、デバイス、コマンドキュー、スワップチェーン」までは、前サンプルと変わりません。<br />
+　「デスクプリタヒープ」は今回のサンプルでは「CbvSrvUavデスクプリタヒープ」という新たな「デスクプリタヒープ」が加わります。<br />
+　このサンプルは、この「CbvSrvUavデスクプリタヒープ」が大きなテーマです。
+<h4>CbvSrvUavデスクプリタヒープ</h4>
+　さて、以下の表を見てください。<a href="1105.html">１１０５．シンプルな三角形の描画（５）</a>で説明した、「デスクプリタヒープ」の概念図です。
+<p>&nbsp;</p>
+<img src="img/1105a.png" width="80%"/>
+<p>図1105a（再）</p>
+<p>&nbsp;</p>
+　「デスクプリタヒープ」は、GPUとやり取りする「ビュー」を引き出しにまとめたようなもの、と考えられます。<br />
+　「RTV（レンダーターゲットビュー）」は、フレーム数と同じ数だけ作成しました。「デプスステンシル用」は、今回は出てきませんが、通常1つです。「Sampler（サンプラー）」は、影を使ったりする場合は2つ以上、今回は1つ定義します。<br />
+　そこまではわかりやすいのですが、「CbvSrvUavデスクプリタヒープ」はいったいいくつ必要なのでしょうか？<br />
+　「Dx12」はGPUに対する処理を、柔軟に設定できるよう設計されていますが、「BaseDx12」では、「CbvSrvUavデスクプリタヒープ」は「できるだけ多く」作成します。デフォルトは「1024個」です。<br />
+　「シンプルバージョン」の場合は「シーン」という単位が1つの基準となるので。ゲーム全体で「1024個」の「CbvSrvUavデスクプリタヒープ」が用意されています。<br />
+　もしこの値を変更したければ、「GameDiveceのコンストラクタ」で
+<div class="box1">
+<pre>
+    GameDivece::GameDivece(UINT frameCount) :
+        Dx12Device(frameCount,<span class="red">2048</span>)
+    {
+    }
+</pre>
+</div>
+　のように記述します。「GameDiveceの親クラスのDx12Deviceクラス」は、2つめの引数に「CbvSrvUav」の数を渡します（デフォルトが1024ということです）。
+<h4>コンスタントバッファビュー</h4>
+　「CbvSrvUav」の「Cbv」は「コンスタントバッファビュー」の意味です。「コンスタントバッファ」は「定数バッファ」とも訳されますが「定数」というよりは「シェーダーに渡す変数」という意味合いが強いと思います。<br />
+　「シェーダ」に渡す情報は、基本的に「頂点のデータ」ですから「ローカル座標」になります。それを「ワールド座標」に変換してさらには「カメラの視点」に変換するのが「頂点シェーダ」の役割です。<br />
+　その「ワールド座標」に変換するための「ワールド行列」、そして「カメラ視点」に変換するための「ビュー行列」や「射影行列」をシェーダに渡す領域が「コンスタントバッファ」です。<br />
+　ですから「コンスタントバッファビュー」は「オブジェクト単位」あるいは「メッシュ単位」で違う内容になると考えて差し支えありません。<br />
+　そうした場合、ゲーム上に配置されるオブジェクトは、オブジェクトごとに「コンスタントバッファビュー」が必要なのがわかります。<br />
+　「Dx11」の場合は、それぞれのオブジェクトの描画で一回完結するので、「コンスタントバッファ」は使いまわしができます。極端な話「1個のコンスタントバッファ」を使って、1つのオブジェクトを描画し、そして次のオブジェクトの描画でそのコンスタントバッファを使うことができます。<br />
+　しかし「Dx12」の場合は「コマンドリスト」という形で、複数の描画命令をため込んで「一気に描画する」という手法を取ります。そのため、「コンスタントバッファビュー」は複数（描画単位で）必要になります。（BaseDx12はそういう設計になっています）<br />
+<h4>シェーダーリソースビュー</h4>
+　「CbvSrvUav」の「Srv」は「シェーダーリソースビュー」です。これは「テクスチャ」と思っていいと思います。「CbvSrvUavデスクプリタヒープ」は「コンスタントバッファ」のほかに「テクスチャ」も同じグループで管理します。<br />
+　そういうわけで、前述した「CbvSrvUavの数」は「テクスチャの数」も加味して決める必要があります。<br />
+　モデルによっては複数のテクスチャを持つ場合もあるので、コンスタントバッファほどではありませんが、ある程度の数は過去穂しなければなりません。
+<h4>アンオーダードアクセスビュー</h4>
+　「CbvSrvUav」の「Uav」は「アンオーダードアクセスビュー（順序不定のアクセスビュー）」です。<br />
+　この領域はシェーダとのデータのやり取りに使用できるエリアで、コンスタントバッファやシェーダリソースより、自由度が高いです。<br />
+　このこのサンプルでは使用しません。
+<h4>CbvSrvUavデスクプリタヒープの作成</h4>
+　このような背景があるので、「GameDivece::LoadPipeline()関数」ではまず
+<div class="box1">
+<pre>
+            m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(GetCbvSrvUavMax());
+</pre>
+</div>
+　という形で「CbvSrvUavデスクプリタヒープ」を作成します。<br />
+　この呼び出しは、以下のように展開されます
+<div class="box1">
+<pre>
+    static inline ComPtr&lt;ID3D12DescriptorHeap> CreateCbvSrvUavHeap(UINT NumDescriptorHeap) {
+        //CbvSrvUavデスクプリタヒープ
+        D3D12_DESCRIPTOR_HEAP_DESC CbvSrvHeapDesc = {};
+        CbvSrvHeapDesc.NumDescriptors = NumDescriptorHeap;
+        CbvSrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        CbvSrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        return CreateDirect(CbvSrvHeapDesc);
+    }
+</pre>
+</div>
+　ここで「NumDescriptorHeap」はデフォルトで「1024」ということがわかります。<br />
+　続いて、１つのCbvSrvUavデスクプリタヒープのサイズ、をもとめます。上記概念図によりますと、1つの引き出しの大きさ、のようなものです。
+<div class="box1">
+<pre>
+    m_CbvSrvDescriptorHandleIncrementSize
+    = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+</pre>
+</div>
+<h4>サンプラーデスクプリタヒープの作成</h4>
+　「サンプラー」は、シェーダリソースをサンプリングするのに必要なリソースです。これは
 
 <div class="box1">
 <pre>
 </pre>
 </div>
-
 
 
 

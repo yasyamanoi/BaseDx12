@@ -17,14 +17,14 @@ namespace basedx12 {
 		explicit DrawComponent(const shared_ptr<GameObject>& gameObjectPtr) :
 			Component(gameObjectPtr) {}
 		virtual ~DrawComponent() {}
-		shared_ptr<Dx12Mesh> m_mesh;
+		shared_ptr<BaseMesh> m_mesh;
 		ComPtr<ID3D12PipelineState> m_pipelineState;
 		//コンスタントバッファ
 		shared_ptr<ConstantBuffer> m_constantBuffer;
 		//コンスタントバッファのインデックス
 		UINT m_constBuffIndex;
 	public:
-		void SetMesh(const shared_ptr<Dx12Mesh>& mesh) {
+		void SetMesh(const shared_ptr<BaseMesh>& mesh) {
 			m_mesh = mesh;
 		}
 	};
@@ -77,7 +77,7 @@ namespace basedx12 {
 	//--------------------------------------------------------------------------------------
 	class PTSpriteDraw : public Draw2D {
 		//テクスチャ
-		shared_ptr<Dx12Texture> m_texture;
+		shared_ptr<BaseTexture> m_texture;
 		wstring m_textureFileName;
 		//シェーダリソースのインデックス
 		UINT m_srvIndex;

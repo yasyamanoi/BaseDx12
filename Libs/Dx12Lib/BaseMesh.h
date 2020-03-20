@@ -6,7 +6,7 @@ namespace basedx12 {
 	//--------------------------------------------------------------------------------------
 	///	メッシュクラス
 	//--------------------------------------------------------------------------------------
-	class Dx12Mesh {
+	class BaseMesh {
 		ComPtr<ID3D12Resource> m_vertexBuffer;
 		ComPtr<ID3D12Resource> m_indexBuffer;
 		ComPtr<ID3D12Resource> m_vertexBufferUploadHeap;
@@ -16,9 +16,9 @@ namespace basedx12 {
 		D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
 		UINT m_numVertices;
 		UINT m_numIndices;
-		Dx12Mesh() {}
+		BaseMesh() {}
 	public:
-		~Dx12Mesh() {}
+		~BaseMesh() {}
 		ComPtr<ID3D12Resource> GetVertexBuffer() const {
 			return m_vertexBuffer;
 		}
@@ -47,12 +47,12 @@ namespace basedx12 {
 		}
 		//頂点のみ
 		template<typename T>
-		static shared_ptr<Dx12Mesh> CreateDx12Mesh(const vector<T>& vertices) {
+		static shared_ptr<BaseMesh> CreateBaseMesh(const vector<T>& vertices) {
 			//デバイスの取得
 			auto Dev = App::GetID3D12Device();
-			auto Device = App::GetDx12Device();
+			auto Device = App::GetBaseDevice();
 			auto commandList = Device->GetCommandList();
-			shared_ptr<Dx12Mesh> Ptr = shared_ptr<Dx12Mesh>(new Dx12Mesh());
+			shared_ptr<BaseMesh> Ptr = shared_ptr<BaseMesh>(new BaseMesh());
 			UINT vertexBufferSize = (UINT)(sizeof(T) * vertices.size());
 			//頂点バッファの作成
 			{
@@ -65,7 +65,7 @@ namespace basedx12 {
 					IID_PPV_ARGS(&Ptr->m_vertexBuffer)),
 					L"頂点バッファ作成に失敗しました。",
 					L"if(FAILED(Dev->CreateCommittedResource())",
-					L"Dx12Mesh::CreateDx12Mesh()"
+					L"BaseMesh::CreateBaseMesh()"
 				);
 
 				ThrowIfFailed(Dev->CreateCommittedResource(
@@ -77,7 +77,7 @@ namespace basedx12 {
 					IID_PPV_ARGS(&Ptr->m_vertexBufferUploadHeap)),
 					L"頂点バッファ作成に失敗しました。",
 					L"if(FAILED(Dev->CreateCommittedResource())",
-					L"Dx12Mesh::CreateDx12Mesh()"
+					L"BaseMesh::CreateBaseMesh()"
 				);
 
 				//頂点バッファの更新
@@ -115,12 +115,12 @@ namespace basedx12 {
 
 		//頂点とインデックス
 		template<typename T>
-		static shared_ptr<Dx12Mesh> CreateDx12Mesh(const vector<T>& vertices, const vector<uint32_t>& indices) {
+		static shared_ptr<BaseMesh> CreateBaseMesh(const vector<T>& vertices, const vector<uint32_t>& indices) {
 			//デバイスの取得
 			auto Dev = App::GetID3D12Device();
-			auto Device = App::GetDx12Device();
+			auto Device = App::GetBaseDevice();
 			auto commandList = Device->GetCommandList();
-			shared_ptr<Dx12Mesh> Ptr = shared_ptr<Dx12Mesh>(new Dx12Mesh());
+			shared_ptr<BaseMesh> Ptr = shared_ptr<BaseMesh>(new BaseMesh());
 			UINT vertexBufferSize = (UINT)(sizeof(T) * vertices.size());
 			//頂点バッファの作成
 			{
@@ -133,7 +133,7 @@ namespace basedx12 {
 					IID_PPV_ARGS(&Ptr->m_vertexBuffer)),
 					L"頂点バッファ作成に失敗しました。",
 					L"if(FAILED(Dev->CreateCommittedResource())",
-					L"Dx12Mesh::CreateDx12Mesh()"
+					L"BaseMesh::CreateBaseMesh()"
 				);
 
 				ThrowIfFailed(Dev->CreateCommittedResource(
@@ -145,7 +145,7 @@ namespace basedx12 {
 					IID_PPV_ARGS(&Ptr->m_vertexBufferUploadHeap)),
 					L"頂点バッファ作成に失敗しました。",
 					L"if(FAILED(Dev->CreateCommittedResource())",
-					L"Dx12Mesh::CreateDx12Mesh()"
+					L"BaseMesh::CreateBaseMesh()"
 				);
 
 				//頂点バッファの更新
@@ -190,7 +190,7 @@ namespace basedx12 {
 					IID_PPV_ARGS(&Ptr->m_indexBuffer)),
 					L"インデックスバッファ作成に失敗しました。",
 					L"if(FAILED(Dev->CreateCommittedResource())",
-					L"Dx12Mesh::CreateDx12Mesh()"
+					L"BaseMesh::CreateBaseMesh()"
 				);
 
 				ThrowIfFailed(Dev->CreateCommittedResource(
@@ -202,7 +202,7 @@ namespace basedx12 {
 					IID_PPV_ARGS(&Ptr->m_indexBufferUploadHeap)),
 					L"インデックスアップロードバッファ作成に失敗しました。",
 					L"if(FAILED(Dev->CreateCommittedResource())",
-					L"Dx12Mesh::CreateDx12Mesh()"
+					L"BaseMesh::CreateBaseMesh()"
 				);
 
 				// Copy data to the intermediate upload heap and then schedule a copy 

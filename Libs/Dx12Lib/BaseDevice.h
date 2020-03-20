@@ -4,15 +4,15 @@
 namespace basedx12 {
 
 	//--------------------------------------------------------------------------------------
-	///	Dx12デバイスクラス
+	///	BaseDeviceクラス
 	//--------------------------------------------------------------------------------------
-	class Dx12Device : public ObjectInterface {
+	class BaseDevice : public ObjectInterface {
 		//コンスタントバッファとシェーダーリソースのMAXサイズ
 		const UINT m_cbvSrvUavMax;
 		UINT m_cbvSrvUavSendIndex;
 	protected:
-		Dx12Device(UINT frameCount, UINT cbvSrvUavMax = 1024);
-		virtual ~Dx12Device();
+		BaseDevice(UINT frameCount, UINT cbvSrvUavMax = 1024);
+		virtual ~BaseDevice();
 	public:
 		UINT GetCbvSrvUavNextIndex();
 		UINT GetCbvSrvUavMax() const {
@@ -69,17 +69,17 @@ namespace basedx12 {
 		ComPtr<ID3D12DescriptorHeap> GetRtvHeap() {
 			return m_rtvHeap;
 		}
-		UINT GetRtvDescriptorSize() const {
-			return m_rtvDescriptorSize;
+		UINT GetRtvDescriptorHandleIncrementSize() const {
+			return m_rtvDescriptorHandleIncrementSize;
 		}
 		ComPtr<ID3D12DescriptorHeap> GetCbvSrvUavDescriptorHeap() const {
-			return m_CbvSrvUavDescriptorHeap;
+			return m_cbvSrvUavDescriptorHeap;
 		}
-		UINT GetCbvSrvDescriptorHandleIncrementSize() const {
-			return m_CbvSrvDescriptorHandleIncrementSize;
+		UINT GetCbvSrvUavDescriptorHandleIncrementSize() const {
+			return m_cbvSrvUavDescriptorHandleIncrementSize;
 		}
 		ComPtr<ID3D12DescriptorHeap> GetSamplerDescriptorHeap() const {
-			return m_SamplerDescriptorHeap;
+			return m_samplerDescriptorHeap;
 		}
 		ComPtr<ID3D12GraphicsCommandList> GetCommandList() const {
 			return m_commandList;
@@ -118,17 +118,17 @@ namespace basedx12 {
 		//デスクプリタヒープ
 		//レンダリングターゲートビューのデスクプリタヒープ
 		ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-		UINT m_rtvDescriptorSize = 0;
+		UINT m_rtvDescriptorHandleIncrementSize = 0;
 		//デプスステンシッル
 		ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
-		UINT m_dsvDescriptorSize = 0;
+		UINT m_dsvDescriptorHandleIncrementSize = 0;
 		ComPtr<ID3D12Resource> m_depthStencil;
 		//コンスタントバッファとシェーダリソース用デスクプリタヒープ
-		ComPtr<ID3D12DescriptorHeap> m_CbvSrvUavDescriptorHeap;
-		//CbvSrvのデスクプリタハンドルのインクリメントサイズ
-		UINT m_CbvSrvDescriptorHandleIncrementSize{ 0 };
+		ComPtr<ID3D12DescriptorHeap> m_cbvSrvUavDescriptorHeap;
+		//CbvSrvUavのデスクプリタハンドルのインクリメントサイズ
+		UINT m_cbvSrvUavDescriptorHandleIncrementSize{ 0 };
 		//サンプラー用
-		ComPtr<ID3D12DescriptorHeap> m_SamplerDescriptorHeap;
+		ComPtr<ID3D12DescriptorHeap> m_samplerDescriptorHeap;
 		//コマンドリスト
 		ComPtr<ID3D12GraphicsCommandList> m_commandList;
 		//ルートシグネチャ

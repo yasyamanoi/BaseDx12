@@ -79,7 +79,7 @@ namespace basedx12 {
 
 
 	void PNTStaticDraw::OnInit() {
-		auto Device = App::GetDx12Device();
+		auto Device = App::GetBaseDevice();
 		auto commandList = Device->GetCommandList();
 		auto aspectRatio = Device->GetAspectRatio();
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
@@ -92,7 +92,7 @@ namespace basedx12 {
 		CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
 			Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
 			m_constBuffIndex,
-			Device->GetCbvSrvDescriptorHandleIncrementSize()
+			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		m_constantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
 
@@ -103,17 +103,17 @@ namespace basedx12 {
 
 	void PNTStaticDraw::SetTextureFile(const wstring& textureName) {
 		m_textureFileName = textureName;
-		auto Device = App::GetDx12Device();
+		auto Device = App::GetBaseDevice();
 		//テクスチャの作成
 		//シェーダリソースハンドルを作成
 		m_srvIndex = Device->GetCbvSrvUavNextIndex();
 		CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(
 			Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
 			m_srvIndex,
-			Device->GetCbvSrvDescriptorHandleIncrementSize()
+			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		//画像ファイルをもとにテクスチャを作成
-		m_texture = Dx12Texture::CreateDx12Texture(m_textureFileName, srvHandle);
+		m_texture = BaseTexture::CreateBaseTexture(m_textureFileName, srvHandle);
 	}
 
 	void PNTStaticDraw::OnDraw() {
@@ -121,13 +121,13 @@ namespace basedx12 {
 		SetConstants();
 		m_constantBuffer->Copy(m_constantBufferData);
 
-		auto Device = App::GetDx12Device();
+		auto Device = App::GetBaseDevice();
 		auto commandList = Device->GetCommandList();
 		//Srv
 		CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle(
 			Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			m_srvIndex,
-			Device->GetCbvSrvDescriptorHandleIncrementSize()
+			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		commandList->SetGraphicsRootDescriptorTable(0, SrvHandle);
 		//Sampler
@@ -141,7 +141,7 @@ namespace basedx12 {
 		CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
 			Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			m_constBuffIndex,
-			Device->GetCbvSrvDescriptorHandleIncrementSize()
+			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
 		commandList->SetPipelineState(m_pipelineState.Get());

@@ -2,11 +2,11 @@
 
 namespace basedx12 {
 
-	shared_ptr<Dx12Texture>  Dx12Texture::CreateDx12Texture(const wstring& FileName, const CD3DX12_CPU_DESCRIPTOR_HANDLE& maphandle) {
+	shared_ptr<BaseTexture>  BaseTexture::CreateBaseTexture(const wstring& FileName, const CD3DX12_CPU_DESCRIPTOR_HANDLE& maphandle) {
 		if (FileName == L"") {
 			throw BaseException(
 				L"ファイルが指定されていません\n",
-				L"Dx12Texture::CreateDx12Texture()"
+				L"BaseTexture::CreateBaseTexture()"
 			);
 		}
 		DWORD RetCode;
@@ -15,7 +15,7 @@ namespace basedx12 {
 			throw BaseException(
 				L"ファイルが存在しません\n",
 				FileName,
-				L"\nDx12Texture::CreateDx12Texture()"
+				L"\nBaseTexture::CreateBaseTexture()"
 			);
 		}
 		//テクスチャ作成
@@ -37,7 +37,7 @@ namespace basedx12 {
 			Extbuff, _MAX_EXT);
 
 		wstring ExtStr = Extbuff;
-		shared_ptr<Dx12Texture> Ptr = shared_ptr<Dx12Texture>(new Dx12Texture());
+		shared_ptr<BaseTexture> Ptr = shared_ptr<BaseTexture>(new BaseTexture());
 		TexMetadata matadata;
 
 		if (ExtStr == L".dds" || ExtStr == L".DDS") {
@@ -45,7 +45,7 @@ namespace basedx12 {
 				DirectX::LoadFromDDSFile(FileName.c_str(), DDS_FLAGS_NONE, &matadata, Ptr->m_image),
 				L"テクスチャの読み込みに失敗しました\n",
 				FileName,
-				L"\nDx12Texture::CreateDx12Texture()"
+				L"\nBaseTexture::CreateBaseTexture()"
 			);
 		}
 		else if (ExtStr == L".tga" || ExtStr == L".TGA") {
@@ -53,7 +53,7 @@ namespace basedx12 {
 				DirectX::LoadFromTGAFile(FileName.c_str(), &matadata, Ptr->m_image),
 				L"テクスチャの読み込みに失敗しました\n",
 				FileName,
-				L"\nDx12Texture::CreateDx12Texture()"
+				L"\nBaseTexture::CreateBaseTexture()"
 			);
 		}
 		else if (ExtStr == L".hdr" || ExtStr == L".HDR")
@@ -62,7 +62,7 @@ namespace basedx12 {
 				DirectX::LoadFromHDRFile(FileName.c_str(), &matadata, Ptr->m_image),
 				L"テクスチャの読み込みに失敗しました\n",
 				FileName,
-				L"\nDx12Texture::CreateDx12Texture()"
+				L"\nBaseTexture::CreateBaseTexture()"
 			);
 		}
 		else {
@@ -70,7 +70,7 @@ namespace basedx12 {
 				DirectX::LoadFromWICFile(FileName.c_str(), WIC_FLAGS_NONE, &matadata, Ptr->m_image),
 				L"テクスチャの読み込みに失敗しました\n",
 				FileName,
-				L"\nDx12Texture::CreateDx12Texture()"
+				L"\nBaseTexture::CreateBaseTexture()"
 			);
 		}
 		//デバイスの取得
@@ -79,7 +79,7 @@ namespace basedx12 {
 			DirectX::CreateTexture(Dev.Get(), matadata, &Ptr->m_texture),
 			L"テクスチャリソースの作成に失敗しました\n",
 			FileName,
-			L"\nDx12Texture::CreateDx12Texture()"
+			L"\nBaseTexture::CreateBaseTexture()"
 		);
 
 		ThrowIfFailed(
@@ -87,7 +87,7 @@ namespace basedx12 {
 				Ptr->m_image.GetImageCount(), matadata, Ptr->m_subresources),
 			L"DirectX::PrepareUpload()に失敗しました\n",
 			FileName,
-			L"\nDx12Texture::CreateDx12Texture()"
+			L"\nBaseTexture::CreateBaseTexture()"
 		);
 		const UINT64 uploadBufferSize = GetRequiredIntermediateSize(
 			Ptr->m_texture.Get(),
@@ -104,12 +104,12 @@ namespace basedx12 {
 				IID_PPV_ARGS(Ptr->m_textureUploadHeap.GetAddressOf())),
 			L"テクスチャのアップロードヒープ作成に失敗しました\n",
 			FileName,
-			L"\nDx12Texture::CreateDx12Texture()"
+			L"\nBaseTexture::CreateBaseTexture()"
 		);
 		Ptr->m_maphandle = maphandle;
 		return Ptr;
 	}
-	void Dx12Texture::UpdateSRAndCreateSRV(const ComPtr<ID3D12GraphicsCommandList>& commandList) {
+	void BaseTexture::UpdateSRAndCreateSRV(const ComPtr<ID3D12GraphicsCommandList>& commandList) {
 		UpdateSubresources(commandList.Get(),
 			m_texture.Get(), m_textureUploadHeap.Get(),
 			0, 0, static_cast<unsigned int>(m_subresources.size()),

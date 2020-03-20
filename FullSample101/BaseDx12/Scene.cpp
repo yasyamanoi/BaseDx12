@@ -4,7 +4,7 @@
 namespace basedx12 {
 
 	void Scene::OnInit() {
-		ResetActiveDx12Device<Default2DDivece>(3);
+		ResetActiveBaseDevice<Default2DDivece>(3);
 	}
 	void Scene::OnInitAssets() {
 		ResetActiveStage<GameStage>();

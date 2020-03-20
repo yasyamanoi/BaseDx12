@@ -8,7 +8,7 @@ namespace basedx12 {
 	int App::m_width = 0;
 	int App::m_height = 0;
 
-	shared_ptr<Dx12Device> App::m_device = nullptr;
+	shared_ptr<BaseDevice> App::m_baseDevice = nullptr;
 
 	StepTimer App::m_timer;
 	Controler App::m_controler;
@@ -117,10 +117,10 @@ namespace basedx12 {
 	void  App::UpdateDraw() {
 		m_timer.Tick();
 		m_controler.ResetControlerState();
-		if (m_pSceneBase && m_device)
+		if (m_pSceneBase && m_baseDevice)
 		{
-			m_device->OnUpdate();
-			m_device->OnDraw();
+			m_baseDevice->OnUpdate();
+			m_baseDevice->OnDraw();
 		}
 	}
 
@@ -128,9 +128,9 @@ namespace basedx12 {
 		if (m_pSceneBase) {
 			m_pSceneBase->OnDestroy();
 		}
-		if (m_device) {
-			m_device->OnDestroy();
-			m_device.reset();
+		if (m_baseDevice) {
+			m_baseDevice->OnDestroy();
+			m_baseDevice.reset();
 		}
 		m_pSceneBase = nullptr;
 	}

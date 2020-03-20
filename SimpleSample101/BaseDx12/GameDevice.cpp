@@ -6,7 +6,7 @@ namespace basedx12 {
 
 
 	GameDivece::GameDivece(UINT frameCount) :
-		Dx12Device(frameCount)
+		BaseDevice(frameCount)
 	{
 	}
 
@@ -35,7 +35,7 @@ namespace basedx12 {
 		{
 			// レンダリングターゲットビュー
 			m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_frameCount);
-			m_rtvDescriptorSize = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+			m_rtvDescriptorHandleIncrementSize = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		}
 		// RTVとコマンドアロケータ
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
@@ -43,7 +43,7 @@ namespace basedx12 {
 		{
 			ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
 			m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
-			rtvHandle.Offset(1, m_rtvDescriptorSize);
+			rtvHandle.Offset(1, m_rtvDescriptorHandleIncrementSize);
 			//コマンドアロケータ
 			m_commandAllocators[n] = CommandAllocator::CreateDefault();
 		}
@@ -111,7 +111,7 @@ namespace basedx12 {
 		// Indicate that the back buffer will be used as a render target.
 		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorHandleIncrementSize);
 		m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
 		// Record commands.

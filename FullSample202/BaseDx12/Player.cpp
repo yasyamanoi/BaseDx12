@@ -13,7 +13,7 @@ namespace basedx12 {
 		vector<VertexPositionNormalTexture> vertices;
 		vector<uint32_t> indices;
 		MeshUtill::CreateSphere(1.0f, 18,vertices, indices);
-		auto mesh = Dx12Mesh::CreateDx12Mesh<VertexPositionNormalTexture>(vertices, indices);
+		auto mesh = BaseMesh::CreateBaseMesh<VertexPositionNormalTexture>(vertices, indices);
 		compPtr->SetMesh(mesh);
 		//テクスチャ
 		auto TexFile = App::GetRelativeAssetsPath() + L"trace.png";

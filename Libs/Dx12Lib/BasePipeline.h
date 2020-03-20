@@ -152,7 +152,7 @@ namespace basedx12 {
 
 
 		static inline ComPtr<ID3D12DescriptorHeap> CreateCbvSrvUavHeap(UINT NumDescriptorHeap) {
-			//CbvSrvデスクプリタヒープ
+			//CbvSrvUavデスクプリタヒープ
 			D3D12_DESCRIPTOR_HEAP_DESC CbvSrvHeapDesc = {};
 			CbvSrvHeapDesc.NumDescriptors = NumDescriptorHeap;
 			CbvSrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;

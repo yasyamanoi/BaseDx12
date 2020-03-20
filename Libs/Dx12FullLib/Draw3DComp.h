@@ -98,7 +98,7 @@ namespace basedx12 {
 	//--------------------------------------------------------------------------------------
 	class PNTStaticDraw : public Draw3D {
 		//テクスチャ
-		shared_ptr<Dx12Texture> m_texture;
+		shared_ptr<BaseTexture> m_texture;
 		wstring m_textureFileName;
 		//シェーダリソースのインデックス
 		UINT m_srvIndex;

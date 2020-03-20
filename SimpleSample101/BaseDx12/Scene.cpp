@@ -7,13 +7,13 @@ namespace basedx12 {
 
 
 	void Scene::OnInit() {
-		ResetActiveDx12Device<GameDivece>(2);
+		ResetActiveBaseDevice<GameDivece>(2);
 	}
 
 	void Scene::OnInitAssets() {
 		//ここでシーン上のオブジェクトを構築
 		//デバイスの取得
-		auto Device = App::GetDx12Device();
+		auto Device = App::GetBaseDevice();
 		// ２Ｄの基本的なパイプライン
 		{
 			D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
@@ -30,7 +30,7 @@ namespace basedx12 {
 				{ Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) }
 			};
 			//メッシュ作成
-			m_dx12Mesh = Dx12Mesh::CreateDx12Mesh<VertexPositionColor>(vertex);
+			m_baseMesh = BaseMesh::CreateBaseMesh<VertexPositionColor>(vertex);
 		}
 	}
 
@@ -38,11 +38,11 @@ namespace basedx12 {
 	}
 
 	void Scene::OnDraw() {
-		auto Device = App::GetDx12Device();
+		auto Device = App::GetBaseDevice();
 		auto commandList = Device->GetCommandList();
 		commandList->SetPipelineState(m_pipelineState.Get());
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		commandList->IASetVertexBuffers(0, 1, &m_dx12Mesh->GetVertexBufferView());
+		commandList->IASetVertexBuffers(0, 1, &m_baseMesh->GetVertexBufferView());
 		commandList->DrawInstanced(3, 1, 0, 0);
 	}
 

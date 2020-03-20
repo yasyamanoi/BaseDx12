@@ -21,11 +21,11 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)CommonDx12.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Controler.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)d3dx12.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Device.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Pipeline.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Mesh.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Texture.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Dx12Helper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)BaseDevice.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)BasePipeline.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)BaseMesh.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)BaseTexture.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)BaseHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Light.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)MeshHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)SceneBase.h" />
@@ -36,10 +36,10 @@
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)App.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Camera.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Dx12Device.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Dx12Helper.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Dx12Pipeline.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Dx12Texture.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)BaseDevice.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)BaseHelper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)BasePipeline.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)BaseTexture.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Light.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)MeshHelper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)VertexHelper.cpp" />

@@ -2,7 +2,7 @@
 
 namespace basedx12 {
 
-	Dx12Device::Dx12Device(UINT frameCount, UINT cbvSrvUavMax) :
+	BaseDevice::BaseDevice(UINT frameCount, UINT cbvSrvUavMax) :
 		m_frameCount(frameCount),
 		m_fenceValues(m_frameCount),
 		m_renderTargets(m_frameCount),
@@ -15,9 +15,9 @@ namespace basedx12 {
 		m_aspectRatio = static_cast<float>(App::GetGameWidth()) / static_cast<float>(App::GetGameHeight());
 	}
 
-	Dx12Device::~Dx12Device() {}
+	BaseDevice::~BaseDevice() {}
 
-	UINT Dx12Device::GetCbvSrvUavNextIndex() {
+	UINT BaseDevice::GetCbvSrvUavNextIndex() {
 		if (m_cbvSrvUavSendIndex >= m_cbvSrvUavMax) {
 			throw BaseException(
 				L"これ以上シェーダリソースとコンスタントバッファは増やせません。\n",
@@ -30,7 +30,7 @@ namespace basedx12 {
 
 
 	_Use_decl_annotations_
-	void Dx12Device::GetHardwareAdapter(IDXGIFactory2* pFactory, IDXGIAdapter1** ppAdapter)
+	void BaseDevice::GetHardwareAdapter(IDXGIFactory2* pFactory, IDXGIAdapter1** ppAdapter)
 	{
 		ComPtr<IDXGIAdapter1> adapter;
 		*ppAdapter = nullptr;
@@ -58,7 +58,7 @@ namespace basedx12 {
 		*ppAdapter = adapter.Detach();
 	}
 
-	void Dx12Device::SyncAndWaitForGpu() {
+	void BaseDevice::SyncAndWaitForGpu() {
 		ThrowIfFailed(GetID3D12Device()->CreateFence(m_fenceValues[m_frameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
 		m_fenceValues[m_frameIndex]++;
 
@@ -75,7 +75,7 @@ namespace basedx12 {
 
 
 	// Wait for pending GPU work to complete.
-	void Dx12Device::WaitForGpu()
+	void BaseDevice::WaitForGpu()
 	{
 		// Schedule a Signal command in the queue.
 		ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]));
@@ -89,7 +89,7 @@ namespace basedx12 {
 	}
 
 	// Prepare to render the next frame.
-	void Dx12Device::MoveToNextFrame()
+	void BaseDevice::MoveToNextFrame()
 	{
 		// Schedule a Signal command in the queue.
 		const UINT64 currentFenceValue = m_fenceValues[m_frameIndex];

@@ -11,18 +11,18 @@ namespace basedx12 {
 		virtual ~SceneBase() {}
 	public:
 		template<typename T, typename... Ts>
-		shared_ptr<T> ResetActiveDx12Device(Ts&&... params) {
-			if (App::GetDx12Device()) {
-				App::GetDx12Device()->OnDestroy();
+		shared_ptr<T> ResetActiveBaseDevice(Ts&&... params) {
+			if (App::GetBaseDevice()) {
+				App::GetBaseDevice()->OnDestroy();
 			}
-			shared_ptr<T> Ptr = shared_ptr<T>(new T(params...));
-			auto Dx12DevicePtr = dynamic_pointer_cast<Dx12Device>(Ptr);
-			if (!Dx12DevicePtr) {
-				throw runtime_error("Dx12Deviceに型キャストできません。");
+			shared_ptr<T> ptr = shared_ptr<T>(new T(params...));
+			auto baseDevicePtr = dynamic_pointer_cast<BaseDevice>(ptr);
+			if (!baseDevicePtr) {
+				throw runtime_error("BaseDeviceに型キャストできません。");
 			}
-			App::SetDx12Device(Ptr);
-			Ptr->OnInit();
-			return Ptr;
+			App::SetBaseDevice(ptr);
+			ptr->OnInit();
+			return ptr;
 		}
 		virtual void OnInitAssets() = 0;
 

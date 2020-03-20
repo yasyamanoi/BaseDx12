@@ -6,7 +6,7 @@ namespace basedx12 {
 
 
 	GameDivece::GameDivece(UINT frameCount) :
-		Dx12Device(frameCount)
+		BaseDevice(frameCount)
 	{
 	}
 
@@ -33,14 +33,15 @@ namespace basedx12 {
 		{
 			// レンダリングターゲットビュー
 			m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_frameCount);
-			m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-			//CbvSrvデスクプリタヒープ(シェーダリソースとコンスタントバッファ)
-			//CbvSrvデスクプリタヒープの数はGetCbvSrvUavMax()により取得する
-			m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(GetCbvSrvUavMax());
-			m_CbvSrvDescriptorHandleIncrementSize
+			m_rtvDescriptorHandleIncrementSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+			//CbvSrvUavデスクプリタヒープ
+			//(コンスタントバッファとシェーダリソースと順序不定のアクセスビュー)
+			//CbvSrvUavデスクプリタヒープの数はGetCbvSrvUavMax()により取得する
+			m_cbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(GetCbvSrvUavMax());
+			m_cbvSrvUavDescriptorHandleIncrementSize
 			= m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 			//サンプラーデスクリプタヒープ
-			m_SamplerDescriptorHeap = DescriptorHeap::CreateSamplerHeap(1);
+			m_samplerDescriptorHeap = DescriptorHeap::CreateSamplerHeap(1);
 		}
 		// RTVとコマンドアロケータ
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
@@ -48,7 +49,7 @@ namespace basedx12 {
 		{
 			ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
 			m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
-			rtvHandle.Offset(1, m_rtvDescriptorSize);
+			rtvHandle.Offset(1, m_rtvDescriptorHandleIncrementSize);
 			//コマンドアロケータ
 			m_commandAllocators[n] = CommandAllocator::CreateDefault();
 		}
@@ -122,14 +123,14 @@ namespace basedx12 {
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
 			m_rtvHeap->GetCPUDescriptorHandleForHeapStart(),
 			m_frameIndex,
-			m_rtvDescriptorSize
+			m_rtvDescriptorHandleIncrementSize
 		);
 		m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 		m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		ID3D12DescriptorHeap* ppHeaps[] = {
-			m_CbvSrvUavDescriptorHeap.Get(),
-			m_SamplerDescriptorHeap.Get() 
+			m_cbvSrvUavDescriptorHeap.Get(),
+			m_samplerDescriptorHeap.Get() 
 		};
 		m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 		// シーンの個別描画

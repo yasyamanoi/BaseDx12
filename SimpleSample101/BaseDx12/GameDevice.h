@@ -4,7 +4,7 @@
 namespace basedx12 {
 
 
-    class GameDivece : public Dx12Device {
+    class GameDivece : public BaseDevice {
         // App resources.
         void LoadPipeline();
         void LoadAssets();
