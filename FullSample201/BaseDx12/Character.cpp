@@ -4,8 +4,8 @@
 namespace basedx12 {
 
 	void MoveTriangle::OnInit() {
-		auto Device = App::GetBaseDevice();
-		auto aspectRatio = Device->GetAspectRatio();
+		auto baseDevice = App::GetBaseDevice();
+		auto aspectRatio = baseDevice->GetAspectRatio();
 		auto compPtr = AddComponent<PCSpriteDraw>();
 		vector<VertexPositionColor> vertex =
 		{
@@ -33,8 +33,8 @@ namespace basedx12 {
 	}
 
 	void MoveTriangle2::OnInit() {
-		auto Device = App::GetBaseDevice();
-		auto aspectRatio = Device->GetAspectRatio();
+		auto baseDevice = App::GetBaseDevice();
+		auto aspectRatio = baseDevice->GetAspectRatio();
 		auto compPtr = AddComponent<PCSpriteDraw>();
 		vector<VertexPositionColor> vertex =
 		{
@@ -62,17 +62,16 @@ namespace basedx12 {
 	}
 
 	void MoveSquare::OnInit() {
-		auto Device = App::GetBaseDevice();
 		auto compPtr = AddComponent<PTSpriteDraw>();
 		//メッシュ
 		{
-			float HelfSize = 0.5f;
+			float helfSize = 0.5f;
 			//頂点配列
 			vector<VertexPositionTexture> vertices = {
-				{ VertexPositionTexture(Float3(-HelfSize, HelfSize, 0),	Float2(0.0f, 0.0f)) },
-				{ VertexPositionTexture(Float3(HelfSize, HelfSize, 0),	Float2(1.0f, 0.0f)) },
-				{ VertexPositionTexture(Float3(-HelfSize, -HelfSize, 0),	Float2(0.0f, 1.0f)) },
-				{ VertexPositionTexture(Float3(HelfSize, -HelfSize, 0),	Float2(1.0f, 1.0f)) },
+				{ VertexPositionTexture(Float3(-helfSize, helfSize, 0),	Float2(0.0f, 0.0f)) },
+				{ VertexPositionTexture(Float3(helfSize, helfSize, 0),	Float2(1.0f, 0.0f)) },
+				{ VertexPositionTexture(Float3(-helfSize, -helfSize, 0),	Float2(0.0f, 1.0f)) },
+				{ VertexPositionTexture(Float3(helfSize, -helfSize, 0),	Float2(1.0f, 1.0f)) },
 			};
 			//インデックス配列
 			vector<uint32_t> indices = { 0, 1, 2, 1, 3, 2 };
@@ -82,8 +81,8 @@ namespace basedx12 {
 		}
 		//テクスチャ
 		{
-			auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";
-			compPtr->SetTextureFile(TexFile);
+			auto texFile = App::GetRelativeAssetsPath() + L"sky.jpg";
+			compPtr->SetTextureFile(texFile);
 		}
 		auto ptrTrans = GetComponent<Transform>();
 		ptrTrans->SetScale(Float3(128.0f, 128.0f, 1.0f));
@@ -103,7 +102,6 @@ namespace basedx12 {
 
 
 	void MoveBox::OnInit() {
-		auto Device = App::GetBaseDevice();
 		auto compPtr = AddComponent<PNTStaticDraw>();
 		//メッシュ
 		vector<VertexPositionNormalTexture> vertices;
@@ -112,8 +110,8 @@ namespace basedx12 {
 		auto mesh = BaseMesh::CreateBaseMesh<VertexPositionNormalTexture>(vertices, indices);
 		compPtr->SetMesh(mesh);
 		//テクスチャ
-		auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";
-		compPtr->SetTextureFile(TexFile);
+		auto texFile = App::GetRelativeAssetsPath() + L"sky.jpg";
+		compPtr->SetTextureFile(texFile);
 		compPtr->SetCameraKey(L"MainCamera");
 		compPtr->SetLightSetKey(L"MainLightSet");
 

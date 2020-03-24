@@ -65,9 +65,9 @@ namespace basedx12 {
 	//--------------------------------------------------------------------------------------
 	namespace CommandQueue {
 		static inline ComPtr<ID3D12CommandQueue> CreateDirect(const D3D12_COMMAND_QUEUE_DESC& desc) {
-			auto Dev = App::GetID3D12Device();
+			auto device = App::GetID3D12Device();
 			ComPtr<ID3D12CommandQueue> queue;
-			ThrowIfFailed(Dev->CreateCommandQueue(&desc, IID_PPV_ARGS(&queue)));
+			ThrowIfFailed(device->CreateCommandQueue(&desc, IID_PPV_ARGS(&queue)));
 			return queue;
 		}
 		static inline ComPtr<ID3D12CommandQueue> CreateDefault() {
@@ -123,49 +123,50 @@ namespace basedx12 {
 	//--------------------------------------------------------------------------------------
 	namespace DescriptorHeap {
 		static inline ComPtr<ID3D12DescriptorHeap> CreateDirect(const D3D12_DESCRIPTOR_HEAP_DESC& desc) {
-			auto Dev = App::GetID3D12Device();
-			ComPtr<ID3D12DescriptorHeap> Ret;
-			ThrowIfFailed(Dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&Ret)),
+			auto device = App::GetID3D12Device();
+			ComPtr<ID3D12DescriptorHeap> ret;
+			ThrowIfFailed(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&ret)),
 				L"デスクプリタヒープの作成に失敗しました",
-				L"Dev->GetDevice()->CreateDescriptorHeap()",
+				L"device->CreateDescriptorHeap()",
 				L"DescriptorHeap::CreateDirect()"
 			);
-			return Ret;
+			return ret;
 		}
-		static inline ComPtr<ID3D12DescriptorHeap> CreateRtvHeap(UINT FrameCount) {
+		//Rtv
+		static inline ComPtr<ID3D12DescriptorHeap> CreateRtvHeap(UINT frameCount) {
 			//Rtvデスクプリタヒープ
 			D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-			rtvHeapDesc.NumDescriptors = FrameCount;
+			rtvHeapDesc.NumDescriptors = frameCount;
 			rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 			rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 			return CreateDirect(rtvHeapDesc);
 		}
 		//デプスステンシル
-		static inline ComPtr<ID3D12DescriptorHeap> CreateDsvHeap(UINT NumDescriptorHeap) {
+		static inline ComPtr<ID3D12DescriptorHeap> CreateDsvHeap(UINT numDescriptorHeap) {
 			//Dsvデスクプリタヒープ
-			D3D12_DESCRIPTOR_HEAP_DESC DsvHeapDesc = {};
-			DsvHeapDesc.NumDescriptors = NumDescriptorHeap;
-			DsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-			DsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-			return CreateDirect(DsvHeapDesc);
+			D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+			dsvHeapDesc.NumDescriptors = numDescriptorHeap;
+			dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+			dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+			return CreateDirect(dsvHeapDesc);
 		}
-
-
-		static inline ComPtr<ID3D12DescriptorHeap> CreateCbvSrvUavHeap(UINT NumDescriptorHeap) {
+		//CbvSrvUav
+		static inline ComPtr<ID3D12DescriptorHeap> CreateCbvSrvUavHeap(UINT numDescriptorHeap) {
 			//CbvSrvUavデスクプリタヒープ
-			D3D12_DESCRIPTOR_HEAP_DESC CbvSrvHeapDesc = {};
-			CbvSrvHeapDesc.NumDescriptors = NumDescriptorHeap;
-			CbvSrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-			CbvSrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-			return CreateDirect(CbvSrvHeapDesc);
+			D3D12_DESCRIPTOR_HEAP_DESC cbvSrvUavHeapDesc = {};
+			cbvSrvUavHeapDesc.NumDescriptors = numDescriptorHeap;
+			cbvSrvUavHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+			cbvSrvUavHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+			return CreateDirect(cbvSrvUavHeapDesc);
 		}
-		static inline ComPtr<ID3D12DescriptorHeap> CreateSamplerHeap(UINT NumDescriptorHeap) {
+		//サンプラー
+		static inline ComPtr<ID3D12DescriptorHeap> CreateSamplerHeap(UINT numDescriptorHeap) {
 			//サンプラーデスクプリタヒープ
-			D3D12_DESCRIPTOR_HEAP_DESC SamplerHeapDesc = {};
-			SamplerHeapDesc.NumDescriptors = NumDescriptorHeap;
-			SamplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-			SamplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-			return CreateDirect(SamplerHeapDesc);
+			D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
+			samplerHeapDesc.NumDescriptors = numDescriptorHeap;
+			samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+			samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+			return CreateDirect(samplerHeapDesc);
 		}
 
 	}
@@ -175,7 +176,7 @@ namespace basedx12 {
 	//--------------------------------------------------------------------------------------
 	namespace DepthStencil {
 		static inline ComPtr<ID3D12Resource> CreateDefault(const ComPtr<ID3D12DescriptorHeap>& dsvHeap) {
-			auto Dev = App::GetID3D12Device();
+			auto device = App::GetID3D12Device();
 			ComPtr<ID3D12Resource> ret;
 
 			D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
@@ -188,7 +189,7 @@ namespace basedx12 {
 			depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
 			depthOptimizedClearValue.DepthStencil.Stencil = 0;
 
-			ThrowIfFailed(Dev->CreateCommittedResource(
+			ThrowIfFailed(device->CreateCommittedResource(
 				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE,
 				&CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, 
@@ -199,10 +200,10 @@ namespace basedx12 {
 				IID_PPV_ARGS(&ret)
 			),
 				L"デプスステンシルリソース作成に失敗しました",
-				L"Dev->CreateCommittedResource)",
+				L"device->CreateCommittedResource)",
 				L"DepthStencil::CreateDefault()"
 			);
-			Dev->CreateDepthStencilView(ret.Get(), &depthStencilDesc, dsvHeap->GetCPUDescriptorHandleForHeapStart());
+			device->CreateDepthStencilView(ret.Get(), &depthStencilDesc, dsvHeap->GetCPUDescriptorHandleForHeapStart());
 			return ret;
 		}
 	}
@@ -212,105 +213,54 @@ namespace basedx12 {
 	/// ルートシグネチャユーティリティ
 	//--------------------------------------------------------------------------------------
 	namespace RootSignature {
-		static inline ComPtr<ID3D12RootSignature> CreateDirect(const D3D12_ROOT_SIGNATURE_DESC& desc) {
-			auto Dev = App::GetID3D12Device();
+		static inline ComPtr<ID3D12RootSignature> CreateDirect(const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& desc) {
+			auto device = App::GetID3D12Device();
 			D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
 			featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
-			if (FAILED(Dev->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
+			if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
 			{
 				featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
 			}
 			ComPtr<ID3DBlob> signature;
 			ComPtr<ID3DBlob> error;
-			ComPtr<ID3D12RootSignature> Ret;
-			ThrowIfFailed(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error),
+			ComPtr<ID3D12RootSignature> ret;
+			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&desc, featureData.HighestVersion, &signature, &error),
 				L"ルートシグネチャのシリアライズに失敗しました",
-				L"D3D12SerializeRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error)",
+				L"D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error)",
 				L"RootSignature::CreateDirect()"
-			);
+				);
 			ThrowIfFailed(
-				Dev->CreateRootSignature(0, signature->GetBufferPointer(),
-					signature->GetBufferSize(), IID_PPV_ARGS(&Ret)),
+				device->CreateRootSignature(0, signature->GetBufferPointer(),
+					signature->GetBufferSize(), IID_PPV_ARGS(&ret)),
 				L"ルートシグネチャの作成に失敗しました",
-				L"Dev->CreateRootSignature()",
+				L"device->CreateRootSignature()",
 				L"RootSignature::CreateDirect()"
-			);
-			return Ret;
+				);
+			return ret;
 		}
 		//一番シンプルなルートシグネチャ
 		static inline ComPtr<ID3D12RootSignature> CreateSimple() {
-			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-			rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
+			rootSignatureDesc.Init_1_1(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 			return CreateDirect(rootSignatureDesc);
 		}
-		//コンスタントバッファのみ
-		static inline ComPtr<ID3D12RootSignature> CreateCbv() {
-			CD3DX12_DESCRIPTOR_RANGE ranges[1];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-			CD3DX12_ROOT_PARAMETER rootParameters[1];
-			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
-
-			D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
-				D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
-			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-			rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
-			return CreateDirect(rootSignatureDesc);
-		}
-		//シェーダリソースとサンプラー
-		static inline ComPtr<ID3D12RootSignature> CreateSrvSmp() {
-			CD3DX12_DESCRIPTOR_RANGE ranges[2];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
-
-			CD3DX12_ROOT_PARAMETER rootParameters[2];
-			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
-
-			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-			rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-			return CreateDirect(rootSignatureDesc);
-		}
-
 		//シェーダリソースとサンプラーとコンスタントバッファ
 		static inline ComPtr<ID3D12RootSignature> CreateSrvSmpCbv() {
 
-			CD3DX12_DESCRIPTOR_RANGE ranges[3];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+			CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
+			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
-			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 
-			CD3DX12_ROOT_PARAMETER rootParameters[3];
+			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
 			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
 			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_ALL);
 
-			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-			rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
+			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 			return CreateDirect(rootSignatureDesc);
 		}
-		//シェーダリソース2つとサンプラー2つとコンスタントバッファ1つ
-		static inline ComPtr<ID3D12RootSignature> CreateSrv2Smp2Cbv() {
-			CD3DX12_DESCRIPTOR_RANGE ranges[5];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
-			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
-			ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1);
-			ranges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-
-			CD3DX12_ROOT_PARAMETER rootParameters[5];
-			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
-			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-			rootParameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL);
-			rootParameters[4].InitAsDescriptorTable(1, &ranges[4], D3D12_SHADER_VISIBILITY_ALL);
-
-			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-			rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-			return CreateDirect(rootSignatureDesc);
-		}
-
-
 	}
 
 	//--------------------------------------------------------------------------------------
@@ -331,7 +281,7 @@ namespace basedx12 {
 	/// サンプラーユーティリティ（変更可能）
 	//--------------------------------------------------------------------------------------
 	namespace Sampler {
-		static inline void CreateSampler(const SamplerState State, D3D12_CPU_DESCRIPTOR_HANDLE& Handle) {
+		static inline void CreateSampler(const SamplerState state, D3D12_CPU_DESCRIPTOR_HANDLE& handle) {
 			D3D12_SAMPLER_DESC samplerDesc = {};
 			//デフォルトを入れておく
 			samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -344,7 +294,7 @@ namespace basedx12 {
 			samplerDesc.MaxAnisotropy = 1;
 			samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 
-			switch (State) {
+			switch (state) {
 			case SamplerState::PointWrap:
 				samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
 				samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -400,8 +350,8 @@ namespace basedx12 {
 			}
 
 			//デバイスの取得
-			auto Dev = App::GetID3D12Device();
-			Dev->CreateSampler(&samplerDesc, Handle);
+			auto device = App::GetID3D12Device();
+			device->CreateSampler(&samplerDesc, handle);
 		}
 	}
 
@@ -422,40 +372,33 @@ namespace basedx12 {
 			const T& src
 		) {
 			//デバイスの取得
-			auto Dev = App::GetID3D12Device();
-			shared_ptr<ConstantBuffer> Ptr = shared_ptr<ConstantBuffer>(new ConstantBuffer());
+			auto device = App::GetID3D12Device();
+			shared_ptr<ConstantBuffer> ptrConst = shared_ptr<ConstantBuffer>(new ConstantBuffer());
 			// CB size is required to be 256-byte aligned.
 			UINT constsize = (sizeof(T) + 255) & ~255;
-			ThrowIfFailed(Dev->CreateCommittedResource(
+			ThrowIfFailed(device->CreateCommittedResource(
 				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 				D3D12_HEAP_FLAG_NONE,
 				&CD3DX12_RESOURCE_DESC::Buffer(constsize),
 				D3D12_RESOURCE_STATE_GENERIC_READ,
 				nullptr,
-				IID_PPV_ARGS(&Ptr->m_constantBuffer)));
+				IID_PPV_ARGS(&ptrConst->m_constantBuffer)));
 
 			// Describe and create a constant buffer view.
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-			cbvDesc.BufferLocation = Ptr->m_constantBuffer->GetGPUVirtualAddress();
+			cbvDesc.BufferLocation = ptrConst->m_constantBuffer->GetGPUVirtualAddress();
 			cbvDesc.SizeInBytes = constsize;    
-			Dev->CreateConstantBufferView(&cbvDesc, descHandle);
+			device->CreateConstantBufferView(&cbvDesc, descHandle);
 
-			// Map and initialize the constant buffer. We don't unmap this until the
-			// app closes. Keeping things mapped for the lifetime of the resource is okay.
-			CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-			ThrowIfFailed(Ptr->m_constantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&Ptr->m_pCbvDataBegin)));
-			memcpy(Ptr->m_pCbvDataBegin, &src, sizeof(src));
-
-			Ptr->m_constantBuffer->Unmap(0, nullptr);
-
-			return Ptr;
+			// アプリケーションが動作しているあいだ中、Map状態でも問題ない
+			CD3DX12_RANGE readRange(0, 0); 
+			ThrowIfFailed(ptrConst->m_constantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&ptrConst->m_pCbvDataBegin)));
+			memcpy(ptrConst->m_pCbvDataBegin, &src, sizeof(src));
+			return ptrConst;
 		}
 		template<typename T>
 		void Copy(const T& src) {
-			CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-			ThrowIfFailed(m_constantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_pCbvDataBegin)));
 			memcpy(m_pCbvDataBegin, &src, sizeof(src));
-			m_constantBuffer->Unmap(0, nullptr);
 		}
 	};
 
@@ -465,68 +408,68 @@ namespace basedx12 {
 	namespace PipelineState {
 		static inline ComPtr<ID3D12PipelineState> CreateDirect(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc) {
 			//デバイスの取得
-			auto Dev = App::GetID3D12Device();
-			ComPtr<ID3D12PipelineState> Ret;
-			ThrowIfFailed(Dev->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&Ret)),
+			auto device = App::GetID3D12Device();
+			ComPtr<ID3D12PipelineState> ret;
+			ThrowIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&ret)),
 				L"パイプラインステートの作成に失敗しました",
-				L"Dev->GetDevice()->CreateGraphicsPipelineState()",
+				L"device->GetDevice()->CreateGraphicsPipelineState()",
 				L"PipelineState::CreateDirect()"
 			);
-			return Ret;
+			return ret;
 		}
 		template<typename Vertex, typename VS, typename PS>
-		static inline ComPtr<ID3D12PipelineState> CreateDefault2D(const ComPtr<ID3D12RootSignature>& rootSignature, D3D12_GRAPHICS_PIPELINE_STATE_DESC& RetDesc) {
+		static inline ComPtr<ID3D12PipelineState> CreateDefault2D(const ComPtr<ID3D12RootSignature>& rootSignature, D3D12_GRAPHICS_PIPELINE_STATE_DESC& retDesc) {
 
-			ZeroMemory(&RetDesc, sizeof(RetDesc));
-			RetDesc.InputLayout = { Vertex::GetVertexElement(), Vertex::GetNumElements() };
-			RetDesc.pRootSignature = rootSignature.Get();
-			RetDesc.VS = CD3DX12_SHADER_BYTECODE(VS::GetPtr()->GetShaderComPtr()->GetBufferPointer(),VS::GetPtr()->GetShaderComPtr()->GetBufferSize());
-			RetDesc.PS = CD3DX12_SHADER_BYTECODE(PS::GetPtr()->GetShaderComPtr()->GetBufferPointer(), PS::GetPtr()->GetShaderComPtr()->GetBufferSize());
-			RetDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-			RetDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-			RetDesc.DepthStencilState.DepthEnable = FALSE;
-			RetDesc.DepthStencilState.StencilEnable = FALSE;
-			RetDesc.SampleMask = UINT_MAX;
-			RetDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-			RetDesc.NumRenderTargets = 1;
-			RetDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-			RetDesc.SampleDesc.Count = 1;
-			return CreateDirect(RetDesc);
+			ZeroMemory(&retDesc, sizeof(retDesc));
+			retDesc.InputLayout = { Vertex::GetVertexElement(), Vertex::GetNumElements() };
+			retDesc.pRootSignature = rootSignature.Get();
+			retDesc.VS = CD3DX12_SHADER_BYTECODE(VS::GetPtr()->GetShaderComPtr()->GetBufferPointer(),VS::GetPtr()->GetShaderComPtr()->GetBufferSize());
+			retDesc.PS = CD3DX12_SHADER_BYTECODE(PS::GetPtr()->GetShaderComPtr()->GetBufferPointer(), PS::GetPtr()->GetShaderComPtr()->GetBufferSize());
+			retDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+			retDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+			retDesc.DepthStencilState.DepthEnable = FALSE;
+			retDesc.DepthStencilState.StencilEnable = FALSE;
+			retDesc.SampleMask = UINT_MAX;
+			retDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+			retDesc.NumRenderTargets = 1;
+			retDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+			retDesc.SampleDesc.Count = 1;
+			return CreateDirect(retDesc);
 		}
 		template<typename Vertex, typename VS, typename PS>
-		static inline ComPtr<ID3D12PipelineState> CreateDefault3D(const ComPtr<ID3D12RootSignature>& rootSignature, D3D12_GRAPHICS_PIPELINE_STATE_DESC& RetDesc) {
+		static inline ComPtr<ID3D12PipelineState> CreateDefault3D(const ComPtr<ID3D12RootSignature>& rootSignature, D3D12_GRAPHICS_PIPELINE_STATE_DESC& retDesc) {
 
 			CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
 			//裏面カリング
 			rasterizerStateDesc.CullMode = D3D12_CULL_MODE_NONE;
 
-			ZeroMemory(&RetDesc, sizeof(RetDesc));
-			RetDesc.InputLayout = { Vertex::GetVertexElement(), Vertex::GetNumElements() };
-			RetDesc.pRootSignature = rootSignature.Get();
-			RetDesc.VS =
+			ZeroMemory(&retDesc, sizeof(retDesc));
+			retDesc.InputLayout = { Vertex::GetVertexElement(), Vertex::GetNumElements() };
+			retDesc.pRootSignature = rootSignature.Get();
+			retDesc.VS =
 			{
 				reinterpret_cast<UINT8*>(VS::GetPtr()->GetShaderComPtr()->GetBufferPointer()),
 				VS::GetPtr()->GetShaderComPtr()->GetBufferSize()
 			};
-			RetDesc.PS =
+			retDesc.PS =
 			{
 				reinterpret_cast<UINT8*>(PS::GetPtr()->GetShaderComPtr()->GetBufferPointer()),
 				PS::GetPtr()->GetShaderComPtr()->GetBufferSize()
 			};
-			RetDesc.RasterizerState = rasterizerStateDesc;
-			RetDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-			RetDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-			RetDesc.SampleMask = UINT_MAX;
-			RetDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-			RetDesc.NumRenderTargets = 1;
-			RetDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-			RetDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-			RetDesc.SampleDesc.Count = 1;
-			return CreateDirect(RetDesc);
+			retDesc.RasterizerState = rasterizerStateDesc;
+			retDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+			retDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+			retDesc.SampleMask = UINT_MAX;
+			retDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+			retDesc.NumRenderTargets = 1;
+			retDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+			retDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+			retDesc.SampleDesc.Count = 1;
+			return CreateDirect(retDesc);
 		}
 
 		template<typename Vertex, typename VS>
-		static inline ComPtr<ID3D12PipelineState> CreateShadowmap3D(const ComPtr<ID3D12RootSignature>& rootSignature, D3D12_GRAPHICS_PIPELINE_STATE_DESC& RetDesc) {
+		static inline ComPtr<ID3D12PipelineState> CreateShadowmap3D(const ComPtr<ID3D12RootSignature>& rootSignature, D3D12_GRAPHICS_PIPELINE_STATE_DESC& retDesc) {
 
 			CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
 			//表面カリング
@@ -535,28 +478,28 @@ namespace basedx12 {
 			rasterizerStateDesc.DepthClipEnable = TRUE;
 
 			ZeroMemory(&RetDesc, sizeof(RetDesc));
-			RetDesc.InputLayout = { Vertex::GetVertexElement(), Vertex::GetNumElements() };
-			RetDesc.pRootSignature = rootSignature.Get();
-			RetDesc.VS =
+			retDesc.InputLayout = { Vertex::GetVertexElement(), Vertex::GetNumElements() };
+			retDesc.pRootSignature = rootSignature.Get();
+			retDesc.VS =
 			{
 				reinterpret_cast<UINT8*>(VS::GetPtr()->GetShaderComPtr()->GetBufferPointer()),
 				VS::GetPtr()->GetShaderComPtr()->GetBufferSize()
 			};
 
-			RetDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0);
-			RetDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
-			RetDesc.NumRenderTargets = 0;
+			retDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0);
+			retDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+			retDesc.NumRenderTargets = 0;
 
-			RetDesc.RasterizerState = rasterizerStateDesc;
-			RetDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-			RetDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-			RetDesc.SampleMask = UINT_MAX;
-			RetDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-			RetDesc.NumRenderTargets = 0;
-			RetDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
-			RetDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-			RetDesc.SampleDesc.Count = 1;
-			return CreateDirect(RetDesc);
+			retDesc.RasterizerState = rasterizerStateDesc;
+			retDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+			retDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+			retDesc.SampleMask = UINT_MAX;
+			retDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+			retDesc.NumRenderTargets = 0;
+			retDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+			retDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+			retDesc.SampleDesc.Count = 1;
+			return CreateDirect(retDesc);
 		}
 
 	}
@@ -568,12 +511,12 @@ namespace basedx12 {
 	namespace CommandAllocator {
 		static inline  ComPtr<ID3D12CommandAllocator> CreateDefault() {
 			//デバイスの取得
-			auto Dev = App::GetID3D12Device();
+			auto device = App::GetID3D12Device();
 			ComPtr<ID3D12CommandAllocator> allocator;
 			ThrowIfFailed(
-				Dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&allocator)),
+				device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&allocator)),
 				L"コマンドアロケータの作成に失敗しました",
-				L"Dev->CreateCommandAllocator()",
+				L"device->CreateCommandAllocator()",
 				L"CommandAllocator::CreateDefault()"
 			);
 			return allocator;
@@ -586,64 +529,62 @@ namespace basedx12 {
 	namespace CommandList {
 		static inline  ComPtr<ID3D12GraphicsCommandList> CreateSimple(const ComPtr<ID3D12CommandAllocator>& allocator) {
 			//デバイスの取得
-			auto Dev = App::GetID3D12Device();
-			ComPtr<ID3D12GraphicsCommandList> Ret;
-			ThrowIfFailed(Dev->CreateCommandList(
+			auto device = App::GetID3D12Device();
+			ComPtr<ID3D12GraphicsCommandList> ret;
+			ThrowIfFailed(device->CreateCommandList(
 				0,
 				D3D12_COMMAND_LIST_TYPE_DIRECT,
 				allocator.Get(),
 				nullptr,
-				IID_PPV_ARGS(&Ret)),
+				IID_PPV_ARGS(&ret)),
 				L"コマンドリストの作成に失敗しました",
-				L"Dev->GetDevice()->CreateCommandList()",
+				L"device->GetDevice()->CreateCommandList()",
 				L"CommandList::CreateSimple()"
 			);
-			return Ret;
+			return ret;
 		}
 
 		static inline  ComPtr<ID3D12GraphicsCommandList> CreateDefault(
 			const ComPtr<ID3D12CommandAllocator>& allocator,
 			const ComPtr<ID3D12PipelineState>& pipelineState) {
 			//デバイスの取得
-			auto Dev = App::GetID3D12Device();
-			ComPtr<ID3D12GraphicsCommandList> Ret;
-			ThrowIfFailed(Dev->CreateCommandList(
+			auto device = App::GetID3D12Device();
+			ComPtr<ID3D12GraphicsCommandList> ret;
+			ThrowIfFailed(device->CreateCommandList(
 				0,
 				D3D12_COMMAND_LIST_TYPE_DIRECT,
 				allocator.Get(),
 				pipelineState.Get(),
-				IID_PPV_ARGS(&Ret)),
+				IID_PPV_ARGS(&ret)),
 				L"コマンドリストの作成に失敗しました",
-				L"Dev->GetDevice()->CreateCommandList()",
+				L"device->GetDevice()->CreateCommandList()",
 				L"CommandList::CreateDefault()"
 			);
-			return Ret;
+			return ret;
 		}
 		static inline  ComPtr<ID3D12GraphicsCommandList> CreateCopy(
 			const ComPtr<ID3D12CommandAllocator>& allocator,
 			const ComPtr<ID3D12PipelineState>& pipelineState) {
 			//デバイスの取得
-			auto Dev = App::GetID3D12Device();
-			ComPtr<ID3D12GraphicsCommandList> Ret;
-			ThrowIfFailed(Dev->CreateCommandList(
+			auto device = App::GetID3D12Device();
+			ComPtr<ID3D12GraphicsCommandList> ret;
+			ThrowIfFailed(device->CreateCommandList(
 				0,
 				D3D12_COMMAND_LIST_TYPE_COPY,
 				allocator.Get(),
 				pipelineState.Get(),
-				IID_PPV_ARGS(&Ret)),
+				IID_PPV_ARGS(&ret)),
 				L"コマンドリストの作成に失敗しました\n",
-				L"Dev->CreateCommandList()\n",
+				L"device->CreateCommandList()\n",
 				L"CommandList::CreateCopy()"
 			);
-			return Ret;
+			return ret;
 		}
 
 		static inline  void Reset(
 			const ComPtr<ID3D12CommandAllocator>& allocator,
 			const ComPtr<ID3D12GraphicsCommandList>& commandList
 		) {
-			//デバイスの取得
-			auto Dev = App::GetID3D12Device();
 			ThrowIfFailed(commandList->Reset(allocator.Get(), nullptr),
 				L"コマンドリストのリセットに失敗しました\n",
 				L"commandList->Reset(allocator..Get(),nullptr)\n",
@@ -656,8 +597,6 @@ namespace basedx12 {
 			const ComPtr<ID3D12GraphicsCommandList>& commandList,
 			const ComPtr<ID3D12PipelineState>& pipelineState
 			) {
-			//デバイスの取得
-			auto Dev = App::GetID3D12Device();
 			ThrowIfFailed(commandList->Reset(allocator.Get(), pipelineState.Get()),
 				L"コマンドリストのリセットに失敗しました\n",
 				L"commandList->Reset(allocator.Get(), pipelineState.Get()\n",

@@ -60,7 +60,7 @@ namespace basedx12 {
 	{
 		// ルートシグネチャー
 		{
-			//コンスタントバッファ付ルートシグネチャ
+			//SrvとSmpとCbv付ルートシグネチャ
 			m_rootSignature = RootSignature::CreateSrvSmpCbv();
 		}
 		// 頂点などのリソース構築用のコマンドリスト

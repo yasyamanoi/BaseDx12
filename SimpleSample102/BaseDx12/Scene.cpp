@@ -13,14 +13,14 @@ namespace basedx12 {
 	IMPLEMENT_DX12SHADER(PSPTSprite, App::GetShadersPath() + L"PSPTSprite.cso")
 
 	void FixedTriangle::OnInit() {
-		auto Device = App::GetBaseDevice();
-		auto commandList = Device->GetCommandList();
-		auto aspectRatio = Device->GetAspectRatio();
+		auto baseDevice = App::GetBaseDevice();
+		auto commandList = baseDevice->GetCommandList();
+		auto aspectRatio = baseDevice->GetAspectRatio();
 
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeLineDesc;
 		//コンスタントバッファ無し
 		m_pcPipelineState
-		= PipelineState::CreateDefault2D<VertexPositionColor, VSPCSprite, PSPCSprite>(Device->GetRootSignature(), PipeLineDesc);
+		= PipelineState::CreateDefault2D<VertexPositionColor, VSPCSprite, PSPCSprite>(baseDevice->GetRootSignature(), pipeLineDesc);
 		vector<VertexPositionColor> vertex =
 		{
 			{ Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 0.0f, 1.0f) },
@@ -31,9 +31,9 @@ namespace basedx12 {
 		m_pcTriangleMesh = BaseMesh::CreateBaseMesh<VertexPositionColor>(vertex);
 	}
 
-	void FixedTriangle::OnRender() {
-		auto Device = App::GetBaseDevice();
-		auto commandList = Device->GetCommandList();
+	void FixedTriangle::OnDraw() {
+		auto baseDevice = App::GetBaseDevice();
+		auto commandList = baseDevice->GetCommandList();
 		//GraphicsRootDescriptorTableの設定はしなくてもよい（SRVもSamplerもCSVもシェーダに渡さないので）
 		commandList->SetPipelineState(m_pcPipelineState.Get());
 		commandList->IASetVertexBuffers(0, 1, &m_pcTriangleMesh->GetVertexBufferView());
@@ -42,12 +42,12 @@ namespace basedx12 {
 
 
 	void MoveTriangle::OnInit() {
-		auto Device = App::GetBaseDevice();
-		auto commandList = Device->GetCommandList();
-		auto aspectRatio = Device->GetAspectRatio();
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
+		auto baseDevice = App::GetBaseDevice();
+		auto commandList = baseDevice->GetCommandList();
+		auto aspectRatio = baseDevice->GetAspectRatio();
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeLineDesc;
 		m_pcConstPipelineState
-		= PipelineState::CreateDefault2D<VertexPositionColor, VSPCConstSprite, PSPCConstSprite>(Device->GetRootSignature(), PipeLineDesc);
+		= PipelineState::CreateDefault2D<VertexPositionColor, VSPCConstSprite, PSPCConstSprite>(baseDevice->GetRootSignature(), pipeLineDesc);
 		vector<VertexPositionColor> vertex =
 		{
 			{ Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(0.0f, 1.0f, 0.0f, 1.0f) },
@@ -57,11 +57,11 @@ namespace basedx12 {
 		//三角形メッシュ作成
 		m_pcTriangleMesh = BaseMesh::CreateBaseMesh<VertexPositionColor>(vertex);
 		//コンスタントバッファハンドルを作成
-		m_constBuffIndex = Device->GetCbvSrvUavNextIndex();
+		m_constBuffIndex = baseDevice->GetCbvSrvUavNextIndex();
 		CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
-			Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+			baseDevice->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
 			m_constBuffIndex,
-			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
+			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
 	}
@@ -75,15 +75,15 @@ namespace basedx12 {
 		}
 		m_ConstantBuffer->Copy(m_constantBufferData);
 	}
-	void MoveTriangle::OnRender() {
-		auto Device = App::GetBaseDevice();
-		auto commandList = Device->GetCommandList();
+	void MoveTriangle::OnDraw() {
+		auto baseDevice = App::GetBaseDevice();
+		auto commandList = baseDevice->GetCommandList();
 		//GraphicsRootDescriptorTableへセット。
 		//Cbv
 		CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
-			Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+			baseDevice->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			m_constBuffIndex,
-			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
+			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		//csv。RootSignature上のIDは2番
 		commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
@@ -93,12 +93,12 @@ namespace basedx12 {
 	}
 
 	void MoveSquare::OnInit() {
-		auto Device = App::GetBaseDevice();
-		auto commandList = Device->GetCommandList();
-		auto aspectRatio = Device->GetAspectRatio();
+		auto baseDevice = App::GetBaseDevice();
+		auto commandList = baseDevice->GetCommandList();
+		auto aspectRatio = baseDevice->GetAspectRatio();
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
 		m_ptConstPipelineState
-		= PipelineState::CreateDefault2D<VertexPositionTexture, VSPTSprite, PSPTSprite>(Device->GetRootSignature(), PipeLineDesc);
+		= PipelineState::CreateDefault2D<VertexPositionTexture, VSPTSprite, PSPTSprite>(baseDevice->GetRootSignature(), PipeLineDesc);
 		//メッシュ
 		{
 			float HelfSize = 0.2f;
@@ -119,26 +119,26 @@ namespace basedx12 {
 			auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";
 			//テクスチャの作成
 			//シェーダリソースハンドルを作成
-			m_srvIndex = Device->GetCbvSrvUavNextIndex();
+			m_srvIndex = baseDevice->GetCbvSrvUavNextIndex();
 			CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(
-			Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+			baseDevice->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
 			m_srvIndex,
-			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
+			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 			);
 			//画像ファイルをもとにテクスチャを作成
 			m_SkyTexture = BaseTexture::CreateBaseTexture(TexFile, srvHandle);
 		}
 		//サンプラー
 		{
-			auto SamplerDescriptorHandle = Device->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-			Sampler::CreateSampler(SamplerState::LinearClamp, SamplerDescriptorHandle);
+			auto samplerDescriptorHandle = baseDevice->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+			Sampler::CreateSampler(SamplerState::LinearClamp, samplerDescriptorHandle);
 		}
 		//コンスタントバッファハンドルを作成
-		m_constBuffIndex = Device->GetCbvSrvUavNextIndex();
+		m_constBuffIndex = baseDevice->GetCbvSrvUavNextIndex();
 		CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
-			Device->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+			baseDevice->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
 			m_constBuffIndex,
-			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
+			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
 
@@ -153,32 +153,32 @@ namespace basedx12 {
 		}
 		m_ConstantBuffer->Copy(m_constantBufferData);
 	}
-	void MoveSquare::OnRender() {
-		auto Device = App::GetBaseDevice();
-		auto commandList = Device->GetCommandList();
+	void MoveSquare::OnDraw() {
+		auto baseDevice = App::GetBaseDevice();
+		auto commandList = baseDevice->GetCommandList();
 
 		//GraphicsRootDescriptorTableへセット。
 		//Srv
 		CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle(
-			Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+			baseDevice->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			m_srvIndex,
-			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
+			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		//srv。RootSignature上のIDは0番
 		commandList->SetGraphicsRootDescriptorTable(0, SrvHandle);
 		//Sampler
-		CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
-			Device->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+		CD3DX12_GPU_DESCRIPTOR_HANDLE samplerHandle(
+			baseDevice->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			0,
 			0
 		);
 		//sampler。RootSignature上のIDは1番
-		commandList->SetGraphicsRootDescriptorTable(1, SamplerHandle);
+		commandList->SetGraphicsRootDescriptorTable(1, samplerHandle);
 		//Cbv
 		CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
-			Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+			baseDevice->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			m_constBuffIndex,
-			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
+			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		//csv。RootSignature上のIDは2番
 		commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
@@ -194,11 +194,6 @@ namespace basedx12 {
 		ResetActiveBaseDevice<GameDivece>(3);
 	}
 	void Scene::OnInitAssets() {
-
-		//ここでシーン上のオブジェクトを構築
-		//必要なパイプラインオブジェクトをデバイスから取得
-		auto Device = App::GetBaseDevice();
-		auto commandList = Device->GetCommandList();
 		// それぞれのオブジェクトの初期化
 		{
 			m_FixedTriangle.OnInit();
@@ -213,12 +208,12 @@ namespace basedx12 {
 	}
 	void Scene::OnDraw() {
 		//m_ConstantBuffer->Copy(m_constantBufferData);
-		auto Device = App::GetBaseDevice();
-		auto commandList = Device->GetCommandList();
+		auto baseDevice = App::GetBaseDevice();
+		auto commandList = baseDevice->GetCommandList();
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		m_FixedTriangle.OnRender();
-		m_MoveTriangle.OnRender();
-		m_MoveSquare.OnRender();
+		m_FixedTriangle.OnDraw();
+		m_MoveTriangle.OnDraw();
+		m_MoveSquare.OnDraw();
 	}
 	void Scene::OnDestroy() {
 	}

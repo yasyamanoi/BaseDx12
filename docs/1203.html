@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
+</head>
+<body>
+<!-- 全体コンテナ　-->
+<div id="container">
+<header>
+<div id="title_words">BaseDx12（Dx12研究とフレームワーク）</div>
+</header>
+<!-- contents　-->
+<div id="contents">
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１２０３．複数のオブジェクトの描画（３）</h1>
+　前項に引き続き「Simplesample102」です。
+<h4>Scene::OnInitAssets()関数</h4>
+　「Scene::OnInitAssets()関数」は、このサンプルで配置されるオブジェクトを初期化します。<br />
+　このサンプルでは、「静止している三角形」と「移動する三角形」と「移動する四角形」の３つのオブジェクトを描画するわけですが、それぞれ「クラス」として定義されています。<br />
+　それらは「Scene.h/cpp」に宣言、定義されています。<br />
+　まず「Sceneクラス」ですが、以下のように宣言されています。
+<div class="box1">
+<pre>
+    class Scene :public SceneBase {
+        FixedTriangle m_FixedTriangle;
+        MoveTriangle m_MoveTriangle;
+        MoveSquare m_MoveSquare;
+    public:
+        Scene() :SceneBase() {}
+        virtual ~Scene() {}
+        virtual void OnInit()override;
+        virtual void OnInitAssets()override;
+        virtual void OnUpdate()override;
+        virtual void OnDraw()override;
+        virtual void OnDestroy()override;
+    };
+</pre>
+</div>
+　ここで宣言されている
+<div class="box1">
+<pre>
+        FixedTriangle m_FixedTriangle;
+        MoveTriangle m_MoveTriangle;
+        MoveSquare m_MoveSquare;
+</pre>
+</div>
+　がそれぞれのオブジェクトです。<br />
+　それらを初期化するのが「Scene::OnInitAssets()関数」です。
+<div class="box1">
+<pre>
+    void Scene::OnInitAssets() {
+        // それぞれのオブジェクトの初期化
+        {
+            m_FixedTriangle.OnInit();
+            m_MoveTriangle.OnInit();
+            m_MoveSquare.OnInit();
+        }
+    }
+</pre>
+</div>
+<h4>FixedTriangleクラス</h4>
+　まず、「静止している三角形」から説明します。
+　「Scene.h」にあります「FixedTriangle」が「静止している三角形」です。以下に宣言部を紹介します。
+<div class="box1">
+<pre>
+    class FixedTriangle {
+        //PositionColorの三角形メッシュ
+        shared_ptr&lt;BaseMesh> m_pcTriangleMesh;
+        //PositionColor用パイプラインステート（コンスタントバッファなし）
+        ComPtr&lt;ID3D12PipelineState> m_pcPipelineState;
+    public:
+        FixedTriangle() {}
+        ~FixedTriangle() {}
+        void OnInit();
+        void OnUpdate() {}
+        void OnDraw();
+    };
+</pre>
+</div>
+　このサンプルでは、オブジェクトごとにクラスを作成しますので、メッシュは
+<div class="box1">
+<pre>
+        shared_ptr&lt;BaseMesh> m_pcTriangleMesh;
+</pre>
+</div>
+　という形で準備します。また、パイプラインステートも準備します。<br />
+　初期化そのものは「FixedTriangle::OnInit()」で行います。
+<div class="box1">
+<pre>
+    void FixedTriangle::OnInit() {
+        auto baseDevice = App::GetBaseDevice();
+        auto commandList = baseDevice->GetCommandList();
+        auto aspectRatio = baseDevice->GetAspectRatio();
+
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeLineDesc;
+        //コンスタントバッファ無し
+        m_pcPipelineState
+        = PipelineState::CreateDefault2D&lt;VertexPositionColor, VSPCSprite, PSPCSprite>(
+            baseDevice->GetRootSignature(), pipeLineDesc
+        );
+        vector&lt;VertexPositionColor> vertex =
+        {
+            { Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 0.0f, 1.0f) },
+            { Float3(0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 1.0f, 0.0f, 1.0f) },
+            { Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) }
+        };
+        //三角形メッシュ作成
+        m_pcTriangleMesh = BaseMesh::CreateBaseMesh&lt;VertexPositionColor>(vertex);
+    }
+</pre>
+</div>
+　このオブジェクトは「SimpleSample101」で紹介したものとほぼおなじです。<br />
+　シェーダも同じ内容のシェーダを使っています。
+<h4>MoveTriangleクラス</h4>
+　「MoveTriangleクラス」は左から右に流れるように動く三角形です。<br />
+　以下が宣言部です。
+<div class="box1">
+<pre>
+    class MoveTriangle {
+        //PositionColorの三角形メッシュ
+        shared_ptr&lt;BaseMesh> m_pcTriangleMesh;
+        //PositionColor用パイプラインステート（コンスタントバッファあり）
+        ComPtr&lt;ID3D12PipelineState> m_pcConstPipelineState;
+        <span class="red">//コンスタントバッファ構造体の実体
+        SceneConstantBuffer m_constantBufferData;
+        //コンスタントバッファ
+        shared_ptr&lt;ConstantBuffer> m_ConstantBuffer;
+        //コンスタントバッファのインデックス
+        UINT m_constBuffIndex;</span>
+    public:
+        MoveTriangle(){}
+        ~MoveTriangle() {}
+        void OnInit();
+        void OnUpdate();
+        void OnDraw();
+    };
+</pre>
+</div>
+　赤くなっている部分が、今回注目してほしい部分です。<br />
+　「SimpleSample101」では、オブジェクトは変化しませんでしたが、「MoveTriangle」は移動します。<br />
+　「移動」を表現するためには、シェーダーに対して「描画する場所」を変化させなければなりません。<br />
+　シェーダに対して、そういうパラメータを渡す領域が「コンスタントバッファ」です。<br />
+　「コンスタントバッファ」については<a href="1201.html">１２０１．複数のオブジェクトの描画（１）</a>で説明した「CbvSrvUavデスクプリタヒープ」を思い出してください。「BaeDx12」では「CbvSrvUavデスクプリタヒープ」はデフォルトで「1024個」作成する、と説明しました。<br />
+　つまり、「GameDivece::LoadPipeline()」ですでに、この数のデスクプリタヒープは作成済みです。<br />
+　ですので、「MoveTriangleの初期化」のときは、ここから、このオブジェクトで使用する「CbvSrvUavデスクプリタヒープ」を確定させます。<br />
+　それは「MoveTriangle::OnInit()関数」で行います。
+<div class="box1">
+<pre>
+    void MoveTriangle::OnInit() {
+        auto baseDevice = App::GetBaseDevice();
+        auto commandList = baseDevice->GetCommandList();
+        auto aspectRatio = baseDevice->GetAspectRatio();
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeLineDesc;
+        m_pcConstPipelineState
+        = PipelineState::CreateDefault2D&lt;VertexPositionColor, VSPCConstSprite, PSPCConstSprite>(
+                baseDevice->GetRootSignature(), 
+                pipeLineDesc
+        );
+        vector&lt;VertexPositionColor> vertex =
+        {
+            { Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(0.0f, 1.0f, 0.0f, 1.0f) },
+            { Float3(0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) },
+            { Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 0.0f, 1.0f) }
+        };
+        //三角形メッシュ作成
+        m_pcTriangleMesh = BaseMesh::CreateBaseMesh&lt;VertexPositionColor>(vertex);
+        <span class="red">//コンスタントバッファハンドルを作成
+        m_constBuffIndex = baseDevice->GetCbvSrvUavNextIndex();
+        CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
+            baseDevice->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+            m_constBuffIndex,
+            baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
+        );
+        m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);</span>
+    }
+</pre>
+</div>
+　「三角形メッシュの作成」までは「FixedTriangleクラス」と同じです。赤くなっている部分が「コンスタントバッファ」い関連する部分です。<br/>
+　まず
+<div class="box1">
+<pre>
+        m_constBuffIndex = baseDevice->GetCbvSrvUavNextIndex();
+</pre>
+</div>
+　で「CbvSrvUavデスクプリタヒープ」の「次のインデックス」を取得します。この関数は「CbvSrvUavデスクプリタヒープ」の中から、「使ってない場所」のインデックスを返します。最初は「0」です。2個目は「1」3個目は「2」が帰ってきます。<br />
+　「次のインデックス」を取得したら
+<div class="box1">
+<pre>
+        CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
+            baseDevice->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+            m_constBuffIndex,
+            baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
+        );
+</pre>
+</div>
+　で、そのハンドル（ディスクプリタハンドル）を作成します。上記の設定で、このオブジェクトが使用するハンドルを作れます。<br />
+　そのご、そのハンドルをもとに
+<div class="box1">
+<pre>
+        m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
+</pre>
+</div>
+　と「コンスタントバッファ」を作成します。<br />
+　「ConstantBuffer::CreateDirect()関数」はテンプレート関数になっていて、以下のような形です。
+<div class="box1">
+<pre>
+    template&lt;typename T>
+    static inline shared_ptr&lt;ConstantBuffer> CreateDirect(
+        const CD3DX12_CPU_DESCRIPTOR_HANDLE& descHandle,
+        const T& src
+    ) {
+        //デバイスの取得
+        auto device = App::GetID3D12Device();
+        shared_ptr&lt;ConstantBuffer> ptrConst = shared_ptr&lt;ConstantBuffer>(new ConstantBuffer());
+        // CB size is required to be 256-byte aligned.
+        UINT constsize = (sizeof(T) + 255) & ~255;
+        ThrowIfFailed(device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(constsize),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&ptrConst->m_constantBuffer)));
+
+        // Describe and create a constant buffer view.
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+        cbvDesc.BufferLocation = ptrConst->m_constantBuffer->GetGPUVirtualAddress();
+        cbvDesc.SizeInBytes = constsize;    
+        device->CreateConstantBufferView(&cbvDesc, descHandle);
+
+        // Map and initialize the constant buffer. We don't unmap this until the
+        // app closes. Keeping things mapped for the lifetime of the resource is okay.
+        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+        ThrowIfFailed(ptrConst->m_constantBuffer->Map(0, &readRange, reinterpret_cast&lt;void**>(&ptrConst->m_pCbvDataBegin)));
+        memcpy(ptrConst->m_pCbvDataBegin, &src, sizeof(src));
+
+        ptrConst->m_constantBuffer->Unmap(0, nullptr);
+
+        return ptrConst;
+    }
+</pre>
+</div>
+　テンプレートである「typename T」は、実引数では「const T& src」になります。<br />
+　今回は
+<div class="box1">
+<pre>
+        m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
+</pre>
+</div>
+　と呼びだしているので、「m_constantBufferData」の型、ということになります。<br />
+　この型は「Scene.h」に宣言されている構造体で、
+<div class="box1">
+<pre>
+    struct SceneConstantBuffer
+    {
+        XMFLOAT4 offset;
+        SceneConstantBuffer() :
+            offset(0.0f, 0, 0, 0)
+        {}
+    };
+</pre>
+</div>
+　となっています。「XMFLOAT4」は「DirectXMath」で宣言されている型です。
+<div class="box1">
+<pre>
+struct XMFLOAT4
+{
+    float x;
+    float y;
+    float z;
+    float w;
+
+    XMFLOAT4() = default;
+
+    XMFLOAT4(const XMFLOAT4&) = default;
+    XMFLOAT4& operator=(const XMFLOAT4&) = default;
+
+    XMFLOAT4(XMFLOAT4&&) = default;
+    XMFLOAT4& operator=(XMFLOAT4&&) = default;
+
+    XM_CONSTEXPR XMFLOAT4(float _x, float _y, float _z, float _w) :
+             x(_x), y(_y), z(_z), w(_w) {}
+    explicit XMFLOAT4(_In_reads_(4) const float *pArray) :
+             x(pArray[0]), y(pArray[1]), z(pArray[2]), w(pArray[3]) {}
+};
+</pre>
+</div>
+　こんな感じになっています。シェーダーの入力と互換が取れているので、この型になっています。<br />
+　「ConstantBuffer」は「クラス」です。「CreateDirect()static関数」によってインスタンスを作成し、必要なリソースを作成します。
+<div class="box1">
+<pre>
+        UINT constsize = (sizeof(T) + 255) & ~255;
+        ThrowIfFailed(device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(constsize),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&ptrConst->m_constantBuffer)));
+</pre>
+</div>
+　と作成するわけですが、作成するリソースのサイズを「constsize」に設定しますが、その際
+<div class="box1">
+<pre>
+        UINT constsize = (sizeof(T) + 255) & ~255;
+</pre>
+</div>
+　とします。これは「コンスタントバッファは256バイト単位で作成しなければならない」からです。<br/>
+　その後「CreateCommittedResource()関数」でリソースを作成します。それは「ConstantBuffer」クラスの「m_constantBuffer」に設定されます。<br />
+　続いて「コンスタントバッファビュー」を作成します。
+<div class="box1">
+<pre>
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+        cbvDesc.BufferLocation = ptrConst->m_constantBuffer->GetGPUVirtualAddress();
+        cbvDesc.SizeInBytes = constsize;    
+        device->CreateConstantBufferView(&cbvDesc, descHandle);
+</pre>
+</div>
+　ここで、先ほど作成した「リソース」の「GPU側仮想アドレス」と、「descHandle」を結びつけます。<br />
+　これで「ディスクリプタヒープ（ハンドル経由）、リソース」が関連づけられ「コンスタントバッファビュー」が作成されます。<br />
+　
+
+
+<div class="box1">
+<pre>
+</pre>
+</div>
+
+
+
+</div>
+<!-- /contents　-->
+<!-- フッタ　-->
+<footer>
+<table>
+<tr>
+<td><a href="1202.html">前へ</a></td>
+<td><a href="index.html">目次</a></td>
+<td><a href="1204.html">次へ</a></td>
+</tr>
+</table>
+</footer>
+<!-- /フッタ　-->
+</div>
+<!-- /全体コンテナ　-->
+</body>
+</html>

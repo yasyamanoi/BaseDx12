@@ -76,8 +76,8 @@ namespace basedx12 {
 		auto mesh = BaseMesh::CreateBaseMesh<VertexPositionNormalTexture>(vertices, indices);
 		compPtr->SetMesh(mesh);
 		//テクスチャ
-		auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";
-		compPtr->SetTextureFile(TexFile);
+		auto texFile = App::GetRelativeAssetsPath() + L"sky.jpg";
+		compPtr->SetTextureFile(texFile);
 		compPtr->SetCameraKey(L"MainCamera");
 		compPtr->SetLightSetKey(L"MainLightSet");
 		//物理計算ボックス
@@ -86,7 +86,6 @@ namespace basedx12 {
 	}
 
 	void MoveBox::OnInit() {
-		auto Device = App::GetBaseDevice();
 		auto compPtr = AddComponent<PNTStaticDraw>();
 		//メッシュ
 		vector<VertexPositionNormalTexture> vertices;
@@ -95,8 +94,8 @@ namespace basedx12 {
 		auto mesh = BaseMesh::CreateBaseMesh<VertexPositionNormalTexture>(vertices, indices);
 		compPtr->SetMesh(mesh);
 		//テクスチャ
-		auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";
-		compPtr->SetTextureFile(TexFile);
+		auto texFile = App::GetRelativeAssetsPath() + L"sky.jpg";
+		compPtr->SetTextureFile(texFile);
 		compPtr->SetCameraKey(L"MainCamera");
 		compPtr->SetLightSetKey(L"MainLightSet");
 

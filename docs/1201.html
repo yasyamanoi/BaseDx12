@@ -20,11 +20,11 @@
 <div id="contents">
 <h1>【第1部】シンプルバージョン編</h1>
 <h1 class="pagetitle">１２０１．複数のオブジェクトの描画（１）</h1>
-　今項から、「１２０１．複数のオブジェクトの描画」の解説をしたいと思います。<br />
-　ソリューションは「SimpleSample102」内にあります、「BaseDx12.sln」です。<br />
-　このファイルを「VS2019」で開き、「ビルド－ソリューションのリビルド」でビルドしましょう。
+　今項から、<b>１２０１．複数のオブジェクトの描画</b>の解説をしたいと思います。<br />
+　ソリューションは<b>SimpleSample102</b>内にあります、<b>BaseDx12.sln</b>です。<br />
+　このファイルを<b>VS2019</b>で開き、<b>ビルド－ソリューションのリビルド</b>でビルドしましょう。
 <h4>まず実行してみる</h4>
-　ビルドが終わったら、「デバッグ－デバッグなしで開始」を選択します。すると、以下の画面が現れます。
+　ビルドが終わったら、<b>デバッグ－デバッグなしで開始</b>を選択します。すると、以下の画面が現れます。
 <p>&nbsp;</p>
 <img src="img/1201a.png" width="80%"/>
 <p>図1201a</p>
@@ -34,15 +34,15 @@
 <h4>オブジェクトごとのパラメータ</h4>
 　ゲーム画面上には、いろんなオブジェクトが配置されます。プレイヤーや敵キャラ、あるいは、障害物や、ライフなどをあらわすインターフェイスなど。<br />
 　それらを1画面に同時に出現させるには、それぞれの大きさや位置情報などを別々に管理しなければなりません。<br />
-　「BaseDx12」の「シンプルバージョン」では、それらを管理する仕組みは、直接は提供しませんが、効率よく書くための環境は用意されています。<br />
-　サンプル「SimpleSample001」でも紹介したような「シーン」の仕組みです。<br />
-　「Scene.h/cpp」あるいは、同じようなセットで「Player.h/cpp」などのファイルを用意し、「キャラクター別のクラス」を記述することで、複数のオブジェクトを画面上に表示させることができます。<br />
-　この項からは、それらを「Dx12」で実現するための方法として「コンスタントバッファ」を記述し、それを「Dx12」に結び付ける方法を紹介したいと思います。
+　<b>BaseDx12</b>の<b>シンプルバージョン</b>では、それらを管理する仕組みは、直接は提供しませんが、効率よく書くための環境は用意されています。<br />
+　サンプル<b>SimpleSample001</b>でも紹介したような<b>シーン</b>の仕組みです。<br />
+　<b>Scene.h/cpp</b>あるいは、同じようなセットで<b>Player.h/cpp</b>などのファイルを用意し、<b>キャラクター別のクラス</b>を記述することで、複数のオブジェクトを画面上に表示させることができます。<br />
+　この項からは、それらを<b>Dx12</b>で実現するための方法として<b>コンスタントバッファ</b>を記述し、それを<b>Dx12</b>に結び付ける方法を紹介したいと思います。
 <h4>デバイスの準備</h4>
-　「SimpleSample001」と同じように「デバイスの初期化」からはじめます。<br />
-　エントリポイントの「WinMain」が含まれる「WinMain.cpp」の記述は変わりません。<br />
-　まず「ソリューションエクスプローラ」を開いて「GameDevice.cpp」を開きましょう。<br />
-　その中の「GameDivece::OnInit()関数」を見てください。<br />
+　<b>SimpleSample001</b>と同じように<b>デバイスの初期化</b>からはじめます。<br />
+　エントリポイントの<b>WinMain</b>が含まれる<b>WinMain.cpp</b>の記述は変わりません。<br />
+　まず<b>ソリューションエクスプローラ</b>を開いて<b>GameDevice.cpp</b>を開きましょう。<br />
+　その中の<b>GameDivece::OnInit()関数</b>を見てください。<br />
 　<a href="1102.html">１１０２．シンプルな三角形の描画（２）</a>で説明したように、
 <div class="box1">
 <pre>
@@ -53,11 +53,11 @@
     }
 </pre>
 </div>
-　という記述になっています。「LoadPipeline()関数」は共通のオブジェクトの初期化、「LoadAssets()関数」は、個別のオブジェクトの初期化、の意味合いです。<br />
+　という記述になっています。<b>LoadPipeline()関数</b>は共通のオブジェクトの初期化、<b>LoadAssets()関数</b>は、個別のオブジェクトの初期化、の意味合いです。<br />
 <h4>LoadPipeline()関数</h4>
-　「LoadPipeline()関数」から見ていきます。<br />
-　「SimpleSample001」と同じ処理の場合は、説明は省略します。場合によってはそれぞれの解説ページへのリンクも用意しますので、そちらを参考にしてください。<br />
-　「LoadPipeline()関数」は、以下の様な内容です。赤くなっている部分が、今回のサンプルで新たに付け足された部分です。
+　<b>LoadPipeline()関数</b>から見ていきます。<br />
+　<b>SimpleSample001</b>と同じ処理の場合は、説明は省略します。場合によってはそれぞれの解説ページへのリンクも用意しますので、そちらを参考にしてください。<br />
+　<b>LoadPipeline()関数</b>は、以下の様な内容です。赤くなっている部分が、今回のサンプルで新たに付け足された部分です。
 <div class="box1">
 <pre>
     void GameDivece::LoadPipeline()
@@ -75,15 +75,16 @@
         {
             // レンダリングターゲットビュー
             m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_frameCount);
-            m_rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+            m_rtvDescriptorHandleIncrementSize 
+                = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
             <span class="red">//CbvSrvUavデスクプリタヒープ
             //(コンスタントバッファとシェーダリソースと順序不定のアクセスビュー)
             //CbvSrvUavデスクプリタヒープの数はGetCbvSrvUavMax()により取得する
-            m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(GetCbvSrvUavMax());
-            m_CbvSrvDescriptorHandleIncrementSize
+            m_cbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(GetCbvSrvUavMax());
+            m_cbvSrvUavDescriptorHandleIncrementSize
             = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             //サンプラーデスクリプタヒープ
-            m_SamplerDescriptorHeap = DescriptorHeap::CreateSamplerHeap(1);</span>
+            m_samplerDescriptorHeap = DescriptorHeap::CreateSamplerHeap(1);</span>
         }
         // RTVとコマンドアロケータ
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
@@ -91,28 +92,28 @@
         {
             ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
             m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
-            rtvHandle.Offset(1, m_rtvDescriptorSize);
+            rtvHandle.Offset(1, m_rtvDescriptorHandleIncrementSize);
             //コマンドアロケータ
             m_commandAllocators[n] = CommandAllocator::CreateDefault();
         }
     }
 </pre>
 </div>
-　「ファクトリ、デバイス、コマンドキュー、スワップチェーン」までは、前サンプルと変わりません。<br />
-　「デスクプリタヒープ」は今回のサンプルでは「CbvSrvUavデスクプリタヒープ」という新たな「デスクプリタヒープ」が加わります。<br />
-　このサンプルは、この「CbvSrvUavデスクプリタヒープ」が大きなテーマです。
+　<b>ファクトリ、デバイス、コマンドキュー、スワップチェーン</b>までは、前サンプルと変わりません。<br />
+　<b>デスクプリタヒープ</b>は今回のサンプルでは<b>CbvSrvUavデスクプリタヒープ</b>と<b>サンプラーデスクプリタヒープ</b>という新たな<b>デスクプリタヒープ</b>が加わります。<br />
+　このサンプルは、その中でも<b>CbvSrvUavデスクプリタヒープ</b>が大きなテーマです。
 <h4>CbvSrvUavデスクプリタヒープ</h4>
-　さて、以下の表を見てください。<a href="1105.html">１１０５．シンプルな三角形の描画（５）</a>で説明した、「デスクプリタヒープ」の概念図です。
+　さて、以下の表を見てください。<a href="1105.html">１１０５．シンプルな三角形の描画（５）</a>で説明した、<b>デスクプリタヒープ</b>の概念図です。
 <p>&nbsp;</p>
 <img src="img/1105a.png" width="80%"/>
 <p>図1105a（再）</p>
 <p>&nbsp;</p>
-　「デスクプリタヒープ」は、GPUとやり取りする「ビュー」を引き出しにまとめたようなもの、と考えられます。<br />
-　「RTV（レンダーターゲットビュー）」は、フレーム数と同じ数だけ作成しました。「デプスステンシル用」は、今回は出てきませんが、通常1つです。「Sampler（サンプラー）」は、影を使ったりする場合は2つ以上、今回は1つ定義します。<br />
-　そこまではわかりやすいのですが、「CbvSrvUavデスクプリタヒープ」はいったいいくつ必要なのでしょうか？<br />
-　「Dx12」はGPUに対する処理を、柔軟に設定できるよう設計されていますが、「BaseDx12」では、「CbvSrvUavデスクプリタヒープ」は「できるだけ多く」作成します。デフォルトは「1024個」です。<br />
-　「シンプルバージョン」の場合は「シーン」という単位が1つの基準となるので。ゲーム全体で「1024個」の「CbvSrvUavデスクプリタヒープ」が用意されています。<br />
-　もしこの値を変更したければ、「GameDiveceのコンストラクタ」で
+　<b>デスクプリタヒープ</b>は、GPUとやり取りする<b>ビュー</b>を引き出しにまとめたようなもの、と考えられます。<br />
+　<b>RTV（レンダーターゲットビュー）</b>は、フレーム数と同じ数だけ作成しました。<b>デプスステンシル用</b>は、今回は出てきませんが、通常1つです。<b>Sampler（サンプラー）</b>は、影を使ったりする場合は2つ以上、今回は1つ定義します。<br />
+　そこまではわかりやすいのですが、<b>CbvSrvUavデスクプリタヒープ</b>はいったいいくつ必要なのでしょうか？<br />
+　<b>Dx12</b>はGPUに対する処理を、柔軟に設定できるよう設計されていますが、<b>BaseDx12</b>では、<b>CbvSrvUavデスクプリタヒープ</b>は<b>できるだけ多く</b>作成します。デフォルトは<b>1024個</b>です。<br />
+　<b>シンプルバージョン</b>の場合は<b>シーン</b>という単位が1つの基準となるので。ゲーム全体で<b>1024個</b>の<b>CbvSrvUavデスクプリタヒープ</b>が用意されています。<br />
+　もしこの値を変更したければ、<b>GameDiveceのコンストラクタ</b>で
 <div class="box1">
 <pre>
     GameDivece::GameDivece(UINT frameCount) :
@@ -121,60 +122,87 @@
     }
 </pre>
 </div>
-　のように記述します。「GameDiveceの親クラスのDx12Deviceクラス」は、2つめの引数に「CbvSrvUav」の数を渡します（デフォルトが1024ということです）。
+　のように記述します。<b>GameDiveceの親クラスのDx12Deviceクラス</b>は、2つめの引数に<b>CbvSrvUav</b>の数を渡します（デフォルトが1024ということです）。この数はすなわち<b>CbvSrvUavデスクプリタヒープ</b>の上限数になります。
 <h4>コンスタントバッファビュー</h4>
-　「CbvSrvUav」の「Cbv」は「コンスタントバッファビュー」の意味です。「コンスタントバッファ」は「定数バッファ」とも訳されますが「定数」というよりは「シェーダーに渡す変数」という意味合いが強いと思います。<br />
-　「シェーダ」に渡す情報は、基本的に「頂点のデータ」ですから「ローカル座標」になります。それを「ワールド座標」に変換してさらには「カメラの視点」に変換するのが「頂点シェーダ」の役割です。<br />
-　その「ワールド座標」に変換するための「ワールド行列」、そして「カメラ視点」に変換するための「ビュー行列」や「射影行列」をシェーダに渡す領域が「コンスタントバッファ」です。<br />
-　ですから「コンスタントバッファビュー」は「オブジェクト単位」あるいは「メッシュ単位」で違う内容になると考えて差し支えありません。<br />
-　そうした場合、ゲーム上に配置されるオブジェクトは、オブジェクトごとに「コンスタントバッファビュー」が必要なのがわかります。<br />
-　「Dx11」の場合は、それぞれのオブジェクトの描画で一回完結するので、「コンスタントバッファ」は使いまわしができます。極端な話「1個のコンスタントバッファ」を使って、1つのオブジェクトを描画し、そして次のオブジェクトの描画でそのコンスタントバッファを使うことができます。<br />
-　しかし「Dx12」の場合は「コマンドリスト」という形で、複数の描画命令をため込んで「一気に描画する」という手法を取ります。そのため、「コンスタントバッファビュー」は複数（描画単位で）必要になります。（BaseDx12はそういう設計になっています）<br />
+　<b>CbvSrvUav</b>の<b>Cbv</b>は<b>コンスタントバッファビュー</b>の意味です。<b>コンスタントバッファ</b>は<b>定数バッファ</b>とも訳されますが<b>定数</b>というよりは<b>シェーダーに渡す変数</b>という意味合いが強いと思います。<br />
+　<b>シェーダ</b>に渡す情報は、基本的に<b>頂点のデータ</b>ですから<b>ローカル座標</b>になります。それを<b>ワールド座標</b>に変換してさらには<b>カメラの視点</b>に変換するのが<b>頂点シェーダ</b>の役割です。<br />
+　その<b>ワールド座標</b>に変換するための<b>ワールド行列</b>、そして<b>カメラ視点</b>に変換するための<b>ビュー行列</b>や<b>射影行列</b>をシェーダに渡す領域が<b>コンスタントバッファ</b>です。<br />
+　ですから<b>コンスタントバッファビュー</b>は<b>オブジェクト単位</b>あるいは<b>メッシュ単位</b>で違う内容になると考えて差し支えありません。<br />
+　そうした場合、ゲーム上に配置されるオブジェクトは、オブジェクトごとに<b>コンスタントバッファビュー</b>が必要なのがわかります。<br />
+　<b>Dx11</b>の場合は、それぞれのオブジェクトの描画で一回完結するので、<b>コンスタントバッファ</b>は使いまわしができます。極端な話<b>1個のコンスタントバッファ</b>を使って、1つのオブジェクトを描画し、そして次のオブジェクトの描画でそのコンスタントバッファを使うことができます。<br />
+　しかし<b>Dx12</b>の場合は<b>コマンドリスト</b>という形で、複数の描画命令をため込んで<b>一気に描画する</b>という手法を取ります。そのため、<b>コンスタントバッファビュー</b>は複数（描画単位で）必要になります。（BaseDx12はそういう設計になっています）<br />
 <h4>シェーダーリソースビュー</h4>
-　「CbvSrvUav」の「Srv」は「シェーダーリソースビュー」です。これは「テクスチャ」と思っていいと思います。「CbvSrvUavデスクプリタヒープ」は「コンスタントバッファ」のほかに「テクスチャ」も同じグループで管理します。<br />
-　そういうわけで、前述した「CbvSrvUavの数」は「テクスチャの数」も加味して決める必要があります。<br />
+　<b>CbvSrvUav</b>の<b>Srv</b>は<b>シェーダーリソースビュー</b>です。これは<b>テクスチャ</b>と思っていいと思います。<b>CbvSrvUavデスクプリタヒープ</b>は<b>コンスタントバッファ</b>のほかに<b>テクスチャ</b>も同じグループで管理します。<br />
+　そういうわけで、前述した<b>CbvSrvUavの数</b>は<b>テクスチャの数</b>も加味して決める必要があります。<br />
 　モデルによっては複数のテクスチャを持つ場合もあるので、コンスタントバッファほどではありませんが、ある程度の数は過去穂しなければなりません。
 <h4>アンオーダードアクセスビュー</h4>
-　「CbvSrvUav」の「Uav」は「アンオーダードアクセスビュー（順序不定のアクセスビュー）」です。<br />
+　<b>CbvSrvUav</b>の<b>Uav</b>は<b>アンオーダードアクセスビュー（順序不定のアクセスビュー）</b>です。<br />
 　この領域はシェーダとのデータのやり取りに使用できるエリアで、コンスタントバッファやシェーダリソースより、自由度が高いです。<br />
 　このこのサンプルでは使用しません。
 <h4>CbvSrvUavデスクプリタヒープの作成</h4>
-　このような背景があるので、「GameDivece::LoadPipeline()関数」ではまず
+　このような背景があるので、<b>GameDivece::LoadPipeline()関数</b>ではまず
 <div class="box1">
 <pre>
-            m_CbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(GetCbvSrvUavMax());
+    m_cbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(GetCbvSrvUavMax());
 </pre>
 </div>
-　という形で「CbvSrvUavデスクプリタヒープ」を作成します。<br />
+　という形で<b>CbvSrvUavデスクプリタヒープ</b>を作成します。<br />
 　この呼び出しは、以下のように展開されます
 <div class="box1">
 <pre>
-    static inline ComPtr&lt;ID3D12DescriptorHeap> CreateCbvSrvUavHeap(UINT NumDescriptorHeap) {
-        //CbvSrvUavデスクプリタヒープ
-        D3D12_DESCRIPTOR_HEAP_DESC CbvSrvHeapDesc = {};
-        CbvSrvHeapDesc.NumDescriptors = NumDescriptorHeap;
-        CbvSrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        CbvSrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        return CreateDirect(CbvSrvHeapDesc);
+namespace DescriptorHeap {
+    static inline ComPtr&lt;ID3D12DescriptorHeap> CreateDirect(const D3D12_DESCRIPTOR_HEAP_DESC& desc) {
+        auto device = App::GetID3D12Device();
+        ComPtr&lt;ID3D12DescriptorHeap> ret;
+        ThrowIfFailed(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&ret)),
+            L"デスクプリタヒープの作成に失敗しました",
+            L"device->CreateDescriptorHeap()",
+            L"DescriptorHeap::CreateDirect()"
+        );
+        return ret;
     }
+//中略
+    static inline ComPtr&lt;ID3D12DescriptorHeap> <span class="red">CreateCbvSrvUavHeap(UINT numDescriptorHeap)</span> {
+        //CbvSrvUavデスクプリタヒープ
+        D3D12_DESCRIPTOR_HEAP_DESC cbvSrvUavHeapDesc = {};
+        cbvSrvUavHeapDesc.NumDescriptors = numDescriptorHeap;
+        cbvSrvUavHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        cbvSrvUavHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        return CreateDirect(cbvSrvUavHeapDesc);
+    }
+//中略
+}
 </pre>
 </div>
-　ここで「NumDescriptorHeap」はデフォルトで「1024」ということがわかります。<br />
+　ここで<b>numDescriptorHeap</b>はデフォルトで<b>1024</b>ということがわかります。<br />
 　続いて、１つのCbvSrvUavデスクプリタヒープのサイズ、をもとめます。上記概念図によりますと、1つの引き出しの大きさ、のようなものです。
 <div class="box1">
 <pre>
-    m_CbvSrvDescriptorHandleIncrementSize
+    m_cbvSrvUavDescriptorHandleIncrementSize
     = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 </pre>
 </div>
 <h4>サンプラーデスクプリタヒープの作成</h4>
-　「サンプラー」は、シェーダリソースをサンプリングするのに必要なリソースです。これは
-
+　<b>サンプラー</b>は、シェーダリソースをサンプリングするのに必要なリソースです。今回は1つ用意します（四角形のテクスチャのサンプリングに使用します）。
 <div class="box1">
 <pre>
+    //サンプラーデスクリプタヒープ
+    m_samplerDescriptorHeap = DescriptorHeap::CreateSamplerHeap(1);
 </pre>
 </div>
-
+<h4>RTVとコマンドアロケータ</h4>
+　<b> RTVとコマンドアロケータ</b>は、<b>SimpleSample101</b>と変わりません。<br />
+　ただし<b>Scene::OnInit()関数</b>で
+<div class="box1">
+<pre>
+    void Scene::OnInit() {
+        //フレーム数は3
+        ResetActiveBaseDevice<GameDivece>(3);
+    }
+</pre>
+</div>
+　と記述していますので、今回のフレーム数（RTVとコマンドアロケータの数）はそれぞれ3個になります。<br />
+　ここまでで、<b>LoadPipeline();</b>の処理は終了です。
 
 
 
@@ -184,9 +212,9 @@
 <footer>
 <table>
 <tr>
-<td><a href="1109.html">前へ</a></td>
+<td><a href="1110.html">前へ</a></td>
 <td><a href="index.html">目次</a></td>
-<td><a href="1111.html">次へ</a></td>
+<td><a href="1202.html">次へ</a></td>
 </tr>
 </table>
 </footer>

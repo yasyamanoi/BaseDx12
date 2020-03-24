@@ -26,7 +26,7 @@
 <div class="box1">
 <pre>
     GameDivece::GameDivece(UINT frameCount) :
-        Dx12Device(frameCount)
+        BaseDevice(frameCount)
     {
     }
 </pre>
@@ -35,7 +35,7 @@
 <div class="box1">
 <pre>
     void Scene::OnInit() {
-        ResetActiveDx12Device&lt;GameDivece>(2);
+        ResetActiveBaseDevice&lt;GameDivece>(2);
     }
 </pre>
 </div>
@@ -56,6 +56,7 @@
 　以下が<b>GameDiveceクラス</b>における、その内容です。
 <div class="box1">
 <pre>
+    // パイプラインの準備
     void GameDivece::LoadPipeline()
     {
         //ファクトリ
@@ -68,12 +69,12 @@
         m_swapChain = SwapChain::CreateDefault(factory,m_commandQueue, m_frameCount);
         //フレームインデックスの初期値
         m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-
         // デスクプリタヒープ
         {
             // レンダリングターゲットビュー
             m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_frameCount);
-            m_rtvDescriptorSize = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+            m_rtvDescriptorHandleIncrementSize 
+            = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
         }
         // RTVとコマンドアロケータ
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
@@ -81,7 +82,7 @@
         {
             ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
             m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
-            rtvHandle.Offset(1, m_rtvDescriptorSize);
+            rtvHandle.Offset(1, m_rtvDescriptorHandleIncrementSize);
             //コマンドアロケータ
             m_commandAllocators[n] = CommandAllocator::CreateDefault();
         }
@@ -126,9 +127,9 @@
 </div>
 　このように<b>かなり省エネ</b>で記述が可能になっています。<br />
 　<b>SwapChain::CreateDefault()</b>を右クリックし、<b>定義へ移動</b>で、中で何をやってるか確認すると、<b>HelloTriangleサンプル</b>と同じことをやってるのがわかると思います。<br />
-　<b>SwapChain</b>は<b>namespace</b>として実装され、ライブラリ側の<b>Dx12Pipeline.h</b>に記述があります。<br />
-　<b>Dx12Pipeline.h/cpp</b>には、スワップチェーン以外にも<b>Dx12リソース</b>を作成する場合に、ユーティリティ的に利用できる、namespaceやクラスがあります。<br />
-　もちろん<b>Dx12Pipeline.h/cpp</b>の中の関数やクラスを使わなくても、<b>HelloTriangleサンプル</b>と同様の記述を<b>GameDivece::LoadPipeline()内</b>に記述すれば、同じ意味になります。<br />
+　<b>SwapChain</b>は<b>namespace</b>として実装され、ライブラリ側の<b>BasePipeline.h</b>に記述があります。<br />
+　<b>BasePipeline.h/cpp</b>には、スワップチェーン以外にも<b>Dx12リソース</b>を作成する場合に、ユーティリティ的に利用できる、namespaceやクラスがあります。<br />
+　もちろん<b>BasePipeline.h/cpp</b>の中の関数やクラスを使わなくても、<b>HelloTriangleサンプル</b>と同様の記述を<b>GameDivece::LoadPipeline()内</b>に記述すれば、同じ意味になります。<br />
 　つまり<b>BaseDx12シンプルバージョン</b>は、<b>Dx12</b>を使ったGPUのレンダリング処理の<b>手助けをする</b>フレームワークとなっています。ですので、<b>DirectX-Graphics-Samples</b>のサンプル的な記述も、完全ではないですが、可能な設計になっています。<br />
 　対して<b>BaseDx12フルバージョン</b>は<b>スワップチェーン</b>や<b>Dx12デバイス</b>などが、完全に隠されます。<br />
 　直接いじることは、不可能ではありませんが、ちょっと厄介です。ただできないわけではないので、大部分を<b>BaseDx12フルバージョン</b>に処理を任せ、部分的に自作するような処理には適していると思います。<br/>

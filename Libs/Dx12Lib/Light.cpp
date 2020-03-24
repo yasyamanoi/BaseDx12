@@ -38,7 +38,7 @@ namespace basedx12 {
 	shared_ptr<LightSet>
 	LightSet::CreateDefaultLights() {
 		try {
-			shared_ptr<LightSet> Ptr = shared_ptr<LightSet>(new LightSet());
+			shared_ptr<LightSet> ptrLightSet = shared_ptr<LightSet>(new LightSet());
 			static const Float3 defaultDirections[3] =
 			{
 				{ -0.5265408f, -0.5735765f, -0.6275069f },
@@ -60,15 +60,15 @@ namespace basedx12 {
 				{ 1.0000000f, 0.9607844f, 0.8078432f,0.0f },
 			};
 			static const Float4 defaultAmbient = { 0.05333332f, 0.09882354f, 0.1819608f ,0.0f };
-			Ptr->m_lights.resize(3);
+			ptrLightSet->m_lights.resize(3);
 			for (UINT i = 0; i < 3; i++) {
-				Ptr->m_lights[i].m_directional = defaultDirections[i];
-				Ptr->m_lights[i].m_diffuseColor = defaultDiffuse[i];
-				Ptr->m_lights[i].m_specularColor = defaultSpecular[i];
+				ptrLightSet->m_lights[i].m_directional = defaultDirections[i];
+				ptrLightSet->m_lights[i].m_diffuseColor = defaultDiffuse[i];
+				ptrLightSet->m_lights[i].m_specularColor = defaultSpecular[i];
 			}
-			Ptr->m_ambient = defaultAmbient;
-			Ptr->m_mainIndex = 2;
-			return Ptr;
+			ptrLightSet->m_ambient = defaultAmbient;
+			ptrLightSet->m_mainIndex = 2;
+			return ptrLightSet;
 		}
 		catch (...) {
 			throw;

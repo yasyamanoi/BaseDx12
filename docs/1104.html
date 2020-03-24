@@ -37,9 +37,9 @@
 <pre>
     namespace CommandQueue {
         static inline ComPtr&lt;ID3D12CommandQueue> CreateDirect(const D3D12_COMMAND_QUEUE_DESC& desc) {
-            auto Dev = App::GetID3D12Device();
+            auto device = App::GetID3D12Device();
             ComPtr&lt;ID3D12CommandQueue> queue;
-            ThrowIfFailed(Dev->CreateCommandQueue(&desc, IID_PPV_ARGS(&queue)));
+            ThrowIfFailed(device->CreateCommandQueue(&desc, IID_PPV_ARGS(&queue)));
             return queue;
         }
         static inline ComPtr&lt;ID3D12CommandQueue> <span class="red">CreateDefault()</span> {
@@ -55,7 +55,7 @@
 　<b>CreateDirect()関数</b>内では
 <div class="box1">
 <pre>
-            ThrowIfFailed(Dev->CreateCommandQueue(&desc, IID_PPV_ARGS(&queue)));
+            ThrowIfFailed(device->CreateCommandQueue(&desc, IID_PPV_ARGS(&queue)));
 </pre>
 </div>
 　と実行して、<b>queue</b>を初期化し、そのままリターンします。<br />

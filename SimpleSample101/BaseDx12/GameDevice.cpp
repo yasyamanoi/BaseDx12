@@ -30,7 +30,6 @@ namespace basedx12 {
 		m_swapChain = SwapChain::CreateDefault(factory,m_commandQueue, m_frameCount);
 		//フレームインデックスの初期値
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-
 		// デスクプリタヒープ
 		{
 			// レンダリングターゲットビュー

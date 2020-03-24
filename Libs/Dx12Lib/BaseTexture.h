@@ -25,7 +25,7 @@ namespace basedx12 {
 		void UpdateSRAndCreateSRV(const ComPtr<ID3D12GraphicsCommandList>& commandList);
 		//テスクチャ作成
 		static shared_ptr<BaseTexture>
-		CreateBaseTexture(const wstring& FileName,const CD3DX12_CPU_DESCRIPTOR_HANDLE& m_maphandle);
+		CreateBaseTexture(const wstring& fileName,const CD3DX12_CPU_DESCRIPTOR_HANDLE& mapHandle);
 
 	};
 

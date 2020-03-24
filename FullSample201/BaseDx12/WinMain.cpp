@@ -95,10 +95,10 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow, int iClientWidth, int iClie
 //--------------------------------------------------------------------------------------
 int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int iClientHeight) {
 	//終了コード
-	int RetCode = 0;
+	int retCode = 0;
 	//ウインドウ情報。メッセージボックス表示チェックに使用
-	WINDOWINFO WinInfo;
-	ZeroMemory(&WinInfo, sizeof(WinInfo));
+	WINDOWINFO winInfo;
+	ZeroMemory(&winInfo, sizeof(winInfo));
 	//例外処理開始
 	try {
 		//COMの初期化
@@ -122,33 +122,33 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 		}
 		//msg.wParamには終了コードが入っている
 		basedx12::App::Destroy();
-		RetCode = (int)msg.wParam;
+		retCode = (int)msg.wParam;
 	}
 	catch (exception & e) {
 		//STLエラー
 		//マルチバイトバージョンのメッセージボックスを呼ぶ
-		if (GetWindowInfo(hWnd, &WinInfo)) {
+		if (GetWindowInfo(hWnd, &winInfo)) {
 			MessageBoxA(hWnd, e.what(), "エラー", MB_OK);
 		}
 		else {
 			MessageBoxA(nullptr, e.what(), "エラー", MB_OK);
 		}
-		RetCode = 1;
+		retCode = 1;
 	}
 	catch (...) {
 		//原因不明失敗した
-		if (GetWindowInfo(hWnd, &WinInfo)) {
+		if (GetWindowInfo(hWnd, &winInfo)) {
 			MessageBox(hWnd, L"原因不明のエラーです", L"エラー", MB_OK);
 		}
 		else {
 			MessageBox(nullptr, L"原因不明のエラーです", L"エラー", MB_OK);
 		}
-		RetCode = 1;
+		retCode = 1;
 	}
 	//例外処理終了
 	//COMのリリース
 	::CoUninitialize();
-	return RetCode;
+	return retCode;
 }
 
 
@@ -192,13 +192,13 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 void MakeWindowModeRectFunc(RECT& rc) {
 	rc = { 0, 0, g_ClientWidth, g_ClientHeight };
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-	int CXWidth = GetSystemMetrics(SM_CXSCREEN);
-	int CYHeight = GetSystemMetrics(SM_CYSCREEN);
-	int RCWidth = rc.right - rc.left;
-	int RCHeight = rc.bottom - rc.top;
-	int OffsetLeft = CXWidth / 2 - RCWidth / 2;
-	int OffsetTop = CYHeight / 2 - RCHeight / 2;
-	OffsetRect(&rc, OffsetLeft, OffsetTop);
+	int cxWidth = GetSystemMetrics(SM_CXSCREEN);
+	int cyHeight = GetSystemMetrics(SM_CYSCREEN);
+	int rcWidth = rc.right - rc.left;
+	int rcHeight = rc.bottom - rc.top;
+	int offsetLeft = cxWidth / 2 - rcWidth / 2;
+	int offsetTop = cyHeight / 2 - rcHeight / 2;
+	OffsetRect(&rc, offsetLeft, offsetTop);
 }
 
 //--------------------------------------------------------------------------------------

@@ -30,7 +30,7 @@ namespace basedx12 {
 		~FixedTriangle() {}
 		void OnInit();
 		void OnUpdate() {}
-		void OnRender();
+		void OnDraw();
 	};
 
 	class MoveTriangle {
@@ -49,7 +49,7 @@ namespace basedx12 {
 		~MoveTriangle() {}
 		void OnInit();
 		void OnUpdate();
-		void OnRender();
+		void OnDraw();
 	};
 
 	class MoveSquare {
@@ -72,7 +72,7 @@ namespace basedx12 {
 		~MoveSquare() {}
 		void OnInit();
 		void OnUpdate();
-		void OnRender();
+		void OnDraw();
 	};
 
 	class Scene :public SceneBase {

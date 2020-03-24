@@ -38,19 +38,19 @@
         static inline  ComPtr&lt;ID3D12GraphicsCommandList> 
         <span class="red">CreateSimple(const ComPtr&lt;ID3D12CommandAllocator>& allocator)</span> {
             //デバイスの取得
-            auto Dev = App::GetID3D12Device();
-            ComPtr&lt;ID3D12GraphicsCommandList> Ret;
-            ThrowIfFailed(Dev->CreateCommandList(
+            auto device = App::GetID3D12Device();
+            ComPtr&lt;ID3D12GraphicsCommandList> ret;
+            ThrowIfFailed(device->CreateCommandList(
                 0,
                 D3D12_COMMAND_LIST_TYPE_DIRECT,
                 allocator.Get(),
                 nullptr,
-                IID_PPV_ARGS(&Ret)),
+                IID_PPV_ARGS(&ret)),
                 L"コマンドリストの作成に失敗しました",
-                L"Dev->GetDevice()->CreateCommandList()",
+                L"device->GetDevice()->CreateCommandList()",
                 L"CommandList::CreateSimple()"
             );
-            return Ret;
+            return ret;
         }
 //中略
     }
@@ -76,18 +76,18 @@
     void Scene::OnInitAssets() {
         //ここでシーン上のオブジェクトを構築
         //デバイスの取得
-        auto Device = App::GetDx12Device();
+        auto baseDevice = App::GetBaseDevice();
         // ２Ｄの基本的なパイプライン
         {
             D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
             m_pipelineState
-                = PipelineState::CreateDefault2D&lt;VertexPositionColor, VSPCSprite, PSPCSprite>(
-                    Device->GetRootSignature(), PipeLineDesc
+            = PipelineState::CreateDefault2D&lt;VertexPositionColor, VSPCSprite, PSPCSprite>(
+                baseDevice->GetRootSignature(), PipeLineDesc
             );
         }
         // メッシュ
         {
-            auto aspectRatio = Device->GetAspectRatio();
+            auto aspectRatio = baseDevice->GetAspectRatio();
             vector&lt;VertexPositionColor> vertex =
             {
                 { Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 0.0f, 1.0f) },
@@ -95,17 +95,17 @@
                 { Float3(-0.25f, -0.25f * aspectRatio, 0.0f), Float4(0.0f, 0.0f, 1.0f, 1.0f) }
             };
             //メッシュ作成
-            m_dx12Mesh = Dx12Mesh::CreateDx12Mesh&lt;VertexPositionColor>(vertex);
+            m_baseMesh = BaseMesh::CreateBaseMesh&lt;VertexPositionColor>(vertex);
         }
     }
 </pre>
 </div>
-　ここで参照されている<b>m_pipelineState</b>および<b>m_dx12Mesh</b>は、<b>Scene.h</b>に宣言されているものです。以下は<b>Scene.h</b>の<b>Sceneクラス</b>です。
+　ここで参照されている<b>m_pipelineState</b>および<b>m_baseMesh</b>は、<b>Scene.h</b>に宣言されているものです。以下は<b>Scene.h</b>の<b>Sceneクラス</b>です。
 <div class="box1">
 <pre>
     class Scene :public SceneBase {
-        <span class="red">ComPtr&lt;ID3D12PipelineState> m_pipelineState;
-        shared_ptr&lt;Dx12Mesh> m_dx12Mesh;</span>
+        ComPtr&lt;ID3D12PipelineState> m_pipelineState;
+        shared_ptr&lt;BaseMesh> m_baseMesh;
     public:
         Scene() :SceneBase() {}
         virtual ~Scene() {}
@@ -117,12 +117,12 @@
     };
 </pre>
 </div>
-　このように<b>m_pipelineState</b>は<b>ID3D12PipelineStateインターフェイス</b>ですが、<b>m_dx12Mesh</b>は<b>Dx12Meshクラス</b>の<b>shared_ptr</b>になっています。<br />
-　<b>Dx12Meshクラス</b>については、後ほど解説します。<br />
+　このように<b>m_pipelineState</b>は<b>ID3D12PipelineStateインターフェイス</b>ですが、<b>m_baseMesh</b>は<b>BaseMeshクラス</b>の<b>shared_ptr</b>になっています。<br />
+　<b>BaseMeshクラス</b>については、後ほど解説します。<br />
 　<b>Scene::OnInitAssets()関数</b>に戻りますが、まず
 <div class="box1">
 <pre>
-        auto Device = App::GetDx12Device();
+        auto baseDevice = App::GetBaseDevice();
 </pre>
 </div>
 　により、<b>デバイス</b>を取得します。<br />
@@ -135,8 +135,7 @@
             D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
             m_pipelineState
             = PipelineState::CreateDefault2D&lt;VertexPositionColor, VSPCSprite, PSPCSprite>(
-                Device->GetRootSignature(),
-                PipeLineDesc
+                baseDevice->GetRootSignature(), PipeLineDesc
             );
         }
 </pre>
@@ -147,41 +146,41 @@
 namespace PipelineState {
     static inline ComPtr&lt;ID3D12PipelineState> CreateDirect(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc) {
         //デバイスの取得
-        auto Dev = App::GetID3D12Device();
-        ComPtr&lt;ID3D12PipelineState> Ret;
-        ThrowIfFailed(Dev->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&Ret)),
+        auto device = App::GetID3D12Device();
+        ComPtr&lt;ID3D12PipelineState> ret;
+        ThrowIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&ret)),
             L"パイプラインステートの作成に失敗しました",
-            L"Dev->GetDevice()->CreateGraphicsPipelineState()",
+            L"device->GetDevice()->CreateGraphicsPipelineState()",
             L"PipelineState::CreateDirect()"
         );
-        return Ret;
+        return ret;
     }
     <span class="red">template&lt;typename Vertex, typename VS, typename PS>
-    static inline ComPtr&lt;ID3D12PipelineState>
+    static inline ComPtr&lt;ID3D12PipelineState> 
     CreateDefault2D(
-        const ComPtr&lt;ID3D12RootSignature>& rootSignature,
-         D3D12_GRAPHICS_PIPELINE_STATE_DESC& RetDesc)</span> {
-        ZeroMemory(&RetDesc, sizeof(RetDesc));
-        RetDesc.InputLayout = { Vertex::GetVertexElement(), Vertex::GetNumElements() };
-        RetDesc.pRootSignature = rootSignature.Get();
-        RetDesc.VS = CD3DX12_SHADER_BYTECODE(
+        const ComPtr&lt;ID3D12RootSignature>& rootSignature, 
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC& retDesc)</span> {
+        ZeroMemory(&retDesc, sizeof(retDesc));
+        retDesc.InputLayout = { Vertex::GetVertexElement(), Vertex::GetNumElements() };
+        retDesc.pRootSignature = rootSignature.Get();
+        retDesc.VS = CD3DX12_SHADER_BYTECODE(
             VS::GetPtr()->GetShaderComPtr()->GetBufferPointer(),
             VS::GetPtr()->GetShaderComPtr()->GetBufferSize()
         );
-        RetDesc.PS = CD3DX12_SHADER_BYTECODE(
-            PS::GetPtr()->GetShaderComPtr()->GetBufferPointer(),
+        retDesc.PS = CD3DX12_SHADER_BYTECODE(
+            PS::GetPtr()->GetShaderComPtr()->GetBufferPointer(), 
             PS::GetPtr()->GetShaderComPtr()->GetBufferSize()
         );
-        RetDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        RetDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-        RetDesc.DepthStencilState.DepthEnable = FALSE;
-        RetDesc.DepthStencilState.StencilEnable = FALSE;
-        RetDesc.SampleMask = UINT_MAX;
-        RetDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        RetDesc.NumRenderTargets = 1;
-        RetDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-        RetDesc.SampleDesc.Count = 1;
-        return CreateDirect(RetDesc);
+        retDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+        retDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+        retDesc.DepthStencilState.DepthEnable = FALSE;
+        retDesc.DepthStencilState.StencilEnable = FALSE;
+        retDesc.SampleMask = UINT_MAX;
+        retDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        retDesc.NumRenderTargets = 1;
+        retDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        retDesc.SampleDesc.Count = 1;
+        return CreateDirect(retDesc);
     }
 //中略
 }
@@ -191,7 +190,7 @@ namespace PipelineState {
 　この設定はかなり細かく設定することが可能です。ここでは、関数の引数に
 <div class="box1">
 <pre>
-D3D12_GRAPHICS_PIPELINE_STATE_DESC& RetDesc
+D3D12_GRAPHICS_PIPELINE_STATE_DESC& retDesc
 </pre>
 </div>
 　というパラメータを渡しています。これは、作成した<b>パイプライステートの定義構造体</b>を再利用できるためのものです。上記のようにして作成した<b>パイプライステートの定義構造体</b>の一部を修正して、別のパイプラインステートを作成することが可能になります。この場合、再利用して作成した定義構造体は<b>PipelineState::CreateDirect()関数</b>によって、作成することが可能になります。<br/>
@@ -253,11 +252,11 @@ VSPCSprite::VSPCSprite() :
 　このようにしてクラス化されたシェーダは以下のように<b>パイプラインステート</b>に渡します。
 <div class="box1">
 <pre>
-        RetDesc.VS = CD3DX12_SHADER_BYTECODE(
+        retDesc.VS = CD3DX12_SHADER_BYTECODE(
             VS::GetPtr()->GetShaderComPtr()->GetBufferPointer(),
             VS::GetPtr()->GetShaderComPtr()->GetBufferSize()
         );
-        RetDesc.PS = CD3DX12_SHADER_BYTECODE(
+        retDesc.PS = CD3DX12_SHADER_BYTECODE(
             PS::GetPtr()->GetShaderComPtr()->GetBufferPointer(),
             PS::GetPtr()->GetShaderComPtr()->GetBufferSize()
         );

@@ -49,54 +49,59 @@
 <div class="box1">
 <pre>
 namespace RootSignature {
-    static inline ComPtr&lt;ID3D12RootSignature> CreateDirect(const D3D12_ROOT_SIGNATURE_DESC& desc) {
-        auto Dev = App::GetID3D12Device();
+    static inline ComPtr&lt;ID3D12RootSignature> CreateDirect(const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& desc) {
+        auto device = App::GetID3D12Device();
         D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
         featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
-        if (FAILED(Dev->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
+        if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
         {
             featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
         }
         ComPtr&lt;ID3DBlob> signature;
         ComPtr&lt;ID3DBlob> error;
-        ComPtr&lt;ID3D12RootSignature> Ret;
-        ThrowIfFailed(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error),
+        ComPtr&lt;ID3D12RootSignature> ret;
+        ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&desc, featureData.HighestVersion, &signature, &error),
             L"ルートシグネチャのシリアライズに失敗しました",
-            L"D3D12SerializeRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error)",
+            L"D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error)",
             L"RootSignature::CreateDirect()"
-        );
+            );
         ThrowIfFailed(
-            Dev->CreateRootSignature(0, signature->GetBufferPointer(),
-                signature->GetBufferSize(), IID_PPV_ARGS(&Ret)),
+            device->CreateRootSignature(0, signature->GetBufferPointer(),
+                signature->GetBufferSize(), IID_PPV_ARGS(&ret)),
             L"ルートシグネチャの作成に失敗しました",
-            L"Dev->CreateRootSignature()",
+            L"device->CreateRootSignature()",
             L"RootSignature::CreateDirect()"
-        );
-        return Ret;
+            );
+        return ret;
     }
     //一番シンプルなルートシグネチャ
     static inline ComPtr&lt;ID3D12RootSignature> <span class="red">CreateSimple()</span> {
-        CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init_1_1(
+            0, 
+            nullptr, 
+            0, 
+            nullptr, 
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+        );
         return CreateDirect(rootSignatureDesc);
     }
 //中略
 }
-
 </pre>
 </div>
-　ここでは<b>CD3DX12_ROOT_SIGNATURE_DESC構造体</b>を設定します。この構造体は<b>D3D12_ROOT_SIGNATURE_DESC構造体</b>を継承した、ユーティリティクラスです。ライブラリ中の<b>d3dx12.h</b>に記載されています。<br />
-　この構造体には<b>Init</b>というメンバ関数があり、パラメータは以下です。
+　ここでは<b>CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC構造体</b>を設定します。この構造体は<b>D3D12_VERSIONED_ROOT_SIGNATURE_DESC構造体</b>を継承した、ユーティリティクラスです。ライブラリ中の<b>d3dx12.h</b>に記載されています。<br />
+　この構造体には<b>Init_1_1</b>というメンバ関数があり、パラメータは以下です。
 
 <div class="box1">
 <pre>
-void inline Init(
-    UINT numParameters,                         //パラメータの数
-    const D3D12_ROOT_PARAMETER* _pParameters,   //パラメータのポインタ
-    UINT numStaticSamplers = 0,                 //スタティックサンプラーの数
-    const D3D12_STATIC_SAMPLER_DESC* _pStaticSamplers = NULL,   //スタティックサンプラーのポインタ
-    D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_NONE   //フラグ
-);
+inline void Init_1_1(
+    UINT numParameters, //パラメータの数
+    _In_reads_opt_(numParameters) const D3D12_ROOT_PARAMETER1* _pParameters, //パラメータのポインタ
+    UINT numStaticSamplers = 0, //スタティックサンプラーの数
+    _In_reads_opt_(numStaticSamplers) const D3D12_STATIC_SAMPLER_DESC* _pStaticSamplers = nullptr,  
+    //スタティックサンプラーのポインタ
+    D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_NONE //フラグ
 </pre>
 </div>
 　入力されるパラメータをを見ますと

@@ -30,10 +30,10 @@
 <pre>
 int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int iClientHeight) {
     //終了コード
-    int RetCode = 0;
+    int retCode = 0;
     //ウインドウ情報。メッセージボックス表示チェックに使用
-    WINDOWINFO WinInfo;
-    ZeroMemory(&WinInfo, sizeof(WinInfo));
+    WINDOWINFO winInfo;
+    ZeroMemory(&winInfo, sizeof(winInfo));
     //例外処理開始
     try {
         //COMの初期化
@@ -57,33 +57,33 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
         }
         //msg.wParamには終了コードが入っている
         basedx12::App::Destroy();
-        RetCode = (int)msg.wParam;
+        retCode = (int)msg.wParam;
     }
     catch (exception & e) {
         //STLエラー
         //マルチバイトバージョンのメッセージボックスを呼ぶ
-        if (GetWindowInfo(hWnd, &WinInfo)) {
+        if (GetWindowInfo(hWnd, &winInfo)) {
             MessageBoxA(hWnd, e.what(), "エラー", MB_OK);
         }
         else {
             MessageBoxA(nullptr, e.what(), "エラー", MB_OK);
         }
-        RetCode = 1;
+        retCode = 1;
     }
     catch (...) {
         //原因不明失敗した
-        if (GetWindowInfo(hWnd, &WinInfo)) {
+        if (GetWindowInfo(hWnd, &winInfo)) {
             MessageBox(hWnd, L"原因不明のエラーです", L"エラー", MB_OK);
         }
         else {
             MessageBox(nullptr, L"原因不明のエラーです", L"エラー", MB_OK);
         }
-        RetCode = 1;
+        retCode = 1;
     }
     //例外処理終了
     //COMのリリース
     ::CoUninitialize();
-    return RetCode;
+    return retCode;
 }
 </pre>
 </div>
@@ -95,10 +95,10 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
     void  App::UpdateDraw() {
         m_timer.Tick();
         m_controler.ResetControlerState();
-        if (m_pSceneBase && m_device)
+        if (m_pSceneBase && m_baseDevice)
         {
-            m_device->OnUpdate();
-            m_device->OnDraw();
+            m_baseDevice->OnUpdate();
+            m_baseDevice->OnDraw();
         }
     }
 </pre>
@@ -107,7 +107,7 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 <h4>更新処理</h4>
 <div class="box1">
 <pre>
-            m_device->OnUpdate();
+            m_baseDevice->OnUpdate();
 </pre>
 </div>
 　は仮想関数ですので、<b>GameDivece::OnUpdate()関数</b>が呼ばれます。以下がその内容です。
@@ -157,6 +157,7 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 　は<b>コマンドリストを集める</b>処理です。以下の様な内容です。
 <div class="box1">
 <pre>
+    // 描画のためのコマンドリストを集める
     void GameDivece::PopulateCommandList()
     {
         ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
@@ -168,17 +169,17 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
         m_commandList->RSSetScissorRects(1, &m_scissorRect);
         // Indicate that the back buffer will be used as a render target.
         m_commandList->ResourceBarrier(
-            1, 
+            1,
             &CD3DX12_RESOURCE_BARRIER::Transition(
-                m_renderTargets[m_frameIndex].Get(),
+                m_renderTargets[m_frameIndex].Get(), 
                 D3D12_RESOURCE_STATE_PRESENT, 
                 D3D12_RESOURCE_STATE_RENDER_TARGET
             )
         );
-
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
             m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), 
-            m_frameIndex, m_rtvDescriptorSize
+            m_frameIndex, 
+            m_rtvDescriptorHandleIncrementSize
         );
         m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
@@ -192,7 +193,7 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
             1, 
             &CD3DX12_RESOURCE_BARRIER::Transition(
                 m_renderTargets[m_frameIndex].Get(), 
-                D3D12_RESOURCE_STATE_RENDER_TARGET,
+                D3D12_RESOURCE_STATE_RENDER_TARGET, 
                 D3D12_RESOURCE_STATE_PRESENT
             )
         );
@@ -224,10 +225,10 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 </div>
 　で<b>ルートシグネチャ</b>の設定を行い<b>ビューポート</b>と<b>シザー矩形</b>を設定します。<br />
 　<b>ビューポート</b>はこれまでの<b>DirectX</b>にあった概念で、<b>GPUのデバイス座標</b>と<b>ウインドウのクライアント座標</b>を結びつけるものです。<br />
-　<b>GameDivece</b>の親クラスである<b>Dx12Deviceクラス</b>のコンストラクタですでに初期化されています。<br />
-　デフォルトは、<b>WinMain.cpp</b>によって作成された、ウインドウの幅、高さが設定されています。奥行（Deps）は<b>0.0から1.0</b>に設定されています。<br />
+　<b>GameDivece</b>の親クラスである<b>BaseDeviceクラス</b>のコンストラクタですでに初期化されています。<br />
+　デフォルトは、<b>WinMain.cpp</b>によって作成された、ウインドウの幅、高さが設定されています。奥行（depth）は<b>0.0から1.0</b>に設定されています。<br />
 　<b>GameDivece</b>の初期化時に再設定することもできます。<br />
-　<b>シザー矩形</b>は、ビューポートのうち、どの領域を描画するかを指定します。画面の中を部分的に描画することもできるように、なっています。デフォルトはビューポート同様<b>Dx12Deviceクラス</b>のコンストラクタで初期化されており、ビューポート全体を描画するようになっています。変更する場合はこちらも、<b>GameDivece</b>の初期化時などに行います。
+　<b>シザー矩形</b>は、ビューポートのうち、どの領域を描画するかを指定します。画面の中を部分的に描画することもできるように、なっています。デフォルトはビューポート同様<b>BaseDeviceクラス</b>のコンストラクタで初期化されており、ビューポート全体を描画するようになっています。変更する場合はこちらも、<b>GameDivece</b>の初期化時などに行います。
 <h4>バリアを張る</h4>
 　<b>Dx12</b>では、バックバッファに書き込むタイミングで、他からの書き込みを制限する<b>バリア</b>の実装もプログラマが行います。<br />
 　その記述は以下です。
@@ -250,7 +251,8 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 <pre>
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
             m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), 
-            m_frameIndex, m_rtvDescriptorSize
+            m_frameIndex, 
+            m_rtvDescriptorHandleIncrementSize
         );
         m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 </pre>
@@ -275,11 +277,11 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 <div class="box1">
 <pre>
     void Scene::OnDraw() {
-        auto Device = App::GetDx12Device();
-        auto commandList = Device->GetCommandList();
+        auto baseDevice = App::GetBaseDevice();
+        auto commandList = baseDevice->GetCommandList();
         commandList->SetPipelineState(m_pipelineState.Get());
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        commandList->IASetVertexBuffers(0, 1, &m_dx12Mesh->GetVertexBufferView());
+        commandList->IASetVertexBuffers(0, 1, &m_baseMesh->GetVertexBufferView());
         commandList->DrawInstanced(3, 1, 0, 0);
     }
 </pre>
@@ -287,11 +289,11 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 　ここでは、まず
 <div class="box1">
 <pre>
-        auto Device = App::GetDx12Device();
-        auto commandList = Device->GetCommandList();
+        auto baseDevice = App::GetBaseDevice();
+        auto commandList = baseDevice->GetCommandList();
 </pre>
 </div>
-　で、デバイスと、コマンドリストを取り出します。
+　で、デバイスクラスと、コマンドリストを取り出します。
 <div class="box1">
 <pre>
         commandList->SetPipelineState(m_pipelineState.Get());
@@ -306,10 +308,10 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 　ここで<b>3角形として描画する</b>という設定を行います。
 <div class="box1">
 <pre>
-        commandList->IASetVertexBuffers(0, 1, &m_dx12Mesh->GetVertexBufferView());
+        commandList->IASetVertexBuffers(0, 1, &m_baseMesh->GetVertexBufferView());
 </pre>
 </div>
-　で頂点バッファを設定します。<b>m_dx12Mesh->GetVertexBufferView()</b>で<b>D3D12_VERTEX_BUFFER_VIEWの参照</b>が帰りますので、そのアドレスを渡します。<br />
+　で頂点バッファを設定します。<b>m_baseMesh->GetVertexBufferView()</b>で<b>D3D12_VERTEX_BUFFER_VIEWの参照</b>が帰りますので、そのアドレスを渡します。<br />
 　そして
 <div class="box1">
 <pre>
@@ -326,7 +328,7 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
             1, 
             &CD3DX12_RESOURCE_BARRIER::Transition(
                 m_renderTargets[m_frameIndex].Get(), 
-                D3D12_RESOURCE_STATE_RENDER_TARGET,
+                D3D12_RESOURCE_STATE_RENDER_TARGET, 
                 D3D12_RESOURCE_STATE_PRESENT
             )
         );
@@ -374,7 +376,7 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 　具体的には以下のようになっています。
 <div class="box1">
 <pre>
-    void Dx12Device::MoveToNextFrame()
+    void BaseDevice::MoveToNextFrame()
     {
         // Schedule a Signal command in the queue.
         const UINT64 currentFenceValue = m_fenceValues[m_frameIndex];

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
+</head>
+<body>
+<!-- 全体コンテナ　-->
+<div id="container">
+<header>
+<div id="title_words">BaseDx12（Dx12研究とフレームワーク）</div>
+</header>
+<!-- contents　-->
+<div id="contents">
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１２０２．複数のオブジェクトの描画（２）</h1>
+　前項に引き続き<b>SimpleSample102</b>の解説です。
+<h4>GameDivece::LoadAssets()関数</h4>
+　前項では<b>GameDivece::LoadPipeline()関数</b>を説明しました。<br />
+　この項では、<b>GameDivece::LoadAssets()関数</b>を説明します。この関数は、<b>個別のオブジェクトの準備</b>のような意味合いです。<br />
+　以下に関数全体を紹介します。
+<div class="box1">
+<pre>
+    void GameDivece::LoadAssets()
+    {
+        // ルートシグネチャー
+        {
+            <span class="red">//SrvとSmpとCbv付ルートシグネチャ
+            m_rootSignature = RootSignature::CreateSrvSmpCbv();</span>
+        }
+        // 頂点などのリソース構築用のコマンドリスト
+        m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);
+        //シーンに各オブジェクトの構築を任せる
+        App::GetSceneBase().OnInitAssets();
+        //コマンドラインクローズおよびキューの実行
+        CommandList::Close(m_commandList);
+        CommandList::Excute(m_commandQueue, m_commandList);
+        //同期オブジェクトおよびＧＰＵの処理待ち
+        SyncAndWaitForGpu();
+    }
+</pre>
+</div>
+　赤くなっている部分が<b>SimpleSample101</b>と違うところです。<br />
+<h4>ルートシグネチャの設定</h4>
+　<b>SrvとSmpとCbv付ルートシグネチャ</b>というのは<b>シェーダリソースビュー、サンプラービュー、そしてコンスタントバッファビュー</b>という意味です。<br />
+　<b>ルートシグネチャ</b>は、シェーダーに流すデータの種類と数をあらかじめ定義するものです。<br />
+　<b>SimpleSample101</b>の場合は<b>頂点データ</b>しか渡さなかったので、シンプルなものでしたが、今回は上記の3種類を渡します。<br />
+　<b>RootSignature::CreateSrvSmpCbv()関数</b>は以下になります。
+<div class="box1">
+<pre>
+namespace RootSignature {
+    static inline ComPtr&lt;ID3D12RootSignature> CreateDirect(const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& desc) {
+        auto device = App::GetID3D12Device();
+        D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+        if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
+        {
+            featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+        }
+        ComPtr&lt;ID3DBlob> signature;
+        ComPtr&lt;ID3DBlob> error;
+        ComPtr&lt;ID3D12RootSignature> ret;
+        ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&desc, featureData.HighestVersion, &signature, &error),
+            L"ルートシグネチャのシリアライズに失敗しました",
+            L"D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error)",
+            L"RootSignature::CreateDirect()"
+            );
+        ThrowIfFailed(
+            device->CreateRootSignature(0, signature->GetBufferPointer(),
+                signature->GetBufferSize(), IID_PPV_ARGS(&ret)),
+            L"ルートシグネチャの作成に失敗しました",
+            L"device->CreateRootSignature()",
+            L"RootSignature::CreateDirect()"
+            );
+        return ret;
+    }
+//中略
+    //シェーダリソースとサンプラーとコンスタントバッファ
+    static inline ComPtr&lt;ID3D12RootSignature> <span class="red">CreateSrvSmpCbv()</span> {
+
+        CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
+        ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+
+        CD3DX12_ROOT_PARAMETER1 rootParameters[3];
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_ALL);
+
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init_1_1(
+                _countof(rootParameters), 
+                rootParameters, 
+                0, 
+                nullptr, 
+                D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+        );
+        return CreateDirect(rootSignatureDesc);
+    }
+}
+</pre>
+</div>
+　ここでは、どのシェーダーの何番スロットに何を入れるのか、の設定を行います。<br />
+　まず<b>デスクプリタレンジ</b>ですが
+<div class="box1">
+<pre>
+    CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
+    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
+    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+</pre>
+</div>
+　のようになっています。ここで
+<div class="box1">
+<pre>
+    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+</pre>
+</div>
+　というのは、<b>1つのSRVを0番スロットに、D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATICフラグ</b>で設定という意味です。<br />
+　これによりシェーダでは<b>t0</b>というテクスチャを使用できます。<br />
+　同様、サンプラーは<b>s0</b>、コンスタントバッファは<b>b0</b>で取得できます。<br />
+　<b>D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC</b>というのは、<b>ルートシグネチャバージョン1.1</b>から導入されたフラグで、<b>コマンドリスト</b>が発行されたあとはディスクプリタヒープに変更がないことを保証するものです。<b>BaseDx12</b>は<b>CsvSrvUav</b>は、コマンドリスト発行後は変更しない設計になっているので、このパラメータを使用できます。<br />
+　このパラメータは、特に<b>コンスタントバッファ</b>については、高速化につながるようです。<br />
+　続く
+<div class="box1">
+<pre>
+        CD3DX12_ROOT_PARAMETER1 rootParameters[3];
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_ALL);
+</pre>
+</div>
+　は、<b>ranges</b>の内容を、どのシェーダに送るかを設定します。<br />
+<div class="box1">
+<pre>
+        rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+</pre>
+</div>
+　というのは<b>ピクセルシェーダ</b>を指し、
+<div class="box1">
+<pre>
+        rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_ALL);
+</pre>
+</div>
+　というのは<b>全てのシェーダ</b>を指します。<br />
+　今回のサンプルでは、<b>コンスタントバッファ</b>はすべてのシェーダ（ここでは頂点とピクセル）で参照できるようにしています。<h4>各オブジェクトの初期化</h4>
+　<b>GameDivece::LoadAssets()関数</b>では、このあと
+<div class="box1">
+<pre>
+    // 頂点などのリソース構築用のコマンドリスト
+    m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);
+</pre>
+</div>
+　とコマンドリストを構築し、
+<div class="box1">
+<pre>
+    //シーンに各オブジェクトの構築を任せる
+    App::GetSceneBase().OnInitAssets();
+</pre>
+</div>
+　と<b>シーン</b>に初期化をまかせます。その内容は次項で説明します。
+</div>
+<!-- /contents　-->
+<!-- フッタ　-->
+<footer>
+<table>
+<tr>
+<td><a href="1201.html">前へ</a></td>
+<td><a href="index.html">目次</a></td>
+<td><a href="1203.html">次へ</a></td>
+</tr>
+</table>
+</footer>
+<!-- /フッタ　-->
+</div>
+<!-- /全体コンテナ　-->
+</body>
+</html>

@@ -64,19 +64,19 @@
 <p>図1101b</p>
 <p>&nbsp;</p>
 　シンプルとはいえ、結構な量のファイル構成になっています。<br />
-　それぞれ、意味があって記述しているので、皆重要は重要なのですが、リソース構築時は<b>Dx12Device.h/cpp</b>と<b>Dx12Pipeline.h/cpp</b>が重要な役割をはたします。<br />
+　それぞれ、意味があって記述しているので、皆重要は重要なのですが、リソース構築時は<b>BaseDevice.h/cpp</b>と<b>BasePipeline.h/cpp</b>が重要な役割をはたします。<br />
 <h4>ウインドウの作成とメッセージループ</h4>
 　まず、ライブラリ側ではなく<b>BaseDx12プロジェクト</b>内にある、<b>WinMain.cpp</b>を見てください。<br />
 　ここでは、ウインドウを作成して、メッセージループを起動します。その際、<b>シーン</b>というオブジェクトを作成します。その記述が、<b>MainLoop()関数</b>内にあります。以下が実体です。<br />
 　<b>Dx12</b>にかかわる部分は、赤くなっています。
 <div class="box1">
 <pre>
-int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, bool isFullScreen, int iClientWidth, int iClientHeight) {
+int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int iClientHeight) {
     //終了コード
-    int RetCode = 0;
+    int retCode = 0;
     //ウインドウ情報。メッセージボックス表示チェックに使用
-    WINDOWINFO WinInfo;
-    ZeroMemory(&WinInfo, sizeof(WinInfo));
+    WINDOWINFO winInfo;
+    ZeroMemory(&winInfo, sizeof(winInfo));
     //例外処理開始
     try {
         //COMの初期化
@@ -100,33 +100,33 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, bool isFullScreen, in
         }
         //msg.wParamには終了コードが入っている
         <span class="red">basedx12::App::Destroy();</span>
-        RetCode = (int)msg.wParam;
+        retCode = (int)msg.wParam;
     }
     catch (exception & e) {
         //STLエラー
         //マルチバイトバージョンのメッセージボックスを呼ぶ
-        if (GetWindowInfo(hWnd, &WinInfo)) {
+        if (GetWindowInfo(hWnd, &winInfo)) {
             MessageBoxA(hWnd, e.what(), "エラー", MB_OK);
         }
         else {
             MessageBoxA(nullptr, e.what(), "エラー", MB_OK);
         }
-        RetCode = 1;
+        retCode = 1;
     }
     catch (...) {
         //原因不明失敗した
-        if (GetWindowInfo(hWnd, &WinInfo)) {
+        if (GetWindowInfo(hWnd, &winInfo)) {
             MessageBox(hWnd, L"原因不明のエラーです", L"エラー", MB_OK);
         }
         else {
             MessageBox(nullptr, L"原因不明のエラーです", L"エラー", MB_OK);
         }
-        RetCode = 1;
+        retCode = 1;
     }
     //例外処理終了
     //COMのリリース
     ::CoUninitialize();
-    return RetCode;
+    return retCode;
 }
 </pre>
 </div>
@@ -151,7 +151,7 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, bool isFullScreen, in
 <pre>
     class Scene :public SceneBase {
         ComPtr&lt;ID3D12PipelineState> m_pipelineState;
-        shared_ptr&lt;Dx12Mesh> m_dx12Mesh;
+        shared_ptr&lt;BaseMesh> m_baseMesh;
     public:
         Scene() :SceneBase() {}
         virtual ~Scene() {}
@@ -177,13 +177,13 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, bool isFullScreen, in
 <div class="box1">
 <pre>
     void Scene::OnInit() {
-        ResetActiveDx12Device&lt;GameDivece>(2);
+        ResetActiveBaseDevice&lt;GameDivece>(2);
     }
 </pre>
 </div>
 　このように<b>GameDiveceクラス</b>をテンプレート引数に持った、<b>テンプレート関数呼び出し</b>となります。<br />
 　この関数は、指定のクラス（ここではGameDeviceクラス）のインスタンスを作成して<b>Appクラス</b>に登録します。こうすることにより<b>Appクラス経由</b>で<b>GameDeviceクラスのインスタンス</b>にアクセスできる形になります。<br />
-　<b>ResetActiveDx12Device()関数</b>では、そのあと<b>GameDivece::OnInit()関数</b>を呼び出します。<br />
+　<b>ResetActiveBaseDevice()関数</b>では、そのあと<b>GameDivece::OnInit()関数</b>を呼び出します。<br />
 　この関数こそが、<b>Dx12のリソース群</b>を構築すべき関数となります。<br />
 　<b>GameDiveceクラス</b>は<b>コンテンツ部</b>にある<b>GameDevice.h/cpp</b>です。次項では、その中身を詳しく見てみましょう。
 </div>

@@ -44,7 +44,8 @@
 <pre>
     // レンダリングターゲットビュー
     m_rtvHeap = <span class="red">DescriptorHeap::CreateRtvHeap(m_frameCount);</span>
-    m_rtvDescriptorSize = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    m_rtvDescriptorHandleIncrementSize 
+    = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 </pre>
 </div>
 　このうち赤くなっている部分は、以下のコードを実行します。
@@ -52,19 +53,19 @@
 <pre>
     namespace DescriptorHeap {
         static inline ComPtr&lt;ID3D12DescriptorHeap> CreateDirect(const D3D12_DESCRIPTOR_HEAP_DESC& desc) {
-            auto Dev = App::GetID3D12Device();
-            ComPtr&lt;ID3D12DescriptorHeap> Ret;
-            ThrowIfFailed(Dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&Ret)),
+            auto device = App::GetID3D12Device();
+            ComPtr&lt;ID3D12DescriptorHeap> ret;
+            ThrowIfFailed(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&ret)),
                 L"デスクプリタヒープの作成に失敗しました",
-                L"Dev->GetDevice()->CreateDescriptorHeap()",
+                L"device->CreateDescriptorHeap()",
                 L"DescriptorHeap::CreateDirect()"
             );
-            return Ret;
+            return ret;
         }
-        static inline ComPtr&lt;ID3D12DescriptorHeap> <span class="red">CreateRtvHeap(UINT FrameCount)</span> {
+        static inline ComPtr&lt;ID3D12DescriptorHeap> <span class="red">CreateRtvHeap(UINT frameCount)</span> {
             //Rtvデスクプリタヒープ
             D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-            rtvHeapDesc.NumDescriptors = FrameCount;
+            rtvHeapDesc.NumDescriptors = frameCount;
             rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
             rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
             return CreateDirect(rtvHeapDesc);
@@ -77,7 +78,7 @@
 　ここでは<b>D3D12_DESCRIPTOR_HEAP_DESC構造体</b>を設定します。
 <div class="box1">
 <pre>
-            rtvHeapDesc.NumDescriptors = FrameCount;
+            rtvHeapDesc.NumDescriptors = frameCount;
 </pre>
 </div>
 　は、フレーム数です。このサンプルでは<b>2</b>ですね。
@@ -105,25 +106,25 @@
 　作り出すのは<b>ID3D12DescriptorHeapインターフェイス</b>です。この時<b>デバイス</b>が必要なので<b>Appクラス</b>から取り出します。
 <div class="box1">
 <pre>
-            auto Dev = App::GetID3D12Device();
-            ComPtr&lt;ID3D12DescriptorHeap> Ret;
-            ThrowIfFailed(Dev->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&Ret)),
+            auto device = App::GetID3D12Device();
+            ComPtr&lt;ID3D12DescriptorHeap> ret;
+            ThrowIfFailed(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&ret)),
                 L"デスクプリタヒープの作成に失敗しました",
-                L"Dev->GetDevice()->CreateDescriptorHeap()",
+                L"device->CreateDescriptorHeap()",
                 L"DescriptorHeap::CreateDirect()"
             );
-            return Ret;
+            return ret;
 </pre>
 </div>
 　なぜ<b>Appクラス</b>から参照できるかというと、<b>１１０１．シンプルな三角形の描画（１）</b>で紹介した
 <div class="box1">
 <pre>
     void Scene::OnInit() {
-        ResetActiveDx12Device&lt;GameDivece>(2);
+        ResetActiveBaseDevice&lt;GameDivece>(2);
     }
 </pre>
 </div>
-　で、<b>ResetActiveDx12Device()関数</b>が、<b>GameDiveceクラス</b>のインスタンスを<b>Appクラス</b>に渡しているからです。<br />
+　で、<b>ResetActiveBaseDevice()関数</b>が、<b>GameDiveceクラス</b>のインスタンスを<b>Appクラス</b>に渡しているからです。<br />
 <br />
 　このようにして作成された<b>RTV用</b>の<b>ディスクリプタヒープ</b>が
 <div class="box1">
@@ -135,7 +136,8 @@
 　このあと
 <div class="box1">
 <pre>
-    m_rtvDescriptorSize = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    m_rtvDescriptorHandleIncrementSize 
+    = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 </pre>
 </div>
 　で、その<b>ディスクリプタヒープの大きさ</b>を取得します。<b>RTV用</b>の<b>ディスクリプタヒープ</b>は後ほど、複数のフレーム（すなわち複数のレンダーターゲット）と組み合わされるので、<b>ディスクリプタヒープの大きさ</b>が必要です。
@@ -144,12 +146,13 @@
 　以下がその内容です
 <div class="box1">
 <pre>
+    // RTVとコマンドアロケータ
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
     for (UINT n = 0; n &lt; m_frameCount; n++)
     {
         ThrowIfFailed(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
         m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
-        rtvHandle.Offset(1, m_rtvDescriptorSize);
+        rtvHandle.Offset(1, m_rtvDescriptorHandleIncrementSize);
         //コマンドアロケータ
         m_commandAllocators[n] = CommandAllocator::CreateDefault();
     }
@@ -187,11 +190,11 @@
 　そして、最初のフレームの<b>RTV</b>を取得したので
 <div class="box1">
 <pre>
-        rtvHandle.Offset(1, m_rtvDescriptorSize);
+        rtvHandle.Offset(1, m_rtvDescriptorHandleIncrementSize);
 </pre>
 </div>
-　でハンドルを<b>m_rtvDescriptorSize分だけ</b>後ろにずらします。<br />
-　ですので次のループでは<b>rtvHandleは、スタート位置からm_rtvDescriptorSizeだけ後ろ</b>になるので、2つ目のフレームの<b>RTV</b>を作成することができます。<br />
+　でハンドルを<b>m_rtvDescriptorHandleIncrementSize分だけ</b>後ろにずらします。<br />
+　ですので次のループでは<b>rtvHandleは、スタート位置からm_rtvDescriptorHandleIncrementSizeだけ後ろ</b>になるので、2つ目のフレームの<b>RTV</b>を作成することができます。<br />
 　ループ内では、一緒に<b>コマンドアロケータ</b>も作成します。コマンドアロケータの<b>m_commandAllocators変数</b>もフレーム数の配列にあっていますので、
 <div class="box1">
 <pre>
@@ -206,18 +209,17 @@
     namespace CommandAllocator {
         static inline  ComPtr&lt;ID3D12CommandAllocator> CreateDefault() {
             //デバイスの取得
-            auto Dev = App::GetID3D12Device();
+            auto device = App::GetID3D12Device();
             ComPtr&lt;ID3D12CommandAllocator> allocator;
             ThrowIfFailed(
-                Dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&allocator)),
+                device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&allocator)),
                 L"コマンドアロケータの作成に失敗しました",
-                L"Dev->CreateCommandAllocator()",
+                L"device->CreateCommandAllocator()",
                 L"CommandAllocator::CreateDefault()"
             );
             return allocator;
         }
     }
-
 </pre>
 </div>
 　デバイスを取り出し、そのメンバ関数<b>CreateCommandAllocator()関数</b>で、コマンドアロケータを<b>allocator</b>に取得し、それをリターンします。<br />

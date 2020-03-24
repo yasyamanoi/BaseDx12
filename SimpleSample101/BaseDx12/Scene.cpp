@@ -13,16 +13,16 @@ namespace basedx12 {
 	void Scene::OnInitAssets() {
 		//ここでシーン上のオブジェクトを構築
 		//デバイスの取得
-		auto Device = App::GetBaseDevice();
+		auto baseDevice = App::GetBaseDevice();
 		// ２Ｄの基本的なパイプライン
 		{
 			D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
 			m_pipelineState
-				= PipelineState::CreateDefault2D<VertexPositionColor, VSPCSprite, PSPCSprite>(Device->GetRootSignature(), PipeLineDesc);
+				= PipelineState::CreateDefault2D<VertexPositionColor, VSPCSprite, PSPCSprite>(baseDevice->GetRootSignature(), PipeLineDesc);
 		}
 		// メッシュ
 		{
-			auto aspectRatio = Device->GetAspectRatio();
+			auto aspectRatio = baseDevice->GetAspectRatio();
 			vector<VertexPositionColor> vertex =
 			{
 				{ Float3(0.0f, 0.25f * aspectRatio, 0.0f), Float4(1.0f, 0.0f, 0.0f, 1.0f) },
@@ -38,8 +38,8 @@ namespace basedx12 {
 	}
 
 	void Scene::OnDraw() {
-		auto Device = App::GetBaseDevice();
-		auto commandList = Device->GetCommandList();
+		auto baseDevice = App::GetBaseDevice();
+		auto commandList = baseDevice->GetCommandList();
 		commandList->SetPipelineState(m_pipelineState.Get());
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList->IASetVertexBuffers(0, 1, &m_baseMesh->GetVertexBufferView());
