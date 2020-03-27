@@ -66,7 +66,8 @@ namespace basedx12 {
 		m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
 	}
 	void MoveTriangle::OnUpdate() {
-		const float translationSpeed = 0.005f;
+		float elapsedTime = App::GetElapsedTime();
+		float translationSpeed = elapsedTime * 0.25f;
 		const float offsetBounds = 1.25f;
 		m_constantBufferData.offset.x += translationSpeed;
 		if (m_constantBufferData.offset.x > offsetBounds)
@@ -144,7 +145,8 @@ namespace basedx12 {
 
 	}
 	void MoveSquare::OnUpdate() {
-		const float translationSpeed = 0.01f;
+		float elapsedTime = App::GetElapsedTime();
+		float translationSpeed = elapsedTime * 0.5f;
 		const float offsetBounds = 1.25f;
 		m_constantBufferData.offset.x += translationSpeed;
 		if (m_constantBufferData.offset.x > offsetBounds)

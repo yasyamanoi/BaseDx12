@@ -20,12 +20,12 @@
 <div id="contents">
 <h1>【第1部】シンプルバージョン編</h1>
 <h1 class="pagetitle">１２０３．複数のオブジェクトの描画（３）</h1>
-　前項に引き続き「Simplesample102」です。
+　前項に引き続き<b>Simplesample102</b>です。
 <h4>Scene::OnInitAssets()関数</h4>
-　「Scene::OnInitAssets()関数」は、このサンプルで配置されるオブジェクトを初期化します。<br />
-　このサンプルでは、「静止している三角形」と「移動する三角形」と「移動する四角形」の３つのオブジェクトを描画するわけですが、それぞれ「クラス」として定義されています。<br />
-　それらは「Scene.h/cpp」に宣言、定義されています。<br />
-　まず「Sceneクラス」ですが、以下のように宣言されています。
+　<b>Scene::OnInitAssets()関数</b>は、このサンプルで配置されるオブジェクトを初期化します。<br />
+　このサンプルでは、<b>静止している三角形</b>と<b>移動する三角形</b>と<b>移動する四角形</b>の３つのオブジェクトを描画するわけですが、それぞれ<b>クラス</b>として定義されています。<br />
+　それらは<b>Scene.h/cpp</b>に宣言、定義されています。<br />
+　まず<b>Sceneクラス</b>ですが、以下のように宣言されています。
 <div class="box1">
 <pre>
     class Scene :public SceneBase {
@@ -52,7 +52,7 @@
 </pre>
 </div>
 　がそれぞれのオブジェクトです。<br />
-　それらを初期化するのが「Scene::OnInitAssets()関数」です。
+　それらを初期化するのが<b>Scene::OnInitAssets()関数</b>です。
 <div class="box1">
 <pre>
     void Scene::OnInitAssets() {
@@ -66,8 +66,8 @@
 </pre>
 </div>
 <h4>FixedTriangleクラス</h4>
-　まず、「静止している三角形」から説明します。
-　「Scene.h」にあります「FixedTriangle」が「静止している三角形」です。以下に宣言部を紹介します。
+　まず、<b>静止している三角形</b>から説明します。
+　<b>Scene.h</b>にあります<b>FixedTriangle</b>が<b>静止している三角形</b>です。以下に宣言部を紹介します。
 <div class="box1">
 <pre>
     class FixedTriangle {
@@ -91,7 +91,7 @@
 </pre>
 </div>
 　という形で準備します。また、パイプラインステートも準備します。<br />
-　初期化そのものは「FixedTriangle::OnInit()」で行います。
+　初期化そのものは<b>FixedTriangle::OnInit()</b>で行います。
 <div class="box1">
 <pre>
     void FixedTriangle::OnInit() {
@@ -116,10 +116,10 @@
     }
 </pre>
 </div>
-　このオブジェクトは「SimpleSample101」で紹介したものとほぼおなじです。<br />
+　このオブジェクトは<b>SimpleSample101</b>で紹介したものとほぼおなじです。<br />
 　シェーダも同じ内容のシェーダを使っています。
 <h4>MoveTriangleクラス</h4>
-　「MoveTriangleクラス」は左から右に流れるように動く三角形です。<br />
+　<b>MoveTriangleクラス</b>は左から右に流れるように動く三角形です。<br />
 　以下が宣言部です。
 <div class="box1">
 <pre>
@@ -144,13 +144,13 @@
 </pre>
 </div>
 　赤くなっている部分が、今回注目してほしい部分です。<br />
-　「SimpleSample101」では、オブジェクトは変化しませんでしたが、「MoveTriangle」は移動します。<br />
-　「移動」を表現するためには、シェーダーに対して「描画する場所」を変化させなければなりません。<br />
-　シェーダに対して、そういうパラメータを渡す領域が「コンスタントバッファ」です。<br />
-　「コンスタントバッファ」については<a href="1201.html">１２０１．複数のオブジェクトの描画（１）</a>で説明した「CbvSrvUavデスクプリタヒープ」を思い出してください。「BaeDx12」では「CbvSrvUavデスクプリタヒープ」はデフォルトで「1024個」作成する、と説明しました。<br />
-　つまり、「GameDivece::LoadPipeline()」ですでに、この数のデスクプリタヒープは作成済みです。<br />
-　ですので、「MoveTriangleの初期化」のときは、ここから、このオブジェクトで使用する「CbvSrvUavデスクプリタヒープ」を確定させます。<br />
-　それは「MoveTriangle::OnInit()関数」で行います。
+　<b>SimpleSample101</b>では、オブジェクトは変化しませんでしたが、<b>MoveTriangle</b>は移動します。<br />
+　<b>移動</b>を表現するためには、シェーダーに対して<b>描画する場所</b>を変化させなければなりません。<br />
+　シェーダに対して、そういうパラメータを渡す領域が<b>コンスタントバッファ</b>です。<br />
+　<b>コンスタントバッファ</b>については<a href="1201.html">１２０１．複数のオブジェクトの描画（１）</a>で説明した<b>CbvSrvUavデスクプリタヒープ</b>を思い出してください。<b>BaeDx12</b>では<b>CbvSrvUavデスクプリタヒープ</b>はデフォルトで<b>1024個</b>作成する、と説明しました。<br />
+　つまり、<b>GameDivece::LoadPipeline()</b>ですでに、この数のデスクプリタヒープは作成済みです。<br />
+　ですので、<b>MoveTriangleの初期化</b>のときは、ここから、このオブジェクトで使用する<b>CbvSrvUavデスクプリタヒープ</b>を確定させます。<br />
+　それは<b>MoveTriangle::OnInit()関数</b>で行います。
 <div class="box1">
 <pre>
     void MoveTriangle::OnInit() {
@@ -182,15 +182,15 @@
     }
 </pre>
 </div>
-　「三角形メッシュの作成」までは「FixedTriangleクラス」と同じです。赤くなっている部分が「コンスタントバッファ」い関連する部分です。<br/>
+　<b>三角形メッシュの作成</b>までは<b>FixedTriangleクラス</b>と同じです。赤くなっている部分が<b>コンスタントバッファ</b>い関連する部分です。<br/>
 　まず
 <div class="box1">
 <pre>
         m_constBuffIndex = baseDevice->GetCbvSrvUavNextIndex();
 </pre>
 </div>
-　で「CbvSrvUavデスクプリタヒープ」の「次のインデックス」を取得します。この関数は「CbvSrvUavデスクプリタヒープ」の中から、「使ってない場所」のインデックスを返します。最初は「0」です。2個目は「1」3個目は「2」が帰ってきます。<br />
-　「次のインデックス」を取得したら
+　で<b>CbvSrvUavデスクプリタヒープ</b>の<b>次のインデックス</b>を取得します。この関数は<b>CbvSrvUavデスクプリタヒープ</b>の中から、<b>使ってない場所</b>のインデックスを返します。最初は<b>0</b>です。2個目は<b>1</b>3個目は<b>2</b>が帰ってきます。<br />
+　<b>次のインデックス</b>を取得したら
 <div class="box1">
 <pre>
         CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
@@ -207,8 +207,8 @@
         m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
 </pre>
 </div>
-　と「コンスタントバッファ」を作成します。<br />
-　「ConstantBuffer::CreateDirect()関数」はテンプレート関数になっていて、以下のような形です。
+　と<b>コンスタントバッファ</b>を作成します。<br />
+　<b>ConstantBuffer::CreateDirect()関数</b>はテンプレート関数になっていて、以下のような形です。
 <div class="box1">
 <pre>
     template&lt;typename T>
@@ -219,7 +219,7 @@
         //デバイスの取得
         auto device = App::GetID3D12Device();
         shared_ptr&lt;ConstantBuffer> ptrConst = shared_ptr&lt;ConstantBuffer>(new ConstantBuffer());
-        // CB size is required to be 256-byte aligned.
+        // コンスタントバッファのサイズは256バイト境界ごとに作成する
         UINT constsize = (sizeof(T) + 255) & ~255;
         ThrowIfFailed(device->CreateCommittedResource(
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -229,33 +229,33 @@
             nullptr,
             IID_PPV_ARGS(&ptrConst->m_constantBuffer)));
 
-        // Describe and create a constant buffer view.
+        // コンスタントバッファビューの作成
         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
         cbvDesc.BufferLocation = ptrConst->m_constantBuffer->GetGPUVirtualAddress();
         cbvDesc.SizeInBytes = constsize;    
         device->CreateConstantBufferView(&cbvDesc, descHandle);
 
-        // Map and initialize the constant buffer. We don't unmap this until the
-        // app closes. Keeping things mapped for the lifetime of the resource is okay.
-        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-        ThrowIfFailed(ptrConst->m_constantBuffer->Map(0, &readRange, reinterpret_cast&lt;void**>(&ptrConst->m_pCbvDataBegin)));
+        // アプリケーションが動作しているあいだ中、Map状態でも問題ない
+        CD3DX12_RANGE readRange(0, 0); 
+        ThrowIfFailed(ptrConst->m_constantBuffer->Map(
+            0,
+            &readRange,
+            reinterpret_cast&lt;void**>(&ptrConst->m_pCbvDataBegin))
+        );
         memcpy(ptrConst->m_pCbvDataBegin, &src, sizeof(src));
-
-        ptrConst->m_constantBuffer->Unmap(0, nullptr);
-
         return ptrConst;
     }
 </pre>
 </div>
-　テンプレートである「typename T」は、実引数では「const T& src」になります。<br />
+　テンプレートである<b>typename T</b>は、実引数では<b>const T& src</b>になります。<br />
 　今回は
 <div class="box1">
 <pre>
         m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
 </pre>
 </div>
-　と呼びだしているので、「m_constantBufferData」の型、ということになります。<br />
-　この型は「Scene.h」に宣言されている構造体で、
+　と呼びだしているので、<b>m_constantBufferData</b>の型、ということになります。<br />
+　この型は<b>Scene.h</b>に宣言されている構造体で、
 <div class="box1">
 <pre>
     struct SceneConstantBuffer
@@ -267,7 +267,7 @@
     };
 </pre>
 </div>
-　となっています。「XMFLOAT4」は「DirectXMath」で宣言されている型です。
+　となっています。<b>XMFLOAT4</b>は<b>DirectXMath</b>で宣言されている型です。
 <div class="box1">
 <pre>
 struct XMFLOAT4
@@ -293,7 +293,7 @@ struct XMFLOAT4
 </pre>
 </div>
 　こんな感じになっています。シェーダーの入力と互換が取れているので、この型になっています。<br />
-　「ConstantBuffer」は「クラス」です。「CreateDirect()static関数」によってインスタンスを作成し、必要なリソースを作成します。
+　<b>ConstantBuffer</b>は<b>クラス</b>です。<b>CreateDirect()static関数</b>によってインスタンスを作成し、必要なリソースを作成します。
 <div class="box1">
 <pre>
         UINT constsize = (sizeof(T) + 255) & ~255;
@@ -306,34 +306,41 @@ struct XMFLOAT4
             IID_PPV_ARGS(&ptrConst->m_constantBuffer)));
 </pre>
 </div>
-　と作成するわけですが、作成するリソースのサイズを「constsize」に設定しますが、その際
+　と作成するわけですが、作成するリソースのサイズを<b>constsize</b>に設定しますが、その際
 <div class="box1">
 <pre>
         UINT constsize = (sizeof(T) + 255) & ~255;
 </pre>
 </div>
-　とします。これは「コンスタントバッファは256バイト単位で作成しなければならない」からです。<br/>
-　その後「CreateCommittedResource()関数」でリソースを作成します。それは「ConstantBuffer」クラスの「m_constantBuffer」に設定されます。<br />
-　続いて「コンスタントバッファビュー」を作成します。
+　とします。これは<b>コンスタントバッファは256バイト単位で作成しなければならない</b>からです。<br/>
+　その後<b>CreateCommittedResource()関数</b>でリソースを作成します。それは<b>ConstantBuffer</b>クラスの<b>m_constantBuffer</b>に設定されます。<br />
+　続いて<b>コンスタントバッファビュー</b>を作成します。
 <div class="box1">
 <pre>
+        // コンスタントバッファビューの作成
         D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
         cbvDesc.BufferLocation = ptrConst->m_constantBuffer->GetGPUVirtualAddress();
         cbvDesc.SizeInBytes = constsize;    
         device->CreateConstantBufferView(&cbvDesc, descHandle);
 </pre>
 </div>
-　ここで、先ほど作成した「リソース」の「GPU側仮想アドレス」と、「descHandle」を結びつけます。<br />
-　これで「ディスクリプタヒープ（ハンドル経由）、リソース」が関連づけられ「コンスタントバッファビュー」が作成されます。<br />
-　
-
-
+　ここで、先ほど作成した<b>リソース</b>の<b>GPU側仮想アドレス</b>と、<b>descHandle</b>を結びつけます。<br />
+　これで<b>ディスクリプタヒープ（ハンドル経由）、リソース</b>が関連づけられ<b>コンスタントバッファビュー</b>が作成されます。<br />
+　最後に、コンスタントバッファと、CPU側のポインタ<b>ptrConst->m_pCbvDataBegin</b>をマップし、データの内容をコピーします。
 <div class="box1">
 <pre>
+        // アプリケーションが動作しているあいだ中、Map状態でも問題ない
+        CD3DX12_RANGE readRange(0, 0); 
+        ThrowIfFailed(ptrConst->m_constantBuffer->Map(
+            0,
+            &readRange,
+            reinterpret_cast&lt;void**>(&ptrConst->m_pCbvDataBegin))
+        );
+        memcpy(ptrConst->m_pCbvDataBegin, &src, sizeof(src));
 </pre>
 </div>
-
-
+　ここで、コメントにあるように、マップした領域は、アプリケーションが終了するまでマップしたままで問題ありません。<br />
+　これで<b>MoveTriangle::OnInit()</b>は、終わりです。
 
 </div>
 <!-- /contents　-->

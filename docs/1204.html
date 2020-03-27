@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="有限会社山ノ井商事" />
+<link href="css/main.css" rel="stylesheet" type="text/css">
+<link rel="index" href="https://yasyamanoi.github.io/BaseDx12/">
+<link rel="contents" href="index.html">
+<title>BaseDx12 - DirectX12の研究とゲームフレームワーク</title>
+<meta name="keywords" content="DirectX12,C/C++,ゲームフレームワーク,DX12,有限会社山ノ井商事" />
+<meta name="description" content=" DirectX12を研究しながら、ゲームフレームワークを制作公開しています。C/C++でゲームを作成できる、ミドルウェアです。C/C++プログラムなら、有限会社山ノ井商事"/>
+</head>
+<body>
+<!-- 全体コンテナ　-->
+<div id="container">
+<header>
+<div id="title_words">BaseDx12（Dx12研究とフレームワーク）</div>
+</header>
+<!-- contents　-->
+<div id="contents">
+<h1>【第1部】シンプルバージョン編</h1>
+<h1 class="pagetitle">１２０４．複数のオブジェクトの描画（４）</h1>
+　前項に引き続き<b>Simplesample102</b>です。
+<h4>MoveSquareクラス</h4>
+　最後に残ったオブジェクトが「MoveSquareクラス」です。このオブジェクトは、「頂点」情報の中に「テクスチャUV値」が入ります。<br />
+　テクスチャUV値というのは、テクスチャ（ここでは空の写真の画像）を、各頂点に対して、どのように張り付けるか、を設定するものです。
+<p>&nbsp;</p>
+<img src="img/1204a.png" width="60%"/>
+<p>図1204a</p>
+<p>&nbsp;</p>
+　「MoveSquareクラス」は四角形のオブジェクトです。それを表現するのに「三角形を２つ」描画します。上図のようなイメージです。<br />
+　以下が初期化部です。
+
+<div class="box1">
+<pre>
+    void MoveSquare::OnInit() {
+        auto baseDevice = App::GetBaseDevice();
+        auto commandList = baseDevice->GetCommandList();
+        auto aspectRatio = baseDevice->GetAspectRatio();
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
+        m_ptConstPipelineState
+        = PipelineState::CreateDefault2D&lt;VertexPositionTexture, VSPTSprite, PSPTSprite>(
+            baseDevice->GetRootSignature(),
+            PipeLineDesc
+        );
+        //メッシュ
+        {
+            <span class="red">float HelfSize = 0.2f;
+            //頂点配列
+            vector&lt;VertexPositionTexture> vertices = {
+                { VertexPositionTexture(Float3(-HelfSize, HelfSize, 0), Float2(0.0f, 0.0f)) },
+                { VertexPositionTexture(Float3(HelfSize, HelfSize, 0),  Float2(1.0f, 0.0f)) },
+                { VertexPositionTexture(Float3(-HelfSize, -HelfSize, 0),    Float2(0.0f, 1.0f)) },
+                { VertexPositionTexture(Float3(HelfSize, -HelfSize, 0), Float2(1.0f, 1.0f)) },
+            };
+            //インデックス配列
+            vector&lt;uint32_t> indices = { 0, 1, 2, 1, 3, 2 };
+            //四角形メッシュの作成
+            m_ptSquareMesh = BaseMesh::CreateBaseMesh&lt;VertexPositionTexture>(
+                vertices, indices
+            );</span>
+        }
+        //テクスチャ
+        {
+            auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";
+            //テクスチャの作成
+            //シェーダリソースハンドルを作成
+            m_srvIndex = baseDevice->GetCbvSrvUavNextIndex();
+            CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(
+            baseDevice->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+            m_srvIndex,
+            baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
+            );
+            //画像ファイルをもとにテクスチャを作成
+            m_SkyTexture = BaseTexture::CreateBaseTexture(TexFile, srvHandle);
+        }
+        //サンプラー
+        {
+            auto samplerDescriptorHandle 
+            = baseDevice->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+            Sampler::CreateSampler(SamplerState::LinearClamp, samplerDescriptorHandle);
+        }
+        //コンスタントバッファハンドルを作成
+        m_constBuffIndex = baseDevice->GetCbvSrvUavNextIndex();
+        CD3DX12_CPU_DESCRIPTOR_HANDLE Handle(
+            baseDevice->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+            m_constBuffIndex,
+            baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
+        );
+        m_ConstantBuffer = ConstantBuffer::CreateDirect(Handle, m_constantBufferData);
+
+    }
+</pre>
+</div>
+　赤くなっているところが、四角形を作成している部分です。このオブジェクトは「頂点位置とテクスチャUV」を持つ頂点データで構成されています。すなわち「VertexPositionTexture型」というわけです。
+<div class="box1">
+<pre>
+            float HelfSize = 0.2f;
+            vector&lt;VertexPositionTexture> vertices = {
+                { VertexPositionTexture(Float3(-HelfSize, HelfSize, 0), Float2(0.0f, 0.0f)) },
+                { VertexPositionTexture(Float3(HelfSize, HelfSize, 0),  Float2(1.0f, 0.0f)) },
+                { VertexPositionTexture(Float3(-HelfSize, -HelfSize, 0),    Float2(0.0f, 1.0f)) },
+                { VertexPositionTexture(Float3(HelfSize, -HelfSize, 0), Float2(1.0f, 1.0f)) },
+            };
+</pre>
+</div>
+　「HelfSize」という変数に「0.2f」を設定し「VertexPositionTexture(Float3(-HelfSize, HelfSize, 0), Float2(0.0f, 0.0f))」という形で、1つの頂点を作成します。頂点の数は４つです。上記の図では、「A,B,C,D」にあたります。<br />
+
+
+
+
+<div class="box1">
+<pre>
+</pre>
+</div>
+
+
+
+</div>
+<!-- /contents　-->
+<!-- フッタ　-->
+<footer>
+<table>
+<tr>
+<td><a href="1203.html">前へ</a></td>
+<td><a href="index.html">目次</a></td>
+<td><a href="1205.html">次へ</a></td>
+</tr>
+</table>
+</footer>
+<!-- /フッタ　-->
+</div>
+<!-- /全体コンテナ　-->
+</body>
+</html>

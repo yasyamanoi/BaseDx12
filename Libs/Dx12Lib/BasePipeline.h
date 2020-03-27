@@ -374,7 +374,7 @@ namespace basedx12 {
 			//デバイスの取得
 			auto device = App::GetID3D12Device();
 			shared_ptr<ConstantBuffer> ptrConst = shared_ptr<ConstantBuffer>(new ConstantBuffer());
-			// CB size is required to be 256-byte aligned.
+			// コンスタントバッファのサイズは256バイト境界ごとに作成する
 			UINT constsize = (sizeof(T) + 255) & ~255;
 			ThrowIfFailed(device->CreateCommittedResource(
 				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -384,7 +384,7 @@ namespace basedx12 {
 				nullptr,
 				IID_PPV_ARGS(&ptrConst->m_constantBuffer)));
 
-			// Describe and create a constant buffer view.
+			// コンスタントバッファビューの作成
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 			cbvDesc.BufferLocation = ptrConst->m_constantBuffer->GetGPUVirtualAddress();
 			cbvDesc.SizeInBytes = constsize;    
@@ -398,7 +398,8 @@ namespace basedx12 {
 		}
 		template<typename T>
 		void Copy(const T& src) {
-			memcpy(m_pCbvDataBegin, &src, sizeof(src));
+			//コンスタントバッファにデータを転送する
+			memcpy(m_pCbvDataBegin, &src, sizeof(T));
 		}
 	};
 
