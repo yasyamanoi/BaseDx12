@@ -193,7 +193,7 @@ namespace basedx12 {
 
 	void Scene::OnInit() {
 		//フレーム数は3
-		ResetActiveBaseDevice<GameDivece>(3);
+		ResetActiveBaseDevice<GameDevice>(3);
 	}
 	void Scene::OnInitAssets() {
 		// それぞれのオブジェクトの初期化

@@ -284,7 +284,7 @@ namespace basedx12 {
 
 	void Scene::OnInit() {
 		//ƒtƒŒ[ƒ€”‚Í3
-		ResetActiveBaseDevice<GameDivece>(3);
+		ResetActiveBaseDevice<GameDevice>(3);
 	}
 	void Scene::OnInitAssets() {
 		auto baseDevice = App::GetBaseDevice();

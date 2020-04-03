@@ -7,7 +7,7 @@ namespace basedx12 {
 
 
 	void Scene::OnInit() {
-		ResetActiveBaseDevice<GameDivece>(2);
+		ResetActiveBaseDevice<GameDevice>(2);
 	}
 
 	void Scene::OnInitAssets() {

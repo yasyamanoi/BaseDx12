@@ -20,11 +20,11 @@
 <div id="contents">
 <h1>【第1部】シンプルバージョン編</h1>
 <h1 class="pagetitle">１１０７．シンプルな三角形の描画（７）</h1>
-　前項に引き続き<b>GameDivece::LoadAssets()関数</b>です。<br />
+　前項に引き続き<b>GameDevice::LoadAssets()関数</b>です。<br />
 <h4>コマンドリスト</h4>
 　<b>Dx12</b>では、GPUに対する命令群（メッシュの作成なども含む）を<b>コマンドリスト</b>という、<b>コマンド（命令）の集合</b>としてためておき、一気に実行するという処理方法を行います。<br />
 　すでに作成した<b>コマンドアロケータ</b>は、この<b>コマンドリスト</b>を作成するためのものです。<br />
-　<b>GameDivece::LoadAssets()関数</b>では<b>ルートシグネチャ</b>の作成に続き、リソース構築用の<b>コマンドリスト</b>を作成します。コードは以下です。<br />
+　<b>GameDevice::LoadAssets()関数</b>では<b>ルートシグネチャ</b>の作成に続き、リソース構築用の<b>コマンドリスト</b>を作成します。コードは以下です。<br />
 <div class="box1">
 <pre>
     m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);

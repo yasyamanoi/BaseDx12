@@ -110,10 +110,10 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
             m_baseDevice->OnUpdate();
 </pre>
 </div>
-　は仮想関数ですので、<b>GameDivece::OnUpdate()関数</b>が呼ばれます。以下がその内容です。
+　は仮想関数ですので、<b>GameDevice::OnUpdate()関数</b>が呼ばれます。以下がその内容です。
 <div class="box1">
 <pre>
-    void GameDivece::OnUpdate()
+    void GameDevice::OnUpdate()
     {
         App::GetSceneBase().OnUpdate();
     }
@@ -133,7 +133,7 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 　これは以下の様な処理になります。
 <div class="box1">
 <pre>
-    void GameDivece::OnDraw()
+    void GameDevice::OnDraw()
     {
         // 描画のためのコマンドリストを集める
         PopulateCommandList();
@@ -158,7 +158,7 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 <div class="box1">
 <pre>
     // 描画のためのコマンドリストを集める
-    void GameDivece::PopulateCommandList()
+    void GameDevice::PopulateCommandList()
     {
         ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
         //コマンドリストのリセット（パイプライン指定なし）
@@ -202,7 +202,7 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 </pre>
 </div>
 　この関数は、基本的に<b>DirectX-Graphics-Samples</b>を参考にしてますが、微妙に違います。<br />
-　<b>DirectX-Graphics-Samples</b>のほうは<b>GameDivece</b>とか<b>Scene</b>とかの概念はないので、この関数内で、コマンドリストに、描画処理を集めてますが、<b>BaseDx12</b>では、個別の描画を<b>シーン</b>に任せます。
+　<b>DirectX-Graphics-Samples</b>のほうは<b>GameDevice</b>とか<b>Scene</b>とかの概念はないので、この関数内で、コマンドリストに、描画処理を集めてますが、<b>BaseDx12</b>では、個別の描画を<b>シーン</b>に任せます。
 <h4>コマンドアロケータとコマンドリストのリセット</h4>
 　ここではまず
 <div class="box1">
@@ -225,10 +225,10 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 </div>
 　で<b>ルートシグネチャ</b>の設定を行い<b>ビューポート</b>と<b>シザー矩形</b>を設定します。<br />
 　<b>ビューポート</b>はこれまでの<b>DirectX</b>にあった概念で、<b>GPUのデバイス座標</b>と<b>ウインドウのクライアント座標</b>を結びつけるものです。<br />
-　<b>GameDivece</b>の親クラスである<b>BaseDeviceクラス</b>のコンストラクタですでに初期化されています。<br />
+　<b>GameDevice</b>の親クラスである<b>BaseDeviceクラス</b>のコンストラクタですでに初期化されています。<br />
 　デフォルトは、<b>WinMain.cpp</b>によって作成された、ウインドウの幅、高さが設定されています。奥行（depth）は<b>0.0から1.0</b>に設定されています。<br />
-　<b>GameDivece</b>の初期化時に再設定することもできます。<br />
-　<b>シザー矩形</b>は、ビューポートのうち、どの領域を描画するかを指定します。画面の中を部分的に描画することもできるように、なっています。デフォルトはビューポート同様<b>BaseDeviceクラス</b>のコンストラクタで初期化されており、ビューポート全体を描画するようになっています。変更する場合はこちらも、<b>GameDivece</b>の初期化時などに行います。
+　<b>GameDevice</b>の初期化時に再設定することもできます。<br />
+　<b>シザー矩形</b>は、ビューポートのうち、どの領域を描画するかを指定します。画面の中を部分的に描画することもできるように、なっています。デフォルトはビューポート同様<b>BaseDeviceクラス</b>のコンストラクタで初期化されており、ビューポート全体を描画するようになっています。変更する場合はこちらも、<b>GameDevice</b>の初期化時などに行います。
 <h4>バリアを張る</h4>
 　<b>Dx12</b>では、バックバッファに書き込むタイミングで、他からの書き込みを制限する<b>バリア</b>の実装もプログラマが行います。<br />
 　その記述は以下です。
@@ -319,8 +319,8 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 </pre>
 </div>
 　で、描画します。パラメータは<b>3つの頂点を1つだけ</b>の意味です。<br />
-　<b>Scene::OnDraw()</b>の処理が終わると<b>GameDivece::PopulateCommandList()関数</b>に制御が戻ります。<br />
-<h4>GameDivece::PopulateCommandList()に戻る</h4>
+　<b>Scene::OnDraw()</b>の処理が終わると<b>GameDevice::PopulateCommandList()関数</b>に制御が戻ります。<br />
+<h4>GameDevice::PopulateCommandList()に戻る</h4>
 　戻ったら、再びバリアを張ります。
 <div class="box1">
 <pre>
@@ -342,10 +342,10 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 </pre>
 </div>
 　で、コマンドリストをクローズします。
-<h4>GameDivece::PopulateCommandList()の終了</h4>
-　<b>PopulateCommandList()</b>が終わると<b>GameDivece::OnDraw()</b>に制御が戻ります。
+<h4>GameDevice::PopulateCommandList()の終了</h4>
+　<b>PopulateCommandList()</b>が終わると<b>GameDevice::OnDraw()</b>に制御が戻ります。
 <h4>コマンドリストの実行</h4>
-　<b>GameDivece::OnDraw()</b>では<b>コマンドリストの実行</b>を行います。
+　<b>GameDevice::OnDraw()</b>では<b>コマンドリストの実行</b>を行います。
 <div class="box1">
 <pre>
         // 描画用コマンドリスト実行

@@ -177,15 +177,15 @@ int MainLoop(HINSTANCE hInstance, HWND hWnd, int nCmdShow, int iClientWidth, int
 <div class="box1">
 <pre>
     void Scene::OnInit() {
-        ResetActiveBaseDevice&lt;GameDivece>(2);
+        ResetActiveBaseDevice&lt;GameDevice>(2);
     }
 </pre>
 </div>
-　このように<b>GameDiveceクラス</b>をテンプレート引数に持った、<b>テンプレート関数呼び出し</b>となります。<br />
+　このように<b>GameDeviceクラス</b>をテンプレート引数に持った、<b>テンプレート関数呼び出し</b>となります。<br />
 　この関数は、指定のクラス（ここではGameDeviceクラス）のインスタンスを作成して<b>Appクラス</b>に登録します。こうすることにより<b>Appクラス経由</b>で<b>GameDeviceクラスのインスタンス</b>にアクセスできる形になります。<br />
-　<b>ResetActiveBaseDevice()関数</b>では、そのあと<b>GameDivece::OnInit()関数</b>を呼び出します。<br />
+　<b>ResetActiveBaseDevice()関数</b>では、そのあと<b>GameDevice::OnInit()関数</b>を呼び出します。<br />
 　この関数こそが、<b>Dx12のリソース群</b>を構築すべき関数となります。<br />
-　<b>GameDiveceクラス</b>は<b>コンテンツ部</b>にある<b>GameDevice.h/cpp</b>です。次項では、その中身を詳しく見てみましょう。
+　<b>GameDeviceクラス</b>は<b>コンテンツ部</b>にある<b>GameDevice.h/cpp</b>です。次項では、その中身を詳しく見てみましょう。
 </div>
 <!-- /contents　-->
 <!-- フッタ　-->

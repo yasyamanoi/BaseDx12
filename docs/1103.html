@@ -20,7 +20,7 @@
 <div id="contents">
 <h1>【第1部】シンプルバージョン編</h1>
 <h1 class="pagetitle">１１０３．シンプルな三角形の描画（３）</h1>
-　では、前項に続きまして<b>GameDivece::LoadPipeline()関数</b>の中身を解説したいと思います。
+　では、前項に続きまして<b>GameDevice::LoadPipeline()関数</b>の中身を解説したいと思います。
 <h4>factory</h4>
 　数々の<b>Dx12オブジェクト</b>の中で、<b>factory</b>はちょっと変わったオブジェクトです。<br />
 　<b>factory</b>問う名前の通り、何かを作成するために存在します。その何か、というのは<b>Dx12デバイス</b>と<b>スワップチェーン</b>です。この2つは<b>factory</b>を使って構築します。<br/>
@@ -113,7 +113,7 @@
 </pre>
 </div>
 　ここで、先ほど作成した<b>factory</b>を渡します。<b>m_useWarpDevice</b>というのは<b>ラップデバイスを使うかどうか</b>です。<b>ハードウェアデバイスのみに対応するのでfaise</b>となっています。<br />
-　<b>m_device</b>というのは、親クラスの<b>Dx12Deviceクラス</b>にある<b>protected変数</b>です。<b>protected</b>なので、継承先である<b>GameDiveceクラス</b>からも、直接扱えます。<br />
+　<b>m_device</b>というのは、親クラスの<b>Dx12Deviceクラス</b>にある<b>protected変数</b>です。<b>protected</b>なので、継承先である<b>GameDeviceクラス</b>からも、直接扱えます。<br />
 　その宣言は以下のようになっています。
 <div class="box1">
 <pre>
@@ -189,7 +189,7 @@ void GetHardwareAdapter(IDXGIFactory2* pFactory, IDXGIAdapter1** ppAdapter)
 　ここの記述は<b>DirectX-Graphics-Samples</b>のものとまるで同じですが、この部分をオリジナル化するメリットもありません。<br />
 　着実にお決まりの処理をこなしてくれればいいと思います。<br />
 <br />
-　このようにして、作成された<b>ID3D12Deviceインターフェイス</b>は<b>D3D12Device::CreateDefault()関数</b>によって作成され、<b>GameDivece::LoadPipeline()関数</b>に戻されます。<br />
+　このようにして、作成された<b>ID3D12Deviceインターフェイス</b>は<b>D3D12Device::CreateDefault()関数</b>によって作成され、<b>GameDevice::LoadPipeline()関数</b>に戻されます。<br />
 <br />
 　それでは次項では<b>コマンドキュー</b>の作成から続けましょう。
 </div>

@@ -21,13 +21,13 @@
 <h1>【第1部】シンプルバージョン編</h1>
 <h1 class="pagetitle">１２０２．複数のオブジェクトの描画（２）</h1>
 　前項に引き続き<b>SimpleSample102</b>の解説です。
-<h4>GameDivece::LoadAssets()関数</h4>
-　前項では<b>GameDivece::LoadPipeline()関数</b>を説明しました。<br />
-　この項では、<b>GameDivece::LoadAssets()関数</b>を説明します。この関数は、<b>個別のオブジェクトの準備</b>のような意味合いです。<br />
+<h4>GameDevice::LoadAssets()関数</h4>
+　前項では<b>GameDevice::LoadPipeline()関数</b>を説明しました。<br />
+　この項では、<b>GameDevice::LoadAssets()関数</b>を説明します。この関数は、<b>個別のオブジェクトの準備</b>のような意味合いです。<br />
 　以下に関数全体を紹介します。
 <div class="box1">
 <pre>
-    void GameDivece::LoadAssets()
+    void GameDevice::LoadAssets()
     {
         // ルートシグネチャー
         {
@@ -151,7 +151,7 @@ namespace RootSignature {
 </div>
 　というのは<b>全てのシェーダ</b>を指します。<br />
 　今回のサンプルでは、<b>コンスタントバッファ</b>はすべてのシェーダ（ここでは頂点とピクセル）で参照できるようにしています。<h4>各オブジェクトの初期化</h4>
-　<b>GameDivece::LoadAssets()関数</b>では、このあと
+　<b>GameDevice::LoadAssets()関数</b>では、このあと
 <div class="box1">
 <pre>
     // 頂点などのリソース構築用のコマンドリスト

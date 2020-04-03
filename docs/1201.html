@@ -42,11 +42,11 @@
 　<b>SimpleSample001</b>と同じように<b>デバイスの初期化</b>からはじめます。<br />
 　エントリポイントの<b>WinMain</b>が含まれる<b>WinMain.cpp</b>の記述は変わりません。<br />
 　まず<b>ソリューションエクスプローラ</b>を開いて<b>GameDevice.cpp</b>を開きましょう。<br />
-　その中の<b>GameDivece::OnInit()関数</b>を見てください。<br />
+　その中の<b>GameDevice::OnInit()関数</b>を見てください。<br />
 　<a href="1102.html">１１０２．シンプルな三角形の描画（２）</a>で説明したように、
 <div class="box1">
 <pre>
-    void GameDivece::OnInit()
+    void GameDevice::OnInit()
     {
         LoadPipeline();
         LoadAssets();
@@ -60,7 +60,7 @@
 　<b>LoadPipeline()関数</b>は、以下の様な内容です。赤くなっている部分が、今回のサンプルで新たに付け足された部分です。
 <div class="box1">
 <pre>
-    void GameDivece::LoadPipeline()
+    void GameDevice::LoadPipeline()
     {
         //ファクトリ
         ComPtr&lt;IDXGIFactory4> factory = Dx12Factory::CreateDirect();
@@ -113,16 +113,16 @@
 　そこまではわかりやすいのですが、<b>CbvSrvUavデスクプリタヒープ</b>はいったいいくつ必要なのでしょうか？<br />
 　<b>Dx12</b>はGPUに対する処理を、柔軟に設定できるよう設計されていますが、<b>BaseDx12</b>では、<b>CbvSrvUavデスクプリタヒープ</b>は<b>できるだけ多く</b>作成します。デフォルトは<b>1024個</b>です。<br />
 　<b>シンプルバージョン</b>の場合は<b>シーン</b>という単位が1つの基準となるので。ゲーム全体で<b>1024個</b>の<b>CbvSrvUavデスクプリタヒープ</b>が用意されています。<br />
-　もしこの値を変更したければ、<b>GameDiveceのコンストラクタ</b>で
+　もしこの値を変更したければ、<b>GameDeviceのコンストラクタ</b>で
 <div class="box1">
 <pre>
-    GameDivece::GameDivece(UINT frameCount) :
+    GameDevice::GameDevice(UINT frameCount) :
         Dx12Device(frameCount,<span class="red">2048</span>)
     {
     }
 </pre>
 </div>
-　のように記述します。<b>GameDiveceの親クラスのDx12Deviceクラス</b>は、2つめの引数に<b>CbvSrvUav</b>の数を渡します（デフォルトが1024ということです）。この数はすなわち<b>CbvSrvUavデスクプリタヒープ</b>の上限数になります。
+　のように記述します。<b>GameDeviceの親クラスのDx12Deviceクラス</b>は、2つめの引数に<b>CbvSrvUav</b>の数を渡します（デフォルトが1024ということです）。この数はすなわち<b>CbvSrvUavデスクプリタヒープ</b>の上限数になります。
 <h4>コンスタントバッファビュー</h4>
 　<b>CbvSrvUav</b>の<b>Cbv</b>は<b>コンスタントバッファビュー</b>の意味です。<b>コンスタントバッファ</b>は<b>定数バッファ</b>とも訳されますが<b>定数</b>というよりは<b>シェーダーに渡す変数</b>という意味合いが強いと思います。<br />
 　<b>シェーダ</b>に渡す情報は、基本的に<b>頂点のデータ</b>ですから<b>ローカル座標</b>になります。それを<b>ワールド座標</b>に変換してさらには<b>カメラの視点</b>に変換するのが<b>頂点シェーダ</b>の役割です。<br />
@@ -140,7 +140,7 @@
 　この領域はシェーダとのデータのやり取りに使用できるエリアで、コンスタントバッファやシェーダリソースより、自由度が高いです。<br />
 　このこのサンプルでは使用しません。
 <h4>CbvSrvUavデスクプリタヒープの作成</h4>
-　このような背景があるので、<b>GameDivece::LoadPipeline()関数</b>ではまず
+　このような背景があるので、<b>GameDevice::LoadPipeline()関数</b>ではまず
 <div class="box1">
 <pre>
     m_cbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(GetCbvSrvUavMax());
@@ -197,7 +197,7 @@ namespace DescriptorHeap {
 <pre>
     void Scene::OnInit() {
         //フレーム数は3
-        ResetActiveBaseDevice<GameDivece>(3);
+        ResetActiveBaseDevice&lt;GameDevice>(3);
     }
 </pre>
 </div>

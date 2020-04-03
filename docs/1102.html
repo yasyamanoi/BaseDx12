@@ -20,12 +20,12 @@
 <div id="contents">
 <h1>【第1部】シンプルバージョン編</h1>
 <h1 class="pagetitle">１１０２．シンプルな三角形の描画（２）</h1>
-<h4>GameDiveceクラス</h4>
-　さて、前項で<b>GameDiveceクラス</b>を紹介しました。コンテンツ側にあるクラスで<b>GameDevice.h/cpp</b>に記述があります。<br />
+<h4>GameDeviceクラス</h4>
+　さて、前項で<b>GameDeviceクラス</b>を紹介しました。コンテンツ側にあるクラスで<b>GameDevice.h/cpp</b>に記述があります。<br />
 　まずコンストラクタですが、以下の記述になっています。
 <div class="box1">
 <pre>
-    GameDivece::GameDivece(UINT frameCount) :
+    GameDevice::GameDevice(UINT frameCount) :
         BaseDevice(frameCount)
     {
     }
@@ -35,17 +35,17 @@
 <div class="box1">
 <pre>
     void Scene::OnInit() {
-        ResetActiveBaseDevice&lt;GameDivece>(2);
+        ResetActiveBaseDevice&lt;GameDevice>(2);
     }
 </pre>
 </div>
 　の<b>2</b>です。このサンプルでは<b>フレーム数</b>は<b>2個</b>で作成します。<br />
 　<b>フレーム数</b>というのは<b>バックバッファの数</b>と考えて差し支えないでしょう。この後、<b>スワップチェーン</b>や<b>レンダーターゲットビュー</b>そして<b>コマンドアロケータ</b>などの作成に影響します。<br />
 <br />
-　初期化関数である、<b>GameDivece::OnInit()</b>は<b>GameDevice.cpp</b>にあり、そこには以下の2行が書かれています。
+　初期化関数である、<b>GameDevice::OnInit()</b>は<b>GameDevice.cpp</b>にあり、そこには以下の2行が書かれています。
 <div class="box1">
 <pre>
-    void GameDivece::OnInit()
+    void GameDevice::OnInit()
     {
         LoadPipeline();
         LoadAssets();
@@ -53,11 +53,11 @@
 </pre>
 </div>
 　すなわち<b>LoadPipeline()</b>と<b>LoadAssets()</b>という2つのサブ関数を呼び出しています。この書き方は<b>DirectX-Graphics-Samples</b>のサンプルに習ったもので<b>HelloTriangleサンプル</b>も、このようになっています。<br/>
-　以下が<b>GameDiveceクラス</b>における、その内容です。
+　以下が<b>GameDeviceクラス</b>における、その内容です。
 <div class="box1">
 <pre>
     // パイプラインの準備
-    void GameDivece::LoadPipeline()
+    void GameDevice::LoadPipeline()
     {
         //ファクトリ
         ComPtr&lt;IDXGIFactory4> factory = Dx12Factory::CreateDirect();
@@ -129,7 +129,7 @@
 　<b>SwapChain::CreateDefault()</b>を右クリックし、<b>定義へ移動</b>で、中で何をやってるか確認すると、<b>HelloTriangleサンプル</b>と同じことをやってるのがわかると思います。<br />
 　<b>SwapChain</b>は<b>namespace</b>として実装され、ライブラリ側の<b>BasePipeline.h</b>に記述があります。<br />
 　<b>BasePipeline.h/cpp</b>には、スワップチェーン以外にも<b>Dx12リソース</b>を作成する場合に、ユーティリティ的に利用できる、namespaceやクラスがあります。<br />
-　もちろん<b>BasePipeline.h/cpp</b>の中の関数やクラスを使わなくても、<b>HelloTriangleサンプル</b>と同様の記述を<b>GameDivece::LoadPipeline()内</b>に記述すれば、同じ意味になります。<br />
+　もちろん<b>BasePipeline.h/cpp</b>の中の関数やクラスを使わなくても、<b>HelloTriangleサンプル</b>と同様の記述を<b>GameDevice::LoadPipeline()内</b>に記述すれば、同じ意味になります。<br />
 　つまり<b>BaseDx12シンプルバージョン</b>は、<b>Dx12</b>を使ったGPUのレンダリング処理の<b>手助けをする</b>フレームワークとなっています。ですので、<b>DirectX-Graphics-Samples</b>のサンプル的な記述も、完全ではないですが、可能な設計になっています。<br />
 　対して<b>BaseDx12フルバージョン</b>は<b>スワップチェーン</b>や<b>Dx12デバイス</b>などが、完全に隠されます。<br />
 　直接いじることは、不可能ではありませんが、ちょっと厄介です。ただできないわけではないので、大部分を<b>BaseDx12フルバージョン</b>に処理を任せ、部分的に自作するような処理には適していると思います。<br/>

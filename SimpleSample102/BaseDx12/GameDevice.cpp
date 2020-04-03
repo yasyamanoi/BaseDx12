@@ -5,20 +5,20 @@
 namespace basedx12 {
 
 
-	GameDivece::GameDivece(UINT frameCount) :
+	GameDevice::GameDevice(UINT frameCount) :
 		BaseDevice(frameCount)
 	{
 	}
 
 	//初期化
-	void GameDivece::OnInit()
+	void GameDevice::OnInit()
 	{
 		LoadPipeline();
 		LoadAssets();
 	}
 
 	// パイプラインの準備
-	void GameDivece::LoadPipeline()
+	void GameDevice::LoadPipeline()
 	{
 		//ファクトリ
 		ComPtr<IDXGIFactory4> factory = Dx12Factory::CreateDirect();
@@ -56,7 +56,7 @@ namespace basedx12 {
 	}
 
 	// 個別アセットの構築
-	void GameDivece::LoadAssets()
+	void GameDevice::LoadAssets()
 	{
 		// ルートシグネチャー
 		{
@@ -75,14 +75,14 @@ namespace basedx12 {
 	}
 
 	//更新
-	void GameDivece::OnUpdate()
+	void GameDevice::OnUpdate()
 	{
 		//シーンに更新を任せる
 		App::GetSceneBase().OnUpdate();
 	}
 
 	// 描画処理
-	void GameDivece::OnDraw()
+	void GameDevice::OnDraw()
 	{
 		// 描画のためのコマンドリストを集める
 		PopulateCommandList();
@@ -95,7 +95,7 @@ namespace basedx12 {
 		MoveToNextFrame();
 	}
 	//後始末
-	void GameDivece::OnDestroy()
+	void GameDevice::OnDestroy()
 	{
 		//GPUの処理待ち
 		WaitForGpu();
@@ -103,7 +103,7 @@ namespace basedx12 {
 	}
 
 	// 描画のためのコマンドリストを集める
-	void GameDivece::PopulateCommandList()
+	void GameDevice::PopulateCommandList()
 	{
 		ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
 		//コマンドリストのリセット（パイプライン指定なし）

@@ -20,7 +20,7 @@
 <div id="contents">
 <h1>【第1部】シンプルバージョン編</h1>
 <h1 class="pagetitle">１１０４．シンプルな三角形の描画（４）</h1>
-　では、前項に続きまして<b>GameDivece::LoadPipeline()関数</b>の中身を解説したいと思います。
+　では、前項に続きまして<b>GameDevice::LoadPipeline()関数</b>の中身を解説したいと思います。
 <h4>コマンドキュー</h4>
 　続いて<b>コマンドキュー</b>を作成します。<br />
 　<b>Dx12</b>は<b>コマンドリスト</b>という<b>描画命令をまとめたもの</b>を積み上げていって、いくつかのタイミングで<b>一気に実行</b>します。<br />
@@ -110,7 +110,7 @@ namespace SwapChain {
 }
 </pre>
 </div>
-　赤くなっているところが、<b>GameDivece::LoadPipeline()</b>から呼ばれる関数です。<br />
+　赤くなっているところが、<b>GameDevice::LoadPipeline()</b>から呼ばれる関数です。<br />
 　この中では<b>スワップチェーン</b>を作成するために、まとめておく構造体<b>DXGI_SWAP_CHAIN_DESC1</b>を定義します。<br />
 <div class="box1">
 <pre>
@@ -208,7 +208,7 @@ namespace SwapChain {
 　と<b>IDXGISwapChain3インターフェイス</b>にバージョンアップして、それをリターンします。<br />
 　このようにして<b>IDXGISwapChain3インターフェイス</b>の作成が終わります。<br />
 <br />
-　<b>GameDivece::LoadPipeline()</b>ではこの戻り値を<b>m_swapChain</b>に代入します。<br />
+　<b>GameDevice::LoadPipeline()</b>ではこの戻り値を<b>m_swapChain</b>に代入します。<br />
 　その後
 <div class="box1">
 <pre>

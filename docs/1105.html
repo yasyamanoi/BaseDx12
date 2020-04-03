@@ -20,7 +20,7 @@
 <div id="contents">
 <h1>【第1部】シンプルバージョン編</h1>
 <h1 class="pagetitle">１１０５．シンプルな三角形の描画（５）</h1>
-　では、前項に続きまして<b>GameDivece::LoadPipeline()関数</b>の中身を解説したいと思います。
+　では、前項に続きまして<b>GameDevice::LoadPipeline()関数</b>の中身を解説したいと思います。
 <h4>ディスクリプタヒープ</h4>
 　<b>ディスクリプタヒープ</b>はGPUとやり取りをする<b>窓口</b>のようなものと考えられます。<br />
 　で、その窓口はいくつか種類があります。<br />
@@ -120,11 +120,11 @@
 <div class="box1">
 <pre>
     void Scene::OnInit() {
-        ResetActiveBaseDevice&lt;GameDivece>(2);
+        ResetActiveBaseDevice&lt;GameDevice>(2);
     }
 </pre>
 </div>
-　で、<b>ResetActiveBaseDevice()関数</b>が、<b>GameDiveceクラス</b>のインスタンスを<b>Appクラス</b>に渡しているからです。<br />
+　で、<b>ResetActiveBaseDevice()関数</b>が、<b>GameDeviceクラス</b>のインスタンスを<b>Appクラス</b>に渡しているからです。<br />
 <br />
 　このようにして作成された<b>RTV用</b>の<b>ディスクリプタヒープ</b>が
 <div class="box1">
@@ -224,8 +224,8 @@
 </div>
 　デバイスを取り出し、そのメンバ関数<b>CreateCommandAllocator()関数</b>で、コマンドアロケータを<b>allocator</b>に取得し、それをリターンします。<br />
 <br />
-　ここまでの処理で<b>GameDivece::LoadPipeline()</b>の処理は終わりです。この関数は、<b>GPU全体</b>にかかわる初期化と考えられます。<br />
-　次項では<b>各描画されるオブジェクト</b>に関する初期化である、<b>GameDivece::LoadAssets()関数</b>の解説を行います。
+　ここまでの処理で<b>GameDevice::LoadPipeline()</b>の処理は終わりです。この関数は、<b>GPU全体</b>にかかわる初期化と考えられます。<br />
+　次項では<b>各描画されるオブジェクト</b>に関する初期化である、<b>GameDevice::LoadAssets()関数</b>の解説を行います。
 
 </div>
 <!-- /contents　-->
