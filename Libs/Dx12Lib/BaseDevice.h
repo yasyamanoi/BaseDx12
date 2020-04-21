@@ -72,6 +72,24 @@ namespace basedx12 {
 		UINT GetRtvDescriptorHandleIncrementSize() const {
 			return m_rtvDescriptorHandleIncrementSize;
 		}
+		ComPtr<ID3D12DescriptorHeap> GetDsvHeap() {
+			return m_dsvHeap;
+		}
+		UINT GetDsvDescriptorHandleIncrementSize() const {
+			return m_dsvDescriptorHandleIncrementSize;
+		}
+		ComPtr<ID3D12Resource> GetDepthStencil() const {
+			return m_depthStencil;
+		}
+		ComPtr<ID3D12DescriptorHeap> GetShadowmapDsvHeap() {
+			return m_shadowDsvHeap;
+		}
+		ComPtr<ID3D12Resource> GetShadowmapDepthStencil() const {
+			return m_shadowDepthStencil;
+		}
+		UINT GetShadowSRVIndex() const{
+			return m_ShadowSRVIndex;
+		}
 		ComPtr<ID3D12DescriptorHeap> GetCbvSrvUavDescriptorHeap() const {
 			return m_cbvSrvUavDescriptorHeap;
 		}
@@ -80,6 +98,9 @@ namespace basedx12 {
 		}
 		ComPtr<ID3D12DescriptorHeap> GetSamplerDescriptorHeap() const {
 			return m_samplerDescriptorHeap;
+		}
+		UINT GetSamplerDescriptorHandleIncrementSize() const {
+			return m_samplerDescriptorHandleIncrementSize;
 		}
 		ComPtr<ID3D12GraphicsCommandList> GetCommandList() const {
 			return m_commandList;
@@ -115,6 +136,7 @@ namespace basedx12 {
 		vector<ComPtr<ID3D12Resource>> m_renderTargets;
 		//コマンドアロケータ
 		vector<ComPtr<ID3D12CommandAllocator>> m_commandAllocators;
+		vector<ComPtr<ID3D12CommandAllocator>> m_shadowmapCommandAllocators;
 		//デスクプリタヒープ
 		//レンダリングターゲートビューのデスクプリタヒープ
 		ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
@@ -123,12 +145,19 @@ namespace basedx12 {
 		ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
 		UINT m_dsvDescriptorHandleIncrementSize = 0;
 		ComPtr<ID3D12Resource> m_depthStencil;
+		//シャドウマップ用デプスステンシル
+		ComPtr<ID3D12DescriptorHeap> m_shadowDsvHeap;
+		ComPtr<ID3D12Resource> m_shadowDepthStencil;
+		//シャドウ描画用シェーダリソースのインデックス
+		UINT m_ShadowSRVIndex = 0;
 		//コンスタントバッファとシェーダリソース用デスクプリタヒープ
 		ComPtr<ID3D12DescriptorHeap> m_cbvSrvUavDescriptorHeap;
 		//CbvSrvUavのデスクプリタハンドルのインクリメントサイズ
 		UINT m_cbvSrvUavDescriptorHandleIncrementSize{ 0 };
 		//サンプラー用
 		ComPtr<ID3D12DescriptorHeap> m_samplerDescriptorHeap;
+		//サンプラーのデスクプリタハンドルのインクリメントサイズ
+		UINT m_samplerDescriptorHandleIncrementSize{ 0 };
 		//コマンドリスト
 		ComPtr<ID3D12GraphicsCommandList> m_commandList;
 		//ルートシグネチャ

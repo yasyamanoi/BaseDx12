@@ -2141,6 +2141,33 @@ namespace bsm {
 		return *this;
 	}
 
+	inline Mat4x4& Mat4x4::lookatRH(
+		const Float3& eye,
+		const Float3& at,
+		const Float3& up) {
+		*this = (Mat4x4)XMMatrixLookAtRH(eye, at, up);
+		return *this;
+	}
+
+	inline Mat4x4& Mat4x4::perspectiveFovLH(
+		float fovY,
+		float aspectRatio,
+		float nearPlane,
+		float farPlane) {
+		*this = XMMatrixPerspectiveFovLH(fovY, aspectRatio, nearPlane, farPlane);
+		return *this;
+	}
+
+	inline Mat4x4& Mat4x4::perspectiveFovRH(
+		float fovY,
+		float aspectRatio,
+		float nearPlane,
+		float farPlane) {
+		*this = XMMatrixPerspectiveFovRH(fovY, aspectRatio, nearPlane, farPlane);
+		return *this;
+	}
+
+
 	inline Mat4x4& Mat4x4::orthographicLH(
 		float width,
 		float height,

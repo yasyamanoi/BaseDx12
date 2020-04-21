@@ -7,6 +7,7 @@ namespace basedx12 {
 		m_fenceValues(m_frameCount),
 		m_renderTargets(m_frameCount),
 		m_commandAllocators(m_frameCount),
+		m_shadowmapCommandAllocators(m_frameCount),
 		m_viewport(0.0f, 0.0f, static_cast<float>(App::GetGameWidth()), static_cast<float>(App::GetGameHeight())),
 		m_scissorRect(0, 0, static_cast<LONG>(App::GetGameWidth()), static_cast<LONG>(App::GetGameHeight())),
 		m_cbvSrvUavMax(cbvSrvUavMax),

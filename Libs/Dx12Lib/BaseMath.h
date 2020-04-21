@@ -2661,6 +2661,54 @@ namespace bsm {
 			const Float3 & eye,
 			const Float3 & at,
 			const Float3 & up);
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	LookAtRHビュー行列を作成する
+		@param[in]	eye　カメラ位置
+		@param[in]	at　カメラ視点
+		@param[in]	up	カメラ向き
+		@return	*thisの参照
+		*/
+		//--------------------------------------------------------------------------------------
+		inline Mat4x4& lookatRH(
+			const Float3& eye,
+			const Float3& at,
+			const Float3& up);
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	遠近法の行列を作成する(左手)
+		@param[in]	fovY　カメラ位画角
+		@param[in]	aspectRatio　縦横比
+		@param[in]	nearPlane	手前位置
+		@param[in]	farPlane	奥位置
+		@return	*thisの参照
+		*/
+		//--------------------------------------------------------------------------------------
+		inline Mat4x4& perspectiveFovLH(
+			float fovY,
+			float aspectRatio,
+			float nearPlane,
+			float farPlane
+		);
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	遠近法の行列を作成する（右手）
+		@param[in]	fovY　カメラ位画角
+		@param[in]	aspectRatio　縦横比
+		@param[in]	nearPlane	手前位置
+		@param[in]	farPlane	奥位置
+		@return	*thisの参照
+		*/
+		//--------------------------------------------------------------------------------------
+		inline Mat4x4& perspectiveFovRH(
+			float fovY,
+			float aspectRatio,
+			float nearPlane,
+			float farPlane
+		);
+
 		//--------------------------------------------------------------------------------------
 		/*!
 		@brief	OrthographicLH射影行列を作成する

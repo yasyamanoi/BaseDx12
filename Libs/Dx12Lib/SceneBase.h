@@ -25,7 +25,7 @@ namespace basedx12 {
 			return ptr;
 		}
 		virtual void OnInitAssets() = 0;
-
+		virtual void OnDrawPath(UINT index) {}
 	};
 }
 // end basedx12
