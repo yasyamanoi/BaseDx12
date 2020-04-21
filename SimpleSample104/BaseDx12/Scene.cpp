@@ -14,15 +14,9 @@ namespace basedx12 {
 	IMPLEMENT_DX12SHADER(VSShadowmap, App::GetShadersPath() + L"VSShadowmap.cso")
 
 	void FixedBox::OnInit() {
-		m_camera = Camera::CreateCamera<Camera>(Float3(0, 10.0f, -10.0f), Float3(0, 0, 0));
-		m_lightSet = LightSet::CreateDefaultLights();
+		auto scene = App::GetTypedSceneBase<Scene>();
 		auto baseDevice = App::GetBaseDevice();
 		auto commandList = baseDevice->GetCommandList();
-		auto aspectRatio = baseDevice->GetAspectRatio();
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
-		//パイプライステート
-		m_pipelineState
-			= PipelineState::CreateDefault3D<VertexPositionNormalTexture, VSPNTShadow, PSPNTShadow>(baseDevice->GetRootSignature(), PipeLineDesc);
 		//メッシュ
 		{
 			vector<VertexPositionNormalTexture> vertices;
@@ -39,21 +33,6 @@ namespace basedx12 {
 			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		m_constantBuffer = ConstantBuffer::CreateDirect(Handle, m_shadowSceneConstantsData);
-		//テスクチャ描画用サンプラー
-		CD3DX12_CPU_DESCRIPTOR_HANDLE SamplerDescriptorHandle(
-			baseDevice->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-			0,
-			baseDevice->GetSamplerDescriptorHandleIncrementSize()
-		);
-		Sampler::CreateSampler(SamplerState::LinearClamp, SamplerDescriptorHandle);
-		//シャドウ描画用サンプラー
-		CD3DX12_CPU_DESCRIPTOR_HANDLE ShadowSamplerDescriptorHandle(
-			baseDevice->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-			1,
-			baseDevice->GetSamplerDescriptorHandleIncrementSize()
-		);
-		Sampler::CreateSampler(SamplerState::ComparisonLinear, ShadowSamplerDescriptorHandle);
-
 		//テクスチャ
 		{
 			auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";
@@ -68,10 +47,10 @@ namespace basedx12 {
 			//画像ファイルをもとにテクスチャを作成
 			m_SkyTexture = BaseTexture::CreateBaseTexture(TexFile, srvHandle);
 		}
-
 	}
 
 	void FixedBox::SetShadowSceneConstants() {
+		auto scene = App::GetTypedSceneBase<Scene>();
 		Mat4x4 worldMatrix;
 		worldMatrix.affineTransformation(
 			m_scale,
@@ -79,36 +58,33 @@ namespace basedx12 {
 			m_qt,
 			m_pos
 		);
-		auto view = m_camera->GetViewMatrix();
-		auto proj = m_camera->GetProjectionMatrix();
+		auto view = scene.GetCamera()->GetViewMatrix();
+		auto proj = scene.GetCamera()->GetProjectionMatrix();
 		//初期化
 		m_shadowSceneConstantsData = {};
-
 		m_shadowSceneConstantsData.World = bsm::transpose(worldMatrix);
 		m_shadowSceneConstantsData.View = bsm::transpose(view);
 		m_shadowSceneConstantsData.Projection = bsm::transpose(proj);
-
 		//ライトの位置
-		Float3 lightPos(0.0f, 10.0f, 0.0f);
-		Float3 lightAt = m_camera->GetAt();
+		Float3 lightPos = scene.GetLightPos();
+		Float3 lightAt = scene.GetCamera()->GetAt();
 		Float3 lightUp(0, 0, 1);
 		float w = (float)App::GetGameWidth();
 		float h = (float)App::GetGameHeight();
 		float aspectRatio = w / h;
-
 		m_shadowSceneConstantsData.LightPos = lightPos;
 		m_shadowSceneConstantsData.LightPos.w = 1.0f;
-		m_shadowSceneConstantsData.EyePos = m_camera->GetEye();
+		m_shadowSceneConstantsData.EyePos = scene.GetCamera()->GetEye();
 		m_shadowSceneConstantsData.EyePos.w = 1.0f;
 		m_shadowSceneConstantsData.LightView.lookatLH(lightPos, lightAt, lightUp);
 		m_shadowSceneConstantsData.LightView.transpose();
 		m_shadowSceneConstantsData.LightProjection.perspectiveFovLH(XM_PIDIV4, aspectRatio, 1.0f, 100.0f);
 		m_shadowSceneConstantsData.LightProjection.transpose();
-
 	}
 
 
 	void FixedBox::OnDraw() {
+		auto scene = App::GetTypedSceneBase<Scene>();
 		SetShadowSceneConstants();
 		m_constantBuffer->Copy(m_shadowSceneConstantsData);
 		auto Device = App::GetBaseDevice();
@@ -121,28 +97,6 @@ namespace basedx12 {
 			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		commandList->SetGraphicsRootDescriptorTable(0, SrvHandle);
-		//2つ目のシェーダリソース（1）
-		CD3DX12_GPU_DESCRIPTOR_HANDLE ShadowSrvHandle(
-			Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-			Device->GetShadowSRVIndex(),
-			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
-		);
-		commandList->SetGraphicsRootDescriptorTable(1, ShadowSrvHandle);
-		//Sampler
-		//１つ目のサンプラー(2)
-		CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
-			Device->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-			0,
-			Device->GetSamplerDescriptorHandleIncrementSize()
-		);
-		commandList->SetGraphicsRootDescriptorTable(2, SamplerHandle);
-		//２つ目のサンプラー(3)
-		CD3DX12_GPU_DESCRIPTOR_HANDLE ShadowSamplerHandle(
-			Device->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-			1,
-			Device->GetSamplerDescriptorHandleIncrementSize()
-		);
-		commandList->SetGraphicsRootDescriptorTable(3, ShadowSamplerHandle);
 		//コンスタントバッファ（4）
 		CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
 			Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
@@ -151,9 +105,9 @@ namespace basedx12 {
 		);
 		commandList->SetGraphicsRootDescriptorTable(4, CbvHandle);
 		//パイプライステート
-		commandList->SetPipelineState(m_pipelineState.Get());
-
+		commandList->SetPipelineState(scene.GetSceneShadowPipelineState().Get());
 		m_SkyTexture->UpdateSRAndCreateSRV(commandList);
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList->IASetVertexBuffers(0, 1, &m_mesh->GetVertexBufferView());
 		commandList->IASetIndexBuffer(&m_mesh->GetIndexBufferView());
 		commandList->DrawIndexedInstanced(m_mesh->GetNumIndices(), 1, 0, 0, 0);
@@ -162,17 +116,9 @@ namespace basedx12 {
 
 
 	void MoveBox::OnInit() {
-		m_camera = Camera::CreateCamera<Camera>(Float3(0, 10.0f, -10.0f), Float3(0, 0, 0));
-		m_lightSet = LightSet::CreateDefaultLights();
+		auto scene = App::GetTypedSceneBase<Scene>();
 		auto baseDevice = App::GetBaseDevice();
 		auto commandList = baseDevice->GetCommandList();
-		auto aspectRatio = baseDevice->GetAspectRatio();
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
-		//パイプライステート
-		m_shadowmapPipelineState
-			= PipelineState::CreateShadowmap3D<VertexPositionNormalTexture, VSShadowmap>(baseDevice->GetRootSignature(), PipeLineDesc);
-		m_pipelineState
-			= PipelineState::CreateDefault3D<VertexPositionNormalTexture, VSPNT, PSPNT>(baseDevice->GetRootSignature(), PipeLineDesc);
 		//メッシュ
 		{
 			vector<VertexPositionNormalTexture> vertices;
@@ -198,11 +144,9 @@ namespace basedx12 {
 			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		m_constantBuffer = ConstantBuffer::CreateDirect(Handle, m_simpleConstantsData);
-		auto SamplerDescriptorHandle = baseDevice->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-		Sampler::CreateSampler(SamplerState::LinearClamp, SamplerDescriptorHandle);
 		//テクスチャ
 		{
-			auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";
+			auto TexFile = App::GetRelativeAssetsPath() + L"wall.jpg";
 			//テクスチャの作成
 			//シェーダリソースハンドルを作成
 			m_srvIndex = baseDevice->GetCbvSrvUavNextIndex();
@@ -212,12 +156,13 @@ namespace basedx12 {
 				baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 			);
 			//画像ファイルをもとにテクスチャを作成
-			m_SkyTexture = BaseTexture::CreateBaseTexture(TexFile, srvHandle);
+			m_wallTexture = BaseTexture::CreateBaseTexture(TexFile, srvHandle);
 		}
 
 	}
 
 	void MoveBox::SetShadowmapConstants() {
+		auto scene = App::GetTypedSceneBase<Scene>();
 		Mat4x4 worldMatrix,viewMatrix,projMatrix;
 		worldMatrix.affineTransformation(
 			m_scale,
@@ -226,9 +171,8 @@ namespace basedx12 {
 			m_pos
 		);
 		//ライトの位置
-		Float3 lightPos(0.0f, 10.0f, 0.0);
-		Float3 lightAt = m_camera->GetAt();
-		//		Float3 lightAt(0.0f, -4.0f, 2.0f);
+		Float3 lightPos = scene.GetLightPos();
+		Float3 lightAt = scene.GetCamera()->GetAt();
 		Float3 lightUp(0, 0, 1);
 		viewMatrix.lookatLH(lightPos, lightAt, lightUp);
 		float w = (float)App::GetGameWidth();
@@ -242,6 +186,7 @@ namespace basedx12 {
 
 
 	void MoveBox::SetSimpleConstants() {
+		auto scene = App::GetTypedSceneBase<Scene>();
 		Mat4x4 worldMatrix;
 		worldMatrix.affineTransformation(
 			m_scale,
@@ -249,8 +194,8 @@ namespace basedx12 {
 			m_qt,
 			m_pos
 		);
-		auto view = m_camera->GetViewMatrix();
-		auto proj = m_camera->GetProjectionMatrix();
+		auto view = scene.GetCamera()->GetViewMatrix();
+		auto proj = scene.GetCamera()->GetProjectionMatrix();
 		//初期化
 		m_simpleConstantsData = {};
 		m_simpleConstantsData.worldViewProj = worldMatrix;
@@ -272,6 +217,7 @@ namespace basedx12 {
 	}
 
 	void MoveBox::OnDrawShadowmap() {
+		auto scene = App::GetTypedSceneBase<Scene>();
 		SetShadowmapConstants();
 		m_shadowmapConstantBuffer->Copy(m_shadowmapConstantsData);
 		auto Device = App::GetBaseDevice();
@@ -284,7 +230,8 @@ namespace basedx12 {
 		);
 		//コンスタントバッファ（4）
 		commandList->SetGraphicsRootDescriptorTable(4, CbvHandle);
-		commandList->SetPipelineState(m_shadowmapPipelineState.Get());
+		commandList->SetPipelineState(scene.GetShadowmapPipelineState().Get());
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList->IASetVertexBuffers(0, 1, &m_mesh->GetVertexBufferView());
 		commandList->IASetIndexBuffer(&m_mesh->GetIndexBufferView());
 		commandList->DrawIndexedInstanced(m_mesh->GetNumIndices(), 1, 0, 0, 0);
@@ -293,6 +240,7 @@ namespace basedx12 {
 
 
 	void MoveBox::OnDraw() {
+		auto scene = App::GetTypedSceneBase<Scene>();
 		SetSimpleConstants();
 		m_constantBuffer->Copy(m_simpleConstantsData);
 		auto Device = App::GetBaseDevice();
@@ -304,13 +252,6 @@ namespace basedx12 {
 			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
 			);
 		commandList->SetGraphicsRootDescriptorTable(0, SrvHandle);
-		//1つ目のSampler（2）
-		CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
-			Device->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-			0,
-			0
-			);
-		commandList->SetGraphicsRootDescriptorTable(2, SamplerHandle);
 		//Cbv（4）
 		CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
 			Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
@@ -318,13 +259,12 @@ namespace basedx12 {
 			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
 			);
 		commandList->SetGraphicsRootDescriptorTable(4, CbvHandle);
-		commandList->SetPipelineState(m_pipelineState.Get());
-
-		m_SkyTexture->UpdateSRAndCreateSRV(commandList);
+		commandList->SetPipelineState(scene.GetScenePipelineState().Get());
+		m_wallTexture->UpdateSRAndCreateSRV(commandList);
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList->IASetVertexBuffers(0, 1, &m_mesh->GetVertexBufferView());
 		commandList->IASetIndexBuffer(&m_mesh->GetIndexBufferView());
 		commandList->DrawIndexedInstanced(m_mesh->GetNumIndices(), 1, 0, 0, 0);
-
 	}
 
 
@@ -338,8 +278,37 @@ namespace basedx12 {
 		auto baseDevice = App::GetBaseDevice();
 		//サンプラーは共有
 		{
-			auto samplerDescriptorHandle = baseDevice->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-			Sampler::CreateSampler(SamplerState::LinearClamp, samplerDescriptorHandle);
+			//テスクチャ描画用サンプラー
+			CD3DX12_CPU_DESCRIPTOR_HANDLE SamplerDescriptorHandle(
+				baseDevice->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+				0,
+				baseDevice->GetSamplerDescriptorHandleIncrementSize()
+			);
+			Sampler::CreateSampler(SamplerState::LinearClamp, SamplerDescriptorHandle);
+			//シャドウ描画用サンプラー
+			CD3DX12_CPU_DESCRIPTOR_HANDLE ShadowSamplerDescriptorHandle(
+				baseDevice->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+				1,
+				baseDevice->GetSamplerDescriptorHandleIncrementSize()
+			);
+			Sampler::CreateSampler(SamplerState::ComparisonLinear, ShadowSamplerDescriptorHandle);
+		}
+		//パイプラインは共有
+		{
+			D3D12_GRAPHICS_PIPELINE_STATE_DESC PipeLineDesc;
+			//パイプライステート
+			m_shadowmapPipelineState
+				= PipelineState::CreateShadowmap3D<VertexPositionNormalTexture, VSShadowmap>(baseDevice->GetRootSignature(), PipeLineDesc);
+			m_scenePipelineState
+				= PipelineState::CreateDefault3D<VertexPositionNormalTexture, VSPNT, PSPNT>(baseDevice->GetRootSignature(), PipeLineDesc);
+			//パイプライステート
+			m_sceneShadowPipelineState
+				= PipelineState::CreateDefault3D<VertexPositionNormalTexture, VSPNTShadow, PSPNTShadow>(baseDevice->GetRootSignature(), PipeLineDesc);
+		}
+		//カメラとライトは共有
+		{
+			m_camera = Camera::CreateCamera<Camera>(Float3(0, 3.0f, -5.0f), Float3(0, 0, 0));
+			m_lightPos = Float3(0.0f, 10.0f, 0.0);
 		}
 		// それぞれのオブジェクトの初期化
 		{
@@ -352,16 +321,32 @@ namespace basedx12 {
 		m_FixedBox.OnUpdate();
 		m_MoveBox.OnUpdate();
 	}
-	void Scene::OnDraw() {
-		OnDrawPath(1);
-	}
 
 	void Scene::OnDrawPath(UINT index) {
 		if (index == 1) {
-			//m_ConstantBuffer->Copy(m_constantBufferData);
 			auto baseDevice = App::GetBaseDevice();
 			auto commandList = baseDevice->GetCommandList();
-			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			//1つ目のSampler（2）
+			CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
+				baseDevice->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+				0,
+				0
+			);
+			commandList->SetGraphicsRootDescriptorTable(2, SamplerHandle);
+			//２つ目のサンプラー(3)
+			CD3DX12_GPU_DESCRIPTOR_HANDLE ShadowSamplerHandle(
+				baseDevice->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+				1,
+				baseDevice->GetSamplerDescriptorHandleIncrementSize()
+			);
+			commandList->SetGraphicsRootDescriptorTable(3, ShadowSamplerHandle);
+			//2つ目のシェーダリソース（1）
+			CD3DX12_GPU_DESCRIPTOR_HANDLE ShadowSrvHandle(
+				baseDevice->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+				baseDevice->GetShadowSRVIndex(),
+				baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
+			);
+			commandList->SetGraphicsRootDescriptorTable(1, ShadowSrvHandle);
 			m_FixedBox.OnDraw();
 			m_MoveBox.OnDraw();
 		}
@@ -369,7 +354,6 @@ namespace basedx12 {
 			//シャドウマップ
 			auto baseDevice = App::GetBaseDevice();
 			auto commandList = baseDevice->GetCommandList();
-			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			m_MoveBox.OnDrawShadowmap();
 		}
 	}

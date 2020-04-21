@@ -11,22 +11,31 @@ namespace basedx12 {
 		Float3 m_directional;	//ライトの向き
 		Float4 m_diffuseColor;	//ディフィーズ色
 		Float4 m_specularColor;	//スペキュラー色
+		Float3 m_position;	//位置（使用しない場合あり）
+		Float3 m_at;		//指している場所（使用しない場合あり）
+
 		Light() :
 			m_directional(0, -1.0f, 0),
 			m_diffuseColor(1.0f, 1.0f, 1.0f, 1.0f),
-			m_specularColor(0.2f, 0.2f, 0.2f, 1.0f)
+			m_specularColor(0.2f, 0.2f, 0.2f, 1.0f),
+			m_position(0.0f),
+			m_at(0.0f)
 		{
 		}
 		Light(const Float3& dir, const Float4& def, const Float4& sp) :
 			m_directional(dir),
 			m_diffuseColor(def),
-			m_specularColor(sp)
+			m_specularColor(sp),
+			m_position(0.0f),
+			m_at(0.0f)
 		{
 		}
 		Light(const Light& other) :
 			m_directional(other.m_directional),
 			m_diffuseColor(other.m_diffuseColor),
-			m_specularColor(other.m_specularColor)
+			m_specularColor(other.m_specularColor),
+			m_position(other.m_position),
+			m_at(other.m_at)
 		{
 		}
 		Light& operator=(const Light& other) {
@@ -34,11 +43,15 @@ namespace basedx12 {
 				m_directional = other.m_directional;
 				m_diffuseColor = other.m_diffuseColor;
 				m_specularColor = other.m_specularColor;
+				m_position = other.m_position;
+				m_at = other.m_at;
 			}
 			return *this;
 		}
 		~Light() {}
 		void SetPositionToDirectional(const Float3& pos, const Float3& at) {
+			m_position = pos;
+			m_at = at;
 			Float3 dir = at - pos;
 			dir.normalize();
 			m_directional = dir;

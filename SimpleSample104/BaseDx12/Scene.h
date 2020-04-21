@@ -46,10 +46,7 @@ namespace basedx12 {
 
 
 	class FixedBox {
-		shared_ptr<Camera> m_camera;
-		shared_ptr<LightSet> m_lightSet;
 		shared_ptr<BaseMesh> m_mesh;
-		ComPtr<ID3D12PipelineState> m_pipelineState;
 		//コンスタントバッファ
 		shared_ptr<ConstantBuffer> m_constantBuffer;
 		//コンスタントバッファのインデックス
@@ -66,9 +63,7 @@ namespace basedx12 {
 		Quat m_qt;
 		//位置
 		Float3 m_pos;
-
 		void SetShadowSceneConstants();
-
 	public:
 		FixedBox() :
 			m_scale(10.0f,1.0f,10.0f),
@@ -84,28 +79,22 @@ namespace basedx12 {
 
 
 	class MoveBox{
-		shared_ptr<Camera> m_camera;
-		shared_ptr<LightSet> m_lightSet;
+		//メッシュ
 		shared_ptr<BaseMesh> m_mesh;
-		//シャドウマップパイプライン
-		ComPtr<ID3D12PipelineState> m_shadowmapPipelineState;
 		//シャドウマップコンスタントバッファ
 		shared_ptr<ConstantBuffer> m_shadowmapConstantBuffer;
 		///シャドウマップコンスタントバッファのインデックス
 		UINT m_shadowmapConstBuffIndex;
 		//シャドウマップコンスタントバッファの実体
 		ShadowmapConstants m_shadowmapConstantsData;
-
-		//シーン描画用パイプライン
-		ComPtr<ID3D12PipelineState> m_pipelineState;
-		//コンスタントバッファ
+		//シーン用コンスタントバッファ
 		shared_ptr<ConstantBuffer> m_constantBuffer;
-		//コンスタントバッファのインデックス
+		//シーン用コンスタントバッファのインデックス
 		UINT m_constBuffIndex;
-		//コンスタントバッファの実体
+		//シーン用コンスタントバッファの実体
 		SimpleConstants m_simpleConstantsData;
 		//テクスチャ
-		shared_ptr<BaseTexture> m_SkyTexture;
+		shared_ptr<BaseTexture> m_wallTexture;
 		//テクスチャ（シェーダリソース）のインデックス
 		UINT m_srvIndex;
 		//スケール
@@ -135,13 +124,41 @@ namespace basedx12 {
 	class Scene :public SceneBase {
 		FixedBox m_FixedBox;
 		MoveBox m_MoveBox;
+		//シャドウマップパイプライン
+		ComPtr<ID3D12PipelineState> m_shadowmapPipelineState;
+		//シーン描画用パイプライン(影無し)
+		ComPtr<ID3D12PipelineState> m_scenePipelineState;
+		//シーン描画用パイプライン（影あり）
+		ComPtr<ID3D12PipelineState> m_sceneShadowPipelineState;
+		//カメラ
+		shared_ptr<Camera> m_camera;
+		//ライト
+		Float3 m_lightPos;
 	public:
-		Scene() :SceneBase() {}
+		Scene() :SceneBase(), m_lightPos(0.0f, 10.0f, 0.0) {}
 		virtual ~Scene() {}
+		ComPtr<ID3D12PipelineState> GetShadowmapPipelineState() const{
+			return m_shadowmapPipelineState;
+		}
+		ComPtr<ID3D12PipelineState> GetScenePipelineState() const{
+			return m_scenePipelineState;
+		}
+		ComPtr<ID3D12PipelineState> GetSceneShadowPipelineState() const {
+			return m_sceneShadowPipelineState;
+		}
+		shared_ptr<Camera> GetCamera() const{
+			return m_camera;
+		}
+		const Float3& GetLightPos() const {
+			return m_lightPos;
+		}
+		void SetLightPos(const Float3& pos) {
+			m_lightPos = pos;
+		}
 		virtual void OnInit()override;
 		virtual void OnInitAssets()override;
 		virtual void OnUpdate()override;
-		virtual void OnDraw()override;
+		virtual void OnDraw()override {}
 		virtual void OnDrawPath(UINT index)override;
 		virtual void OnDestroy()override;
 

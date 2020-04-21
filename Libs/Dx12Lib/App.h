@@ -31,8 +31,30 @@ namespace basedx12 {
 		static SceneBase& GetSceneBase() {
 			return *m_pSceneBase;
 		}
+		template <typename T>
+		static T& GetTypedSceneBase() {
+			T* ret = dynamic_cast<T*>(m_pSceneBase);
+			if (!ret) {
+				throw BaseException(
+					L"T型にキャストできません。\n",
+					L"App::GetTypedSceneBase()"
+				);
+			}
+			return *ret;
+		}
 		static shared_ptr<BaseDevice>& GetBaseDevice() {
 			return m_baseDevice;
+		}
+		template <typename T>
+		static shared_ptr<T>& GetTypedBaseDevice() {
+			shared_ptr<T> ret = dynamic_pointer_cast<T>(m_baseDevice);
+			if (!ret) {
+				throw BaseException(
+					L"T型にキャストできません。\n",
+					L"App::GetTypedBaseDevice()"
+				);
+			}
+			return ret;
 		}
 		static void SetBaseDevice(const shared_ptr<BaseDevice>& ptr) {
 			m_baseDevice = ptr;

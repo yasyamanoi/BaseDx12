@@ -138,7 +138,6 @@ namespace basedx12 {
 		m_commandList->RSSetViewports(1, &m_viewport);
 		m_commandList->RSSetScissorRects(1, &m_scissorRect);
 		//ディスクリプタヒープの登録
-//		ID3D12DescriptorHeap* ppShadowHeaps[] = { m_cbvSrvUavDescriptorHeap.Get(),m_samplerDescriptorHeap.Get() };
 		ID3D12DescriptorHeap* ppShadowHeaps[] = { m_cbvSrvUavDescriptorHeap.Get() };
 		m_commandList->SetDescriptorHeaps(_countof(ppShadowHeaps), ppShadowHeaps);
 		//シャドウマップの描画

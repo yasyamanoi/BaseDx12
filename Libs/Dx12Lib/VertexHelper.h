@@ -457,6 +457,58 @@ namespace basedx12 {
 	};
 
 	//--------------------------------------------------------------------------------------
+	/// 位置と法線とテクスチャとタンジェントとを持つ入力レイアウトの定義
+	//--------------------------------------------------------------------------------------
+	const D3D12_INPUT_ELEMENT_DESC VertexPositionNormalTextureTangentLayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",      0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD",    0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT",     0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+
+	//--------------------------------------------------------------------------------------
+	/// 位置と法線とタンジェントとテクスチャを持つ頂点の定義
+	//--------------------------------------------------------------------------------------
+	struct VertexPositionNormalTextureTangent
+	{
+		VertexPositionNormalTextureTangent()
+		{ }
+
+
+		VertexPositionNormalTextureTangent(XMFLOAT3 const& pos, XMFLOAT3 const& norm, XMFLOAT4 const& tan, XMFLOAT2 const& tex)
+			: position(pos),
+			normal(norm),
+			tangent(tan),
+			textureCoordinate(tex)
+		{
+		}
+
+		VertexPositionNormalTextureTangent(FXMVECTOR pos, FXMVECTOR norm, FXMVECTOR tan, CXMVECTOR tex)
+			: position(pos),
+			normal(norm),
+			tangent(tan),
+			textureCoordinate(tex)
+		{
+		}
+
+
+		bsm::Float3 position;
+		bsm::Float3 normal;
+		bsm::Float2 textureCoordinate;
+		bsm::Float4 tangent;
+
+
+		static const D3D12_INPUT_ELEMENT_DESC* GetVertexElement() {
+			return VertexPositionNormalTextureTangentLayout;
+		}
+		static UINT GetNumElements() {
+			return  ARRAYSIZE(VertexPositionNormalTextureTangentLayout);
+		}
+	};
+
+
+	//--------------------------------------------------------------------------------------
 	/// 位置と法線とタンジェントとテクスチャとスキン情報を持つ入力レイアウトの定義
 	//--------------------------------------------------------------------------------------
 	const D3D12_INPUT_ELEMENT_DESC VertexPositionNormalTangentTextureSkinningLayout[] =
