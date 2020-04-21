@@ -3,9 +3,6 @@
 
 namespace basedx12 {
 
-
-
-
 	DECLARE_DX12SHADER(VSPNT)
 	DECLARE_DX12SHADER(PSPNT)
 
