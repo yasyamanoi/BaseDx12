@@ -13,6 +13,7 @@ struct VS_INPUT
 
 float4 main(VS_INPUT Input) : SV_POSITION
 {
+
 	Input.vPosition.w = 1.0f;
 	float4 pos;
 	pos = mul(Input.vPosition, World);

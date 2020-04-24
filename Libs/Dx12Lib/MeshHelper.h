@@ -238,6 +238,58 @@ namespace basedx12 {
 		//--------------------------------------------------------------------------------------
 		static void SetNormalTangent(vector<VertexPositionNormalTangentTextureSkinning>& vertices);
 
+		static void ConvertVertex(const vector<VertexPositionNormalTexture>& vertices,
+			vector<VertexPositionColor>& new_pc_vertices,
+			vector<VertexPositionNormal>& new_pn_vertices,
+			vector<VertexPositionTexture>& new_pt_vertices,
+			vector<VertexPositionNormalTangentTexture>& new_pntnt_vertices,
+			vector<VertexPositionNormalTextureTangent>& new_pnttn_vertices
+		) {
+			new_pc_vertices.clear();
+			new_pn_vertices.clear();
+			new_pt_vertices.clear();
+			new_pntnt_vertices.clear();
+			new_pnttn_vertices.clear();
+			for (size_t i = 0; i < vertices.size(); i++) {
+				VertexPositionColor new_pc_v;
+				VertexPositionNormal new_pn_v;
+				VertexPositionTexture new_pt_v;
+				VertexPositionNormalTangentTexture new_pntnt_v;
+				VertexPositionNormalTextureTangent new_pnttn_v;
+
+				new_pc_v.position = vertices[i].position;
+				new_pc_v.color = bsm::Float4(1.0f, 1.0f, 1.0f, 1.0f);
+
+				new_pn_v.position = vertices[i].position;
+				new_pn_v.normal = vertices[i].normal;
+
+				new_pt_v.position = vertices[i].position;
+				new_pt_v.textureCoordinate = vertices[i].textureCoordinate;
+
+				new_pntnt_v.position = vertices[i].position;
+				new_pntnt_v.normal = vertices[i].normal;
+				new_pntnt_v.textureCoordinate = vertices[i].textureCoordinate;
+				bsm::Float3 n = bsm::cross((bsm::Float3)new_pntnt_v.normal, bsm::Float3(0, 1, 0));
+				new_pntnt_v.tangent = bsm::Float4(n.x, n.y, n.z, 0.0f);
+				new_pntnt_v.tangent.w = 0.0f;
+
+				new_pnttn_v.position = vertices[i].position;
+				new_pnttn_v.normal = vertices[i].normal;
+				new_pnttn_v.textureCoordinate = vertices[i].textureCoordinate;
+				bsm::Float3 n2 = bsm::cross((bsm::Float3)new_pnttn_v.normal, bsm::Float3(0, 1, 0));
+				new_pnttn_v.tangent = bsm::Float4(n2.x, n2.y, n2.z, 0.0f);
+				new_pnttn_v.tangent.w = 0.0f;
+
+
+				new_pc_vertices.push_back(new_pc_v);
+				new_pn_vertices.push_back(new_pn_v);
+				new_pt_vertices.push_back(new_pt_v);
+				new_pntnt_vertices.push_back(new_pntnt_v);
+				new_pnttn_vertices.push_back(new_pnttn_v);
+
+			}
+
+		}
 
 
 	};

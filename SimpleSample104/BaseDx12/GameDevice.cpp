@@ -87,8 +87,14 @@ namespace basedx12 {
 	{
 		// ルートシグネチャー
 		{
-			//コンスタントバッファ付ルートシグネチャ
-			m_rootSignature = RootSignature::CreateSrv2Smp2Cbv();
+			//法線マップも使えるルートシグネチャ
+			m_rootSignature = RootSignature::CreateBase();
+			m_gpuSlotMap[L"t0"] = 0;
+			m_gpuSlotMap[L"t1"] = 1;
+			m_gpuSlotMap[L"t2"] = 2;
+			m_gpuSlotMap[L"s0"] = 3;
+			m_gpuSlotMap[L"s1"] = 4;
+			m_gpuSlotMap[L"b0"] = 5;
 		}
 		// 頂点などのリソース構築用のコマンドリスト
 		m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);

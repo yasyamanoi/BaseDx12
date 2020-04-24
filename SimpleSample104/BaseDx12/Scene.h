@@ -3,8 +3,6 @@
 
 namespace basedx12 {
 
-	DECLARE_DX12SHADER(VSPNT)
-	DECLARE_DX12SHADER(PSPNT)
 
 	DECLARE_DX12SHADER(VSPNTShadow)
 	DECLARE_DX12SHADER(PSPNTShadow)
@@ -16,10 +14,6 @@ namespace basedx12 {
 		Mat4x4 world;
 		Mat4x4 view;
 		Mat4x4 proj;
-	};
-
-	struct SimpleConstants {
-		Mat4x4 worldViewProj;
 	};
 
 	struct ShadowSceneConstants {
@@ -60,7 +54,6 @@ namespace basedx12 {
 		Quat m_qt;
 		//位置
 		Float3 m_pos;
-		void SetShadowSceneConstants();
 	public:
 		FixedBox() :
 			m_scale(10.0f,1.0f,10.0f),
@@ -88,8 +81,8 @@ namespace basedx12 {
 		shared_ptr<ConstantBuffer> m_constantBuffer;
 		//シーン用コンスタントバッファのインデックス
 		UINT m_constBuffIndex;
-		//シーン用コンスタントバッファの実体
-		SimpleConstants m_simpleConstantsData;
+		//コンスタントバッファの実体
+		ShadowSceneConstants m_shadowSceneConstantsData;
 		//テクスチャ
 		shared_ptr<BaseTexture> m_wallTexture;
 		//テクスチャ（シェーダリソース）のインデックス
@@ -101,14 +94,13 @@ namespace basedx12 {
 		//位置
 		Float3 m_pos;
 		float m_posSpan;
-		void SetSimpleConstants();
 		void SetShadowmapConstants();
 	public:
 		MoveBox():
 			m_posSpan(0.02f),
 			m_scale(1.0f),
 			m_qt(),
-			m_pos(0.0f,1.0f,0.0f)
+			m_pos(0.0f,0.5f,0.0f)
 		{}
 		~MoveBox() {}
 		void OnInit();
@@ -123,22 +115,19 @@ namespace basedx12 {
 		MoveBox m_MoveBox;
 		//シャドウマップパイプライン
 		ComPtr<ID3D12PipelineState> m_shadowmapPipelineState;
-		//シーン描画用パイプライン(影無し)
-		ComPtr<ID3D12PipelineState> m_scenePipelineState;
 		//シーン描画用パイプライン（影あり）
 		ComPtr<ID3D12PipelineState> m_sceneShadowPipelineState;
 		//カメラ
 		shared_ptr<Camera> m_camera;
 		//ライト
 		Float3 m_lightPos;
+		//GPUのスロットマップ
+		map<wstring, UINT> m_gpuSlotMap;
 	public:
 		Scene() :SceneBase(), m_lightPos(0.0f, 10.0f, 0.0) {}
 		virtual ~Scene() {}
 		ComPtr<ID3D12PipelineState> GetShadowmapPipelineState() const{
 			return m_shadowmapPipelineState;
-		}
-		ComPtr<ID3D12PipelineState> GetScenePipelineState() const{
-			return m_scenePipelineState;
 		}
 		ComPtr<ID3D12PipelineState> GetSceneShadowPipelineState() const {
 			return m_sceneShadowPipelineState;
@@ -152,6 +141,13 @@ namespace basedx12 {
 		void SetLightPos(const Float3& pos) {
 			m_lightPos = pos;
 		}
+		void SetShadowSceneConstants(
+			const Float3& scale,
+			const Quat& qt,
+			const Float3& pos,
+			ShadowSceneConstants& ret
+		);
+
 		virtual void OnInit()override;
 		virtual void OnInitAssets()override;
 		virtual void OnUpdate()override;

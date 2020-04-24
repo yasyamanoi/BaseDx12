@@ -41,7 +41,7 @@ namespace basedx12 {
 		FixedBox() :
 			m_scale(10.0f,1.0f,10.0f),
 			m_qt(),
-			m_pos(0.0f, -3.0f, 0.0f)
+			m_pos(0.0f, -0.5f, 0.0f)
 		{}
 		~FixedBox() {}
 		void OnInit();
@@ -63,7 +63,7 @@ namespace basedx12 {
 		//コンスタントバッファの実体
 		SimpleConstants m_simpleConstantsData;
 		//テクスチャ
-		shared_ptr<BaseTexture> m_SkyTexture;
+		shared_ptr<BaseTexture> m_wallTexture;
 		//テクスチャ（シェーダリソース）のインデックス
 		UINT m_srvIndex;
 		//スケール
@@ -79,7 +79,7 @@ namespace basedx12 {
 			m_posSpan(0.02f),
 			m_scale(1.0f),
 			m_qt(),
-			m_pos(0.0f)
+			m_pos(0.0f,0.5f,0.0f)
 		{}
 		~MoveBox() {}
 		void OnInit();

@@ -111,6 +111,21 @@ namespace basedx12 {
 		bool Is3DDevice() const {
 			return m_Is3DDevice;
 		}
+		UINT GetGpuSlotID(const wstring& key) {
+			auto it = m_gpuSlotMap.begin();
+			while (it != m_gpuSlotMap.end()) {
+				if (it->first == key) {
+					return it->second;
+				}
+				it++;
+			}
+			throw BaseException(
+				L"そのキーはGPUスロットにありません",
+				key,
+				L"BaseDevice::GetGpuSlotID()"
+			);
+			return 0;
+		}
 	protected:
 		//3Dデバイスかどうか
 		bool m_Is3DDevice;
@@ -162,6 +177,8 @@ namespace basedx12 {
 		ComPtr<ID3D12GraphicsCommandList> m_commandList;
 		//ルートシグネチャ
 		ComPtr<ID3D12RootSignature> m_rootSignature;
+		//ルートシグネチャで設定されるGPUスロットのマップ
+		map<wstring, UINT> m_gpuSlotMap;
 		//メンバ関数
 		void GetHardwareAdapter(_In_ IDXGIFactory2* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
 		void MoveToNextFrame();

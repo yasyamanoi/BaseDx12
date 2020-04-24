@@ -24,11 +24,11 @@ cbuffer ParametersBuffer : register(b0)
 	float4x4 LightProjection	: packoffset(c18);
 };
 
-Texture2D<float4> g_texture : register(t0);
 // 深度マップ
-Texture2D g_DepthMap : register(t1);
-SamplerState g_sampler : register(s0);
-SamplerComparisonState g_SamplerDepthMap : register(s1);
+Texture2D g_DepthMap : register(t0);
+Texture2D<float4> g_texture : register(t1);
+SamplerComparisonState g_SamplerDepthMap : register(s0);
+SamplerState g_sampler : register(s1);
 
 float3 DplusS(float3 N, float3 L, float NdotL, float3 view);
 

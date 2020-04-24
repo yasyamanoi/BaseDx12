@@ -139,7 +139,7 @@ namespace basedx12 {
 		Sampler::CreateSampler(SamplerState::LinearClamp, SamplerDescriptorHandle);
 		//テクスチャ
 		{
-			auto TexFile = App::GetRelativeAssetsPath() + L"sky.jpg";
+			auto TexFile = App::GetRelativeAssetsPath() + L"wall.jpg";
 			//テクスチャの作成
 			//シェーダリソースハンドルを作成
 			m_srvIndex = baseDevice->GetCbvSrvUavNextIndex();
@@ -149,7 +149,7 @@ namespace basedx12 {
 				baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 			);
 			//画像ファイルをもとにテクスチャを作成
-			m_SkyTexture = BaseTexture::CreateBaseTexture(TexFile, srvHandle);
+			m_wallTexture = BaseTexture::CreateBaseTexture(TexFile, srvHandle);
 		}
 
 	}
@@ -212,7 +212,7 @@ namespace basedx12 {
 		commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
 		commandList->SetPipelineState(m_pipelineState.Get());
 
-		m_SkyTexture->UpdateSRAndCreateSRV(commandList);
+		m_wallTexture->UpdateSRAndCreateSRV(commandList);
 		commandList->IASetVertexBuffers(0, 1, &m_mesh->GetVertexBufferView());
 		commandList->IASetIndexBuffer(&m_mesh->GetIndexBufferView());
 		commandList->DrawIndexedInstanced(m_mesh->GetNumIndices(), 1, 0, 0, 0);

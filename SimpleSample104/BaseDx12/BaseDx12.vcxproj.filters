@@ -56,12 +56,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\VSPNT.hlsl">
-      <Filter>シェーダーファイル</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\PSPNT.hlsl">
-      <Filter>シェーダーファイル</Filter>
-    </FxCompile>
     <FxCompile Include="Shaders\VSShadowmap.hlsl">
       <Filter>シェーダーファイル</Filter>
     </FxCompile>

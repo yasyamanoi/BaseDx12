@@ -256,6 +256,7 @@ namespace basedx12 {
 	//--------------------------------------------------------------------------------------
 	/// ルートシグネチャユーティリティ
 	//--------------------------------------------------------------------------------------
+
 	namespace RootSignature {
 		static inline ComPtr<ID3D12RootSignature> CreateDirect(const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& desc) {
 			auto device = App::GetID3D12Device();
@@ -332,21 +333,26 @@ namespace basedx12 {
 		//Baseタイプ
 		static inline ComPtr<ID3D12RootSignature> CreateBase() {
 
-			CD3DX12_DESCRIPTOR_RANGE1 ranges[4]; // Perfomance TIP: Order from most frequent to least frequent.
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);    // 2 frequently changed diffuse + normal textures - using registers t1 and t2.
-			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);    // 1 frequently changed constant buffer.
-			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);                                                // 1 infrequently changed shadow texture - starting in register t0.
-			ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 2, 0);                                            // 2 static samplers.
+			CD3DX12_DESCRIPTOR_RANGE1 ranges[6];
+			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+			ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
+			ranges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1);
+			ranges[5].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 
-			CD3DX12_ROOT_PARAMETER1 rootParameters[4];
-			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
-			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
-			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-			rootParameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL);
+			CD3DX12_ROOT_PARAMETER1 rootParameters[6];
+			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);	//t0
+			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);	//t1
+			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);	//t2
+			rootParameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL);	//s0
+			rootParameters[4].InitAsDescriptorTable(1, &ranges[4], D3D12_SHADER_VISIBILITY_PIXEL);	//s1
+			rootParameters[5].InitAsDescriptorTable(1, &ranges[5], D3D12_SHADER_VISIBILITY_ALL);	//b0
 
 			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 			return CreateDirect(rootSignatureDesc);
+
 		}
 
 		static inline ComPtr<ID3D12RootSignature> CreateBase2() {
@@ -394,6 +400,10 @@ namespace basedx12 {
 	/// サンプラーユーティリティ（変更可能）
 	//--------------------------------------------------------------------------------------
 	namespace Sampler {
+		static inline void CreateDirect(const D3D12_SAMPLER_DESC& samplerDesc, D3D12_CPU_DESCRIPTOR_HANDLE& handle) {
+			auto device = App::GetID3D12Device();
+			device->CreateSampler(&samplerDesc, handle);
+		}
 		static inline void CreateSampler(const SamplerState state, D3D12_CPU_DESCRIPTOR_HANDLE& handle) {
 			D3D12_SAMPLER_DESC samplerDesc = {};
 			//デフォルトを入れておく
@@ -552,9 +562,8 @@ namespace basedx12 {
 		}
 		template<typename Vertex, typename VS, typename PS>
 		static inline ComPtr<ID3D12PipelineState> CreateDefault3D(const ComPtr<ID3D12RootSignature>& rootSignature, D3D12_GRAPHICS_PIPELINE_STATE_DESC& retDesc) {
-
 			CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
-			//裏面カリング
+			//カリングしない
 			rasterizerStateDesc.CullMode = D3D12_CULL_MODE_NONE;
 
 			ZeroMemory(&retDesc, sizeof(retDesc));
@@ -613,16 +622,23 @@ namespace basedx12 {
 			retDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 			retDesc.SampleDesc.Count = 1;
 			return CreateDirect(retDesc);
+		}
 
-/*
+		template<typename Vertex, typename VS, typename PS>
+		static inline ComPtr<ID3D12PipelineState> CreateBase3D(const ComPtr<ID3D12RootSignature>& rootSignature, D3D12_GRAPHICS_PIPELINE_STATE_DESC& retDesc) {
 
 			CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
-			//表面カリング
-			rasterizerStateDesc.CullMode = D3D12_CULL_MODE_FRONT;
-			rasterizerStateDesc.FillMode = D3D12_FILL_MODE_SOLID;
-			rasterizerStateDesc.DepthClipEnable = TRUE;
+			//裏面カリング
+			rasterizerStateDesc.CullMode = D3D12_CULL_MODE_NONE;
 
-			ZeroMemory(&RetDesc, sizeof(RetDesc));
+			CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
+			depthStencilDesc.DepthEnable = true;
+			depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+			depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+			depthStencilDesc.StencilEnable = FALSE;
+
+
+			ZeroMemory(&retDesc, sizeof(retDesc));
 			retDesc.InputLayout = { Vertex::GetVertexElement(), Vertex::GetNumElements() };
 			retDesc.pRootSignature = rootSignature.Get();
 			retDesc.VS =
@@ -630,14 +646,43 @@ namespace basedx12 {
 				reinterpret_cast<UINT8*>(VS::GetPtr()->GetShaderComPtr()->GetBufferPointer()),
 				VS::GetPtr()->GetShaderComPtr()->GetBufferSize()
 			};
-
-			retDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0);
-			retDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
-			retDesc.NumRenderTargets = 0;
-
+			retDesc.PS =
+			{
+				reinterpret_cast<UINT8*>(PS::GetPtr()->GetShaderComPtr()->GetBufferPointer()),
+				PS::GetPtr()->GetShaderComPtr()->GetBufferSize()
+			};
 			retDesc.RasterizerState = rasterizerStateDesc;
 			retDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-			retDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+			retDesc.DepthStencilState = depthStencilDesc;
+			retDesc.SampleMask = UINT_MAX;
+			retDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+			retDesc.NumRenderTargets = 1;
+			retDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+			retDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+			retDesc.SampleDesc.Count = 1;
+			return CreateDirect(retDesc);
+		}
+
+		template<typename Vertex, typename VS>
+		static inline ComPtr<ID3D12PipelineState> CreateShadowmapBase3D(const ComPtr<ID3D12RootSignature>& rootSignature, D3D12_GRAPHICS_PIPELINE_STATE_DESC& retDesc) {
+			CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
+			depthStencilDesc.DepthEnable = true;
+			depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+			depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+			depthStencilDesc.StencilEnable = FALSE;
+
+			ZeroMemory(&retDesc, sizeof(retDesc));
+			retDesc.InputLayout = { Vertex::GetVertexElement(), Vertex::GetNumElements() };
+			retDesc.pRootSignature = rootSignature.Get();
+			retDesc.VS =
+			{
+				reinterpret_cast<UINT8*>(VS::GetPtr()->GetShaderComPtr()->GetBufferPointer()),
+				VS::GetPtr()->GetShaderComPtr()->GetBufferSize()
+			};
+			retDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0);
+			retDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+			retDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+			retDesc.DepthStencilState = depthStencilDesc;
 			retDesc.SampleMask = UINT_MAX;
 			retDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 			retDesc.NumRenderTargets = 0;
@@ -645,9 +690,7 @@ namespace basedx12 {
 			retDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 			retDesc.SampleDesc.Count = 1;
 			return CreateDirect(retDesc);
-*/
 		}
-
 	}
 
 

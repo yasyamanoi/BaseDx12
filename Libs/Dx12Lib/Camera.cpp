@@ -18,8 +18,8 @@ namespace basedx12 {
 		m_at(at),
 		m_up(0, 1, 0),
 		m_fovY(XM_PIDIV4),
-		m_nearPlane(1.0f),
-		m_farPlane(1000.0f)
+		m_nearPlane(0.01f),
+		m_farPlane(125.0f)
 	{
 		float w = (float)App::GetGameWidth();
 		float h = (float)App::GetGameHeight();
