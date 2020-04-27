@@ -1,10 +1,7 @@
 #pragma once
 
-//ï®óùåvéZ
-#include "physics_effects/include/physics_effects.h"
 #include "Device2D.h"
 #include "Device3D.h"
-#include "BasePhysics.h"
 #include "Behavior.h"
 #include "UpdateComp.h"
 #include "Rigidbody.h"

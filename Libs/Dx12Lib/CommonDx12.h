@@ -17,3 +17,7 @@ using namespace basedx12::bsm;
 #include "SceneBase.h"
 #include "App.h"
 #include "BasePipeline.h"
+//•¨—ŒvZ
+#include "physics_effects/include/physics_effects.h"
+#include "BasePhysics.h"
+
