@@ -111,6 +111,9 @@ namespace basedx12 {
 		bool Is3DDevice() const {
 			return m_Is3DDevice;
 		}
+		void SetGpuSlot(const wstring& key, UINT val) {
+			m_gpuSlotMap[key] = val;
+		}
 		UINT GetGpuSlotID(const wstring& key) {
 			auto it = m_gpuSlotMap.begin();
 			while (it != m_gpuSlotMap.end()) {

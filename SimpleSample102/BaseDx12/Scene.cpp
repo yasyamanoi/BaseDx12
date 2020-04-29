@@ -86,8 +86,8 @@ namespace basedx12 {
 			m_constBuffIndex,
 			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
-		//csv。RootSignature上のIDは2番
-		commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
+		//RootSignature上のb0に設定
+		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"b0"), CbvHandle);
 		commandList->SetPipelineState(m_pcConstPipelineState.Get());
 		commandList->IASetVertexBuffers(0, 1, &m_pcTriangleMesh->GetVertexBufferView());
 		commandList->DrawInstanced(3, 1, 0, 0);
@@ -166,24 +166,24 @@ namespace basedx12 {
 			m_srvIndex,
 			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
-		//srv。RootSignature上のIDは0番
-		commandList->SetGraphicsRootDescriptorTable(0, SrvHandle);
+		//RootSignature上のt0に設定
+		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"t0"), SrvHandle);
 		//Sampler
 		CD3DX12_GPU_DESCRIPTOR_HANDLE samplerHandle(
 			baseDevice->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			0,
 			0
 		);
-		//sampler。RootSignature上のIDは1番
-		commandList->SetGraphicsRootDescriptorTable(1, samplerHandle);
+		//RootSignature上のs0に設定
+		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"s0"), samplerHandle);
 		//Cbv
 		CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
 			baseDevice->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			m_constBuffIndex,
 			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
-		//csv。RootSignature上のIDは2番
-		commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
+		//RootSignature上のb0に設定
+		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"b0"), CbvHandle);
 		commandList->SetPipelineState(m_ptConstPipelineState.Get());
 		m_SkyTexture->UpdateSRAndCreateSRV(commandList);
 		commandList->IASetVertexBuffers(0, 1, &m_ptSquareMesh->GetVertexBufferView());

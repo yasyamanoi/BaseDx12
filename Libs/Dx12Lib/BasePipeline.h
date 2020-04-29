@@ -303,6 +303,11 @@ namespace basedx12 {
 			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
 			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_ALL);
 
+			auto baseDevice = App::GetBaseDevice();
+			baseDevice->SetGpuSlot(L"t0", 0);
+			baseDevice->SetGpuSlot(L"s0", 1);
+			baseDevice->SetGpuSlot(L"b0", 2);
+
 			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 			return CreateDirect(rootSignatureDesc);
@@ -324,6 +329,14 @@ namespace basedx12 {
 			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
 			rootParameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL);
 			rootParameters[4].InitAsDescriptorTable(1, &ranges[4], D3D12_SHADER_VISIBILITY_ALL);
+
+			auto baseDevice = App::GetBaseDevice();
+			baseDevice->SetGpuSlot(L"t0", 0);
+			baseDevice->SetGpuSlot(L"t1", 1);
+			baseDevice->SetGpuSlot(L"s0", 2);
+			baseDevice->SetGpuSlot(L"s1", 3);
+			baseDevice->SetGpuSlot(L"b0", 4);
+
 
 			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -349,6 +362,15 @@ namespace basedx12 {
 			rootParameters[4].InitAsDescriptorTable(1, &ranges[4], D3D12_SHADER_VISIBILITY_PIXEL);	//s1
 			rootParameters[5].InitAsDescriptorTable(1, &ranges[5], D3D12_SHADER_VISIBILITY_ALL);	//b0
 
+			auto baseDevice = App::GetBaseDevice();
+			baseDevice->SetGpuSlot(L"t0", 0);
+			baseDevice->SetGpuSlot(L"t1", 1);
+			baseDevice->SetGpuSlot(L"t2", 2);
+			baseDevice->SetGpuSlot(L"s0", 3);
+			baseDevice->SetGpuSlot(L"s1", 4);
+			baseDevice->SetGpuSlot(L"b0", 5);
+
+
 			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 			return CreateDirect(rootSignatureDesc);
@@ -372,6 +394,15 @@ namespace basedx12 {
 			rootParameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL);
 			rootParameters[4].InitAsDescriptorTable(1, &ranges[4], D3D12_SHADER_VISIBILITY_PIXEL);
 			rootParameters[5].InitAsDescriptorTable(1, &ranges[5], D3D12_SHADER_VISIBILITY_ALL);
+
+			auto baseDevice = App::GetBaseDevice();
+			baseDevice->SetGpuSlot(L"t0", 0);
+			baseDevice->SetGpuSlot(L"t1", 1);
+			baseDevice->SetGpuSlot(L"t2", 2);
+			baseDevice->SetGpuSlot(L"s0", 3);
+			baseDevice->SetGpuSlot(L"s1", 4);
+			baseDevice->SetGpuSlot(L"b0", 5);
+
 
 			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);

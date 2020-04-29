@@ -75,6 +75,7 @@ namespace basedx12 {
 
 	void FixedBox::OnDraw() {
 		SetSimpleConstants();
+		auto baseDevice = App::GetBaseDevice();
 		m_constantBuffer->Copy(m_simpleConstantsData);
 		auto Device = App::GetBaseDevice();
 		auto commandList = Device->GetCommandList();
@@ -84,21 +85,21 @@ namespace basedx12 {
 			m_srvIndex,
 			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
-		commandList->SetGraphicsRootDescriptorTable(0, SrvHandle);
+		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"t0"), SrvHandle);
 		//Sampler
 		CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
 			Device->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			0,
 			0
 		);
-		commandList->SetGraphicsRootDescriptorTable(1, SamplerHandle);
+		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"s0"), SamplerHandle);
 		//Cbv
 		CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
 			Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			m_constBuffIndex,
 			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
-		commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
+		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"b0"), CbvHandle);
 		commandList->SetPipelineState(m_pipelineState.Get());
 
 		m_SkyTexture->UpdateSRAndCreateSRV(commandList);
@@ -187,29 +188,29 @@ namespace basedx12 {
 	void MoveBox::OnDraw() {
 		SetSimpleConstants();
 		m_constantBuffer->Copy(m_simpleConstantsData);
-		auto Device = App::GetBaseDevice();
-		auto commandList = Device->GetCommandList();
+		auto baseDevice = App::GetBaseDevice();
+		auto commandList = baseDevice->GetCommandList();
 		//Srv
 		CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle(
-			Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+			baseDevice->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			m_srvIndex,
-			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
+			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 			);
-		commandList->SetGraphicsRootDescriptorTable(0, SrvHandle);
+		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"t0"), SrvHandle);
 		//Sampler
 		CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
-			Device->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+			baseDevice->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			0,
 			0
 			);
-		commandList->SetGraphicsRootDescriptorTable(1, SamplerHandle);
+		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"s0"), SamplerHandle);
 		//Cbv
 		CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(
-			Device->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+			baseDevice->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
 			m_constBuffIndex,
-			Device->GetCbvSrvUavDescriptorHandleIncrementSize()
+			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 			);
-		commandList->SetGraphicsRootDescriptorTable(2, CbvHandle);
+		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"b0"), CbvHandle);
 		commandList->SetPipelineState(m_pipelineState.Get());
 
 		m_wallTexture->UpdateSRAndCreateSRV(commandList);
