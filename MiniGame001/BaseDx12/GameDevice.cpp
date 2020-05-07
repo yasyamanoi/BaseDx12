@@ -1,6 +1,5 @@
 #include "stdafx.h"
-#include "Scene.h"
-#include "GameDevice.h"
+#include "Project.h"
 
 namespace basedx12 {
 
@@ -27,14 +26,24 @@ namespace basedx12 {
 		//コマンドキュー
 		m_commandQueue = CommandQueue::CreateDefault();
 		//スワップチェーン
-		m_swapChain = SwapChain::CreateDefault(factory,m_commandQueue, m_frameCount);
-		//フレームインデックスの初期値
+		m_swapChain = SwapChain::CreateDefault(factory, m_commandQueue, m_frameCount);
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 		// デスクプリタヒープ
 		{
 			// レンダリングターゲットビュー
 			m_rtvHeap = DescriptorHeap::CreateRtvHeap(m_frameCount);
-			m_rtvDescriptorHandleIncrementSize = GetID3D12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+			m_rtvDescriptorHandleIncrementSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+			//CbvSrvUavデスクプリタヒープ
+			//(コンスタントバッファとシェーダリソースと順序不定のアクセスビュー)
+			//CbvSrvUavデスクプリタヒープの数はGetCbvSrvUavMax()により取得する
+			m_cbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(GetCbvSrvUavMax());
+			m_cbvSrvUavDescriptorHandleIncrementSize
+			= m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			//サンプラーデスクリプタヒープ
+			m_samplerDescriptorHeap = DescriptorHeap::CreateSamplerHeap(GetSamplerMax());
+			m_samplerDescriptorHandleIncrementSize
+				= m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
 		}
 		// RTVとコマンドアロケータ
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
@@ -53,25 +62,24 @@ namespace basedx12 {
 	{
 		// ルートシグネチャー
 		{
-			//一番シンプル
-			m_rootSignature = RootSignature::CreateSimple();
+			//SrvとSmpとCbv付ルートシグネチャ
+			m_rootSignature = RootSignature::CreateSrvSmpCbv();
 		}
 		// 頂点などのリソース構築用のコマンドリスト
 		m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);
 		//シーンに各オブジェクトの構築を任せる
 		App::GetSceneBase()->OnInitAssets();
-		//コマンドリストクローズおよびキューの実行
-		ThrowIfFailed(m_commandList->Close());
-		ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
-		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
+		//コマンドラインクローズおよびキューの実行
+		CommandList::Close(m_commandList);
+		CommandList::Excute(m_commandQueue, m_commandList);
 		//同期オブジェクトおよびＧＰＵの処理待ち
 		SyncAndWaitForGpu();
 	}
 
-	//更新処理
+	//更新
 	void GameDevice::OnUpdate()
 	{
+		//シーンに更新を任せる
 		App::GetSceneBase()->OnUpdate();
 	}
 
@@ -100,27 +108,44 @@ namespace basedx12 {
 	void GameDevice::PopulateCommandList()
 	{
 		ThrowIfFailed(m_commandAllocators[m_frameIndex]->Reset());
-
 		//コマンドリストのリセット（パイプライン指定なし）
 		CommandList::Reset(m_commandAllocators[m_frameIndex], m_commandList);
 		// Set necessary state.
 		m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 		m_commandList->RSSetViewports(1, &m_viewport);
 		m_commandList->RSSetScissorRects(1, &m_scissorRect);
-		// Indicate that the back buffer will be used as a render target.
-		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorHandleIncrementSize);
+		// バックバッファを使うためのバリア
+		m_commandList->ResourceBarrier(
+			1,
+			&CD3DX12_RESOURCE_BARRIER::Transition(
+				m_renderTargets[m_frameIndex].Get(),
+				D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
+			)
+		);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
+			m_rtvHeap->GetCPUDescriptorHandleForHeapStart(),
+			m_frameIndex,
+			m_rtvDescriptorHandleIncrementSize
+		);
 		m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-
-		// Record commands.
 		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 		m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-		// シーンに個別描画を任せる
+		ID3D12DescriptorHeap* ppHeaps[] = {
+			m_cbvSrvUavDescriptorHeap.Get(),
+			m_samplerDescriptorHeap.Get() 
+		};
+		m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+		// シーンの個別描画
 		App::GetSceneBase()->OnDraw();
-		// Indicate that the back buffer will now be used to present.
-		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-
+		// フロントバッファに転送するためのバリア
+		m_commandList->ResourceBarrier(
+			1, 
+			&CD3DX12_RESOURCE_BARRIER::Transition(
+				m_renderTargets[m_frameIndex].Get(),
+				D3D12_RESOURCE_STATE_RENDER_TARGET, 
+				D3D12_RESOURCE_STATE_PRESENT
+			)
+		);
 		ThrowIfFailed(m_commandList->Close());
 	}
 

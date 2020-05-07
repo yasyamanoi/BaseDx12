@@ -47,7 +47,7 @@ namespace basedx12 {
 
 	void FixedBox::OnDraw() {
 		auto scene = App::GetTypedSceneBase<Scene>();
-		scene.SetBcConstants(
+		scene->SetBcConstants(
 			m_scale,
 			m_qt,
 			m_pos,
@@ -69,7 +69,7 @@ namespace basedx12 {
 		);
 		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"b0"), CbvHandle);
 		//パイプライステート
-		commandList->SetPipelineState(scene.GetBcPipelineState().Get());
+		commandList->SetPipelineState(scene->GetBcPipelineState().Get());
 		m_skyTexture->UpdateSRAndCreateSRV(commandList);
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList->IASetVertexBuffers(0, 1, &m_mesh->GetVertexBufferView());
@@ -135,8 +135,8 @@ namespace basedx12 {
 			m_pos
 		);
 		//ライトの位置
-		Float3 lightPos = scene.GetLightPos(0);
-		Float3 lightAt = scene.GetCamera()->GetAt();
+		Float3 lightPos = scene->GetLightPos(0);
+		Float3 lightAt = scene->GetCamera()->GetAt();
 		Float3 lightUp(0, 0, 1);
 		viewMatrix.lookatLH(lightPos, lightAt, lightUp);
 		float w = (float)App::GetGameWidth();
@@ -171,7 +171,7 @@ namespace basedx12 {
 			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"b0"), CbvHandle);
-		commandList->SetPipelineState(scene.GetShadowmapPipelineState().Get());
+		commandList->SetPipelineState(scene->GetShadowmapPipelineState().Get());
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList->IASetVertexBuffers(0, 1, &m_mesh->GetVertexBufferView());
 		commandList->IASetIndexBuffer(&m_mesh->GetIndexBufferView());
@@ -182,7 +182,7 @@ namespace basedx12 {
 
 	void MoveBox::OnDraw() {
 		auto scene = App::GetTypedSceneBase<Scene>();
-		scene.SetBcConstants(
+		scene->SetBcConstants(
 			m_scale,
 			m_qt,
 			m_pos,
@@ -206,7 +206,7 @@ namespace basedx12 {
 			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"b0"), CbvHandle);
-		commandList->SetPipelineState(scene.GetBcPipelineState().Get());
+		commandList->SetPipelineState(scene->GetBcPipelineState().Get());
 		m_wallTexture->UpdateSRAndCreateSRV(commandList);
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList->IASetVertexBuffers(0, 1, &m_mesh->GetVertexBufferView());
@@ -323,20 +323,22 @@ namespace basedx12 {
 		auto baseDevice = App::GetBaseDevice();
 		//サンプラーは共有
 		{
-			//テスクチャ描画用サンプラー
-			CD3DX12_CPU_DESCRIPTOR_HANDLE SamplerDescriptorHandle(
-				baseDevice->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-				0,
-				baseDevice->GetSamplerDescriptorHandleIncrementSize()
-			);
-			Sampler::CreateSampler(SamplerState::LinearClamp, SamplerDescriptorHandle);
 			//シャドウ描画用サンプラー
+			m_shadowSamplerIndex = baseDevice->GetSamplerNextIndex();
 			CD3DX12_CPU_DESCRIPTOR_HANDLE ShadowSamplerDescriptorHandle(
 				baseDevice->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-				1,
+				m_shadowSamplerIndex,
 				baseDevice->GetSamplerDescriptorHandleIncrementSize()
 			);
 			Sampler::CreateSampler(SamplerState::ComparisonLinear, ShadowSamplerDescriptorHandle);
+			//テスクチャ描画用サンプラー
+			m_sceneSamplerIndex = baseDevice->GetSamplerNextIndex();
+			CD3DX12_CPU_DESCRIPTOR_HANDLE SamplerDescriptorHandle(
+				baseDevice->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+				m_sceneSamplerIndex,
+				baseDevice->GetSamplerDescriptorHandleIncrementSize()
+			);
+			Sampler::CreateSampler(SamplerState::LinearClamp, SamplerDescriptorHandle);
 		}
 		//パイプラインは共有
 		{
@@ -372,20 +374,20 @@ namespace basedx12 {
 		if (index == 1) {
 			auto baseDevice = App::GetBaseDevice();
 			auto commandList = baseDevice->GetCommandList();
-			//Sampler（s1）
-			CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
-				baseDevice->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-				0,
-				0
-			);
-			commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"s1"), SamplerHandle);
 			//Sampler(s0)
 			CD3DX12_GPU_DESCRIPTOR_HANDLE ShadowSamplerHandle(
 				baseDevice->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-				1,
+				m_shadowSamplerIndex,
 				baseDevice->GetSamplerDescriptorHandleIncrementSize()
 			);
 			commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"s0"), ShadowSamplerHandle);
+			//Sampler（s1）
+			CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle(
+				baseDevice->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+				m_sceneSamplerIndex,
+				baseDevice->GetSamplerDescriptorHandleIncrementSize()
+			);
+			commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"s1"), SamplerHandle);
 			//Srv (t0)
 			CD3DX12_GPU_DESCRIPTOR_HANDLE ShadowSrvHandle(
 				baseDevice->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),

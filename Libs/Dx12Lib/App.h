@@ -28,11 +28,11 @@ namespace basedx12 {
 		static const wstring& GetRelativeShadersPath() { return m_wstrRelativeShadersPath; }
 		static const wstring& GetRelativeAssetsPath() { return m_wstrRelativeAssetsPath; }
 
-		static SceneBase& GetSceneBase() {
-			return *m_pSceneBase;
+		static SceneBase* GetSceneBase() {
+			return m_pSceneBase;
 		}
 		template <typename T>
-		static T& GetTypedSceneBase() {
+		static T* GetTypedSceneBase() {
 			T* ret = dynamic_cast<T*>(m_pSceneBase);
 			if (!ret) {
 				throw BaseException(
@@ -40,7 +40,7 @@ namespace basedx12 {
 					L"App::GetTypedSceneBase()"
 				);
 			}
-			return *ret;
+			return ret;
 		}
 		static shared_ptr<BaseDevice>& GetBaseDevice() {
 			return m_baseDevice;

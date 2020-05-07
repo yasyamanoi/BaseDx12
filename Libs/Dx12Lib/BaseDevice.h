@@ -10,13 +10,21 @@ namespace basedx12 {
 		//コンスタントバッファとシェーダーリソースのMAXサイズ
 		const UINT m_cbvSrvUavMax;
 		UINT m_cbvSrvUavSendIndex;
+		//サンプラーのMAXサイズ
+		const UINT m_samplerMax;
+		UINT m_samplerSendIndex;
+
 	protected:
-		BaseDevice(UINT frameCount, UINT cbvSrvUavMax = 1024);
+		BaseDevice(UINT frameCount, UINT cbvSrvUavMax = 2048, UINT samplerMax = 100);
 		virtual ~BaseDevice();
 	public:
 		UINT GetCbvSrvUavNextIndex();
+		UINT GetSamplerNextIndex();
 		UINT GetCbvSrvUavMax() const {
 			return m_cbvSrvUavMax;
+		}
+		UINT GetSamplerMax() const {
+			return m_samplerMax;
 		}
 		UINT GetFrameCount()const {
 			return m_frameCount;

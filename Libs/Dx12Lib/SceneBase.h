@@ -24,6 +24,18 @@ namespace basedx12 {
 			ptr->OnInit();
 			return ptr;
 		}
+		void ConvertVertex(const vector<VertexPositionNormalTexture>& vertices,
+			vector<VertexPositionColor>& new_pc_vertices
+		);
+		void ConvertVertex(const vector<VertexPositionNormalTexture>& vertices,
+			vector<VertexPositionNormal>& new_pn_vertices
+		);
+		void ConvertVertex(const vector<VertexPositionNormalTexture>& vertices,
+			vector<VertexPositionTexture>& new_pt_vertices
+		);
+		void ConvertVertex(const vector<VertexPositionNormalTexture>& vertices,
+			vector<VertexPositionNormalTangentTexture>& new_pntnt_vertices
+		);
 		virtual void OnInitAssets() = 0;
 		virtual void OnDrawPath(UINT index) {}
 	};

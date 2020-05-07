@@ -48,8 +48,8 @@ namespace basedx12 {
 			m_cbvSrvUavDescriptorHeap = DescriptorHeap::CreateCbvSrvUavHeap(GetCbvSrvUavMax());
 			m_cbvSrvUavDescriptorHandleIncrementSize
 				= m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-			//サンプラーデスクリプタヒープ通常と影用
-			m_samplerDescriptorHeap = DescriptorHeap::CreateSamplerHeap(2);
+			//サンプラーデスクリプタヒープ
+			m_samplerDescriptorHeap = DescriptorHeap::CreateSamplerHeap(GetSamplerMax());
 			m_samplerDescriptorHandleIncrementSize
 				= m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 		}
@@ -99,7 +99,7 @@ namespace basedx12 {
 		// 頂点などのリソース構築用のコマンドリスト
 		m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);
 		//シーンに各オブジェクトの構築を任せる
-		App::GetSceneBase().OnInitAssets();
+		App::GetSceneBase()->OnInitAssets();
 		//コマンドラインクローズおよびキューの実行
 		CommandList::Close(m_commandList);
 		CommandList::Excute(m_commandQueue, m_commandList);
@@ -111,7 +111,7 @@ namespace basedx12 {
 	void GameDevice::OnUpdate()
 	{
 		//シーンに更新を任せる
-		App::GetSceneBase().OnUpdate();
+		App::GetSceneBase()->OnUpdate();
 	}
 
 	// 描画処理
@@ -160,7 +160,7 @@ namespace basedx12 {
 		m_commandList->OMSetRenderTargets(0, nullptr, FALSE, &shadowDsvHandle);
 		m_commandList->ClearDepthStencilView(m_shadowDsvHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 		//シャドウマップパス
-		App::GetSceneBase().OnDrawPath(0);
+		App::GetSceneBase()->OnDrawPath(0);
 		//シャドウマップを読めるようにする
 		m_commandList->ResourceBarrier(
 			1,
@@ -212,7 +212,7 @@ namespace basedx12 {
 		//ID3D12DescriptorHeap* ppHeaps[] = { m_cbvSrvUavDescriptorHeap.Get(),m_samplerDescriptorHeap.Get() };
 		//m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 		// シーンの個別描画
-		App::GetSceneBase().OnDrawPath(1);
+		App::GetSceneBase()->OnDrawPath(1);
 		// フロントバッファに転送するためのバリア
 		m_commandList->ResourceBarrier(1,
 			&CD3DX12_RESOURCE_BARRIER::Transition(

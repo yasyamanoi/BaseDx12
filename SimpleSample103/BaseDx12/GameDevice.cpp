@@ -72,7 +72,7 @@ namespace basedx12 {
 		// 頂点などのリソース構築用のコマンドリスト
 		m_commandList = CommandList::CreateSimple(m_commandAllocators[m_frameIndex]);
 		//シーンに各オブジェクトの構築を任せる
-		App::GetSceneBase().OnInitAssets();
+		App::GetSceneBase()->OnInitAssets();
 		//コマンドラインクローズおよびキューの実行
 		CommandList::Close(m_commandList);
 		CommandList::Excute(m_commandQueue, m_commandList);
@@ -84,7 +84,7 @@ namespace basedx12 {
 	void GameDevice::OnUpdate()
 	{
 		//シーンに更新を任せる
-		App::GetSceneBase().OnUpdate();
+		App::GetSceneBase()->OnUpdate();
 	}
 
 	// 描画処理
@@ -140,7 +140,7 @@ namespace basedx12 {
 		ID3D12DescriptorHeap* ppHeaps[] = { m_cbvSrvUavDescriptorHeap.Get(),m_samplerDescriptorHeap.Get() };
 		m_commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 		// シーンの個別描画
-		App::GetSceneBase().OnDraw();
+		App::GetSceneBase()->OnDraw();
 		// フロントバッファに転送するためのバリア
 		m_commandList->ResourceBarrier(1,
 			&CD3DX12_RESOURCE_BARRIER::Transition(

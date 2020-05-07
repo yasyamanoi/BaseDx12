@@ -48,7 +48,7 @@ namespace basedx12 {
 
 	void FixedBox::OnDraw() {
 		auto scene = App::GetTypedSceneBase<Scene>();
-		scene.SetShadowSceneConstants(
+		scene->SetShadowSceneConstants(
 			m_scale,
 			m_qt,
 			m_pos,
@@ -71,7 +71,7 @@ namespace basedx12 {
 		);
 		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"b0"), CbvHandle);
 		//パイプライステート
-		commandList->SetPipelineState(scene.GetSceneShadowPipelineState().Get());
+		commandList->SetPipelineState(scene->GetSceneShadowPipelineState().Get());
 		m_SkyTexture->UpdateSRAndCreateSRV(commandList);
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList->IASetVertexBuffers(0, 1, &m_mesh->GetVertexBufferView());
@@ -137,8 +137,8 @@ namespace basedx12 {
 			m_pos
 		);
 		//ライトの位置
-		Float3 lightPos = scene.GetLightPos();
-		Float3 lightAt = scene.GetCamera()->GetAt();
+		Float3 lightPos = scene->GetLightPos();
+		Float3 lightAt = scene->GetCamera()->GetAt();
 		Float3 lightUp(0, 0, 1);
 		viewMatrix.lookatLH(lightPos, lightAt, lightUp);
 		float w = (float)App::GetGameWidth();
@@ -173,7 +173,7 @@ namespace basedx12 {
 			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"b0"), CbvHandle);
-		commandList->SetPipelineState(scene.GetShadowmapPipelineState().Get());
+		commandList->SetPipelineState(scene->GetShadowmapPipelineState().Get());
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList->IASetVertexBuffers(0, 1, &m_mesh->GetVertexBufferView());
 		commandList->IASetIndexBuffer(&m_mesh->GetIndexBufferView());
@@ -184,7 +184,7 @@ namespace basedx12 {
 
 	void MoveBox::OnDraw() {
 		auto scene = App::GetTypedSceneBase<Scene>();
-		scene.SetShadowSceneConstants(
+		scene->SetShadowSceneConstants(
 			m_scale,
 			m_qt,
 			m_pos,
@@ -207,7 +207,7 @@ namespace basedx12 {
 			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 			);
 		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"b0"), CbvHandle);
-		commandList->SetPipelineState(scene.GetSceneShadowPipelineState().Get());
+		commandList->SetPipelineState(scene->GetSceneShadowPipelineState().Get());
 		m_wallTexture->UpdateSRAndCreateSRV(commandList);
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList->IASetVertexBuffers(0, 1, &m_mesh->GetVertexBufferView());

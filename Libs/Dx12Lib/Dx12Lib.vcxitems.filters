@@ -638,5 +638,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)BasePhysics.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SceneBase.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

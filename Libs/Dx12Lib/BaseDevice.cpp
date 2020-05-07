@@ -2,7 +2,7 @@
 
 namespace basedx12 {
 
-	BaseDevice::BaseDevice(UINT frameCount, UINT cbvSrvUavMax) :
+	BaseDevice::BaseDevice(UINT frameCount, UINT cbvSrvUavMax, UINT samplerMax) :
 		m_frameCount(frameCount),
 		m_fenceValues(m_frameCount),
 		m_renderTargets(m_frameCount),
@@ -11,7 +11,9 @@ namespace basedx12 {
 		m_viewport(0.0f, 0.0f, static_cast<float>(App::GetGameWidth()), static_cast<float>(App::GetGameHeight())),
 		m_scissorRect(0, 0, static_cast<LONG>(App::GetGameWidth()), static_cast<LONG>(App::GetGameHeight())),
 		m_cbvSrvUavMax(cbvSrvUavMax),
-		m_cbvSrvUavSendIndex(0)
+		m_cbvSrvUavSendIndex(0),
+		m_samplerMax(samplerMax),
+		m_samplerSendIndex(0)
 	{
 		m_aspectRatio = static_cast<float>(App::GetGameWidth()) / static_cast<float>(App::GetGameHeight());
 	}
@@ -27,6 +29,17 @@ namespace basedx12 {
 		}
 		return m_cbvSrvUavSendIndex++;
 	}
+
+	UINT BaseDevice::GetSamplerNextIndex() {
+		if (m_samplerSendIndex >= m_samplerMax) {
+			throw BaseException(
+				L"これ以上サンプラーは増やせません。\n",
+				L"Default2DDivece::GetSamplerNextIndex()"
+			);
+		}
+		return m_samplerSendIndex++;
+	}
+
 
 
 

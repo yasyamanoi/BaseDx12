@@ -122,6 +122,10 @@ namespace basedx12 {
 		ComPtr<ID3D12PipelineState> m_shadowmapPipelineState;
 		//Basicパイプライン（影あり）
 		ComPtr<ID3D12PipelineState> m_bcSceneShadowPipelineState;
+		//影用サンプラーのインデックス
+		UINT m_shadowSamplerIndex;
+		//通常描画用サンプラーのインデックス
+		UINT m_sceneSamplerIndex;
 		//カメラ
 		shared_ptr<Camera> m_camera;
 		//ライト
