@@ -139,14 +139,18 @@ namespace basedx12 {
 		}
 		OBB GetOBB() const;
 		OBB GetBeforeOBB() const;
-		DrawData& GetDrawData() {
-			return m_drawData;
-		}
 		void SetToBefore();
+		void SetDirtyflag(bool b);
 		virtual void OnInit() =0;
 		virtual void OnUpdate() = 0;
 		virtual void OnDraw() = 0;
 		virtual void OnCollisionEnter(BaseSquare* other) {}
+		virtual Mat4x4 GetWorldMatrix()const;
+		virtual Mat4x4 GetBeforeWorldMatrix()const;
+		virtual Float3 GetWorldPosition() const;
+		virtual void SetWorldPosition(const Float3& pos);
+		virtual Float3 GetWorldVelocity() const;
+		virtual void SetWorldVelocity(const Float3& velo);
 	};
 
 

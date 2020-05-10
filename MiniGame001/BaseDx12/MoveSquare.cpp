@@ -22,6 +22,7 @@ namespace basedx12 {
 		//DrawDataŠÖ˜A
 		{
 			SetInitDrawData();
+			m_drawData.m_velocity = Float3(-120.0f, 0, 0);
 			if (UpdateDrawMatrix()) {
 				UpdateConstdata();
 			}
@@ -45,9 +46,9 @@ namespace basedx12 {
 
 	void MoveSquare::OnUpdate() {
 		float elapsedTime = App::GetElapsedTime();
-		m_drawData.m_pos.x += m_MoveSpeed * elapsedTime;
+		m_drawData.m_pos.x += m_drawData.m_velocity.x * elapsedTime;
 		float halfW = static_cast<float>(App::GetGameWidth()) / 2.0f;
-		halfW += widthMargin;
+		halfW += m_widthMargin;
 		if (abs(m_drawData.m_pos.x) >= halfW) {
 			m_drawData.m_pos.x *= -1.0f;
 		}
@@ -60,7 +61,7 @@ namespace basedx12 {
 	void MoveSquare::OnCollisionEnter(BaseSquare* other) {
 		auto ptr = dynamic_cast<WallSquare*>(other);
 		if (ptr) {
-			m_MoveSpeed *= -1.0f;
+			m_drawData.m_velocity.x *= -1.0f;
 		}
 	}
 

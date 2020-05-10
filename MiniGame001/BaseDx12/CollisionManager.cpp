@@ -145,11 +145,7 @@ namespace basedx12 {
 					auto rightBefore = m_objectVec[j]->GetBeforeOBB();
 					auto left = m_objectVec[i]->GetOBB();
 					auto right = m_objectVec[j]->GetOBB();
-
-					auto& leftdata = m_objectVec[i]->GetDrawData();
-					auto& rightdata = m_objectVec[j]->GetDrawData();
-
-					Float3 spanVelocity = leftdata.m_velocity - rightdata.m_velocity;
+					Float3 spanVelocity = m_objectVec[i]->GetWorldVelocity() - m_objectVec[j]->GetWorldVelocity();
 					float hitTime = 0;
 					if (HitTest::CollisionTestObbObb(leftBefore, spanVelocity, rightBefore, 0, elapsedTime, hitTime)) {
 
@@ -157,10 +153,10 @@ namespace basedx12 {
 						pair.m_left = m_objectVec[i];
 						pair.m_right = m_objectVec[j];
 						OBB leftChkObb = leftBefore;
-						leftChkObb.m_Center += leftdata.m_velocity * hitTime;
+						leftChkObb.m_Center += m_objectVec[i]->GetWorldVelocity() * hitTime;
 
 						OBB rightChkObb = rightBefore;
-						rightChkObb.m_Center += rightdata.m_velocity * hitTime;
+						rightChkObb.m_Center += m_objectVec[j]->GetWorldVelocity() * hitTime;
 
 						hitTime = elapsedTime - hitTime;
 
@@ -193,8 +189,9 @@ namespace basedx12 {
 		for (auto& v : m_pairVec) {
 			if (!v.m_left->IsFixed()) {
 				//拘束の解消
-				Float3 srcCenter = v.m_left->GetDrawData().m_pos;
-				Float3 destCenter = v.m_right->GetDrawData().m_pos;
+				Float3 srcCenter = v.m_left->GetWorldPosition();
+
+				Float3 destCenter = v.m_right->GetWorldPosition();
 				Float3 destMoveVec = destCenter - v.m_hitMomentCenterRight;
 				Float3 srcLocalVec = srcCenter - v.m_hitMomentCenterLeft - destMoveVec;
 				float srcV = bsm::dot(srcLocalVec, v.m_normalLeft);
@@ -207,16 +204,16 @@ namespace basedx12 {
 					//Srcのエスケープ
 					srcCenter += v.m_normalLeft * escapeLen;
 					srcCenter.floor(3);
-					v.m_left->GetDrawData().m_pos = srcCenter;
+					v.m_left->SetWorldPosition(srcCenter);
 				}
-				v.m_left->GetDrawData().m_dirtyflag = true;
+				v.m_left->SetDirtyflag(true);
 				//拘束の解消後の速度は0
-				v.m_left->GetDrawData().m_velocity = Float3(0);
+				v.m_left->SetWorldVelocity(Float3(0));
 			}
 			if (!v.m_right->IsFixed()) {
 				//拘束の解消
-				Float3 srcCenter = v.m_right->GetDrawData().m_pos;
-				Float3 destCenter = v.m_left->GetDrawData().m_pos;
+				Float3 srcCenter = v.m_right->GetWorldPosition();
+				Float3 destCenter = v.m_left->GetWorldPosition();
 				Float3 destMoveVec = destCenter - v.m_hitMomentCenterLeft;
 				Float3 srcLocalVec = srcCenter - v.m_hitMomentCenterRight -destMoveVec;
 				float srcV = bsm::dot(srcLocalVec, v.m_normalRight);
@@ -229,20 +226,18 @@ namespace basedx12 {
 					//Srcのエスケープ
 					srcCenter += v.m_normalRight * escapeLen;
 					srcCenter.floor(3);
-					v.m_right->GetDrawData().m_pos = srcCenter;
+					v.m_right->SetWorldPosition(srcCenter);
 				}
-				v.m_right->GetDrawData().m_dirtyflag = true;
+				v.m_right->SetDirtyflag(true);
 				//拘束の解消後の速度は0
-				v.m_right->GetDrawData().m_velocity = Float3(0);
+				v.m_right->SetWorldVelocity(Float3(0));
 			}
 		}
-
 		//各オブジェクトに衝突があったことをメッセージする
 		for (auto& v : m_tempPairVec) {
 			v.m_left->OnCollisionEnter(v.m_right);
 			v.m_right->OnCollisionEnter(v.m_left);
 		}
-
 	}
 
 }

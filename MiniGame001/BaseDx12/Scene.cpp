@@ -53,7 +53,7 @@ namespace basedx12 {
 					break;
 					case CharaType::MoveSquare:
 						m_moveSquareVec.push_back(MoveSquare(v));
-						break;
+					break;
 					case CharaType::ItemSquare:
 						m_itemSquareVec.push_back(ItemSquare(v));
 						break;

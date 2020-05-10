@@ -84,25 +84,13 @@ namespace basedx12 {
 	}
 
 	OBB BaseSquare::GetOBB()const {
-		Mat4x4 world;
-		world.affineTransformation(
-			m_drawData.m_scale,
-			m_drawData.m_pivot,
-			m_drawData.m_qt,
-			m_drawData.m_pos
-		);
+		Mat4x4 world = GetWorldMatrix();
 		OBB obb(Float3(1.0), world);
 		return obb;
 	}
 
 	OBB BaseSquare::GetBeforeOBB() const {
-		Mat4x4 world;
-		world.affineTransformation(
-			m_drawData.m_beforeScale,
-			m_drawData.m_pivot,
-			m_drawData.m_beforeQt,
-			m_drawData.m_beforePos
-		);
+		Mat4x4 world = GetBeforeWorldMatrix();
 		OBB obb(Float3(1.0), world);
 		return obb;
 
@@ -116,6 +104,50 @@ namespace basedx12 {
 		m_drawData.m_beforeQt = m_drawData.m_qt;
 		m_drawData.m_beforePos = m_drawData.m_pos;
 	}
+
+	void BaseSquare::SetDirtyflag(bool b) {
+		m_drawData.m_dirtyflag = b;
+	}
+
+
+	Mat4x4 BaseSquare::GetWorldMatrix()const {
+		Mat4x4 world;
+		world.affineTransformation(
+			m_drawData.m_scale,
+			m_drawData.m_pivot,
+			m_drawData.m_qt,
+			m_drawData.m_pos
+		);
+		return world;
+	}
+
+	Mat4x4 BaseSquare::GetBeforeWorldMatrix()const {
+		Mat4x4 world;
+		world.affineTransformation(
+			m_drawData.m_beforeScale,
+			m_drawData.m_pivot,
+			m_drawData.m_beforeQt,
+			m_drawData.m_beforePos
+		);
+		return world;
+	}
+
+	Float3 BaseSquare::GetWorldPosition() const {
+		return m_drawData.m_pos;
+	}
+	void BaseSquare::SetWorldPosition(const Float3& pos) {
+		m_drawData.m_pos = pos;
+		m_drawData.m_dirtyflag = true;
+	}
+
+	Float3 BaseSquare::GetWorldVelocity() const {
+		return m_drawData.m_velocity;
+	}
+	void BaseSquare::SetWorldVelocity(const Float3& velo) {
+		m_drawData.m_velocity = velo;
+	}
+
+
 
 
 

@@ -8,7 +8,8 @@ namespace basedx12 {
 		const float m_speedParam = 250.0f;
 		const float m_jumpVelocity = 500.0f;
 		const float m_onObjectChkParam = 20.0f;
-		const float widthMargin = 32.0f;
+		const float m_widthMargin = 16.0f;
+		const float m_moveSquareHalfWidth = 80.0f;
 		//ステートマシーン
 		unique_ptr< StateMachine<Player> >  m_stateMachine;
 		//PositionTextureの四角形メッシュ
@@ -39,6 +40,8 @@ namespace basedx12 {
 		virtual void OnUpdate()override;
 		virtual void OnDraw() override;
 		virtual void OnCollisionEnter(BaseSquare* other) override;
+
+
 		//Aボタン
 		void OnPushA();
 
@@ -49,6 +52,7 @@ namespace basedx12 {
 		void ChkAndChangeOnObject();
 		void SetExcludeObject();
 		void ResetExcludeObject();
+
 
 	};
 

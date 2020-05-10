@@ -42,10 +42,11 @@ namespace basedx12 {
 	}
 
 	void Player::UpdateConstdata() {
+		Mat4x4 world = GetWorldMatrix();
 		m_spriteConstData = {};
 		m_spriteConstData.diffuse = Float4(1.0f);
 		m_spriteConstData.emissive = Float4(0.0f);
-		m_spriteConstData.worldProj = m_drawData.m_world;
+		m_spriteConstData.worldProj = world;
 		m_spriteConstData.worldProj *= m_drawData.m_proj;
 		m_constantBuffer->Copy(m_spriteConstData);
 	}
@@ -59,15 +60,33 @@ namespace basedx12 {
 
 	void Player::ApplyPotision() {
 		float elapsedTime = App::GetElapsedTime();
+		if (m_onObject) {
+			m_drawData.m_pos += m_onObject->GetWorldVelocity() * elapsedTime;
+		}
 		m_drawData.m_pos += m_drawData.m_velocity * elapsedTime;
 		m_drawData.m_dirtyflag = true;
 
 		float halfW = static_cast<float>(App::GetGameWidth()) / 2.0f;
-		halfW += widthMargin;
-		if (abs(m_drawData.m_pos.x) >= halfW) {
-			m_drawData.m_pos.x *= -1.0f;
+		float halfWEx = halfW + m_widthMargin;
+		if (abs(m_drawData.m_pos.x) >= halfWEx) {
+			auto ptr = dynamic_cast<MoveSquare*>(m_onObject);
+			if (ptr) {
+				OBB myOBB = GetOBB();
+				OBB onOBB = m_onObject->GetOBB();
+				myOBB.m_Center.y -= m_onObjectChkParam;
+				if (!HitTest::OBB_OBB(myOBB, onOBB)) {
+					if (m_drawData.m_pos.x < 0.0f) {
+						m_drawData.m_pos.x = halfW + m_moveSquareHalfWidth;
+					}
+					else {
+						m_drawData.m_pos.x = -halfW - m_moveSquareHalfWidth;
+					}
+				}
+			}
+			else {
+				m_drawData.m_pos.x *= -1.0f;
+			}
 		}
-
 	}
 
 	void Player::SetExcludeObject() {
@@ -88,6 +107,7 @@ namespace basedx12 {
 
 
 	void Player::ApplyControlers() {
+		float elapsedTime = App::GetElapsedTime();
 		auto cntlStats = App::GetControlers();
 		if (cntlStats[0].bConnected) {
 			float moveX = cntlStats[0].fThumbLX;
@@ -107,6 +127,7 @@ namespace basedx12 {
 		}
 	}
 
+
 	void Player::OnUpdate() {
 		//コントローラチェックして入力があればコマンド呼び出し
 		m_inputHandler.PushHandle(this);
@@ -120,7 +141,6 @@ namespace basedx12 {
 		if (m_stateMachine->GetCurrentState() == PlayerOnObjState::Instance()) {
 			m_drawData.m_velocity.y += m_jumpVelocity;
 			m_stateMachine->ChangeState(PlayerJumpState::Instance());
-
 		}
 	}
 
@@ -132,6 +152,7 @@ namespace basedx12 {
 			m_stateMachine->ChangeState(PlayerOnObjState::Instance());
 		}
 	}
+
 
 	void Player::OnDraw() {
 		auto baseDevice = App::GetBaseDevice();
