@@ -29,7 +29,7 @@ namespace basedx12 {
 		bool IsPairChk(BaseSquare* left, BaseSquare* right);
 		bool IsTempPairChk(BaseSquare* left, BaseSquare* right);
 		bool IsExcludeChk(BaseSquare* left, BaseSquare* right);
-		void MakePair(BaseSquare* leftPtr,BaseSquare* rightPtr,float hitTime);
+		CollitionPair MakePair(BaseSquare* leftPtr,BaseSquare* rightPtr,float hitTime);
 		void TestCollision();
 		void EscapeCollision();
 		void MessageCollision();

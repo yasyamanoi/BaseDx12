@@ -60,12 +60,17 @@ namespace basedx12 {
 
 	void Player::ApplyPotision() {
 		float elapsedTime = App::GetElapsedTime();
+		Float3 relativePos(0.0f);
 		if (m_onObject) {
 			m_drawData.m_pos += m_onObject->GetWorldVelocity() * elapsedTime;
 		}
 		m_drawData.m_pos += m_drawData.m_velocity * elapsedTime;
 		m_drawData.m_dirtyflag = true;
+		if (m_onObject) {
+			relativePos = m_drawData.m_pos - m_onObject->GetWorldPosition();
+		}
 
+		//ステージ外に出たときの処理
 		float halfW = static_cast<float>(App::GetGameWidth()) / 2.0f;
 		float halfWEx = halfW + m_widthMargin;
 		if (abs(m_drawData.m_pos.x) >= halfWEx) {
@@ -73,8 +78,10 @@ namespace basedx12 {
 			if (ptr) {
 				OBB myOBB = GetOBB();
 				OBB onOBB = m_onObject->GetOBB();
+
 				myOBB.m_Center.y -= m_onObjectChkParam;
 				if (!HitTest::OBB_OBB(myOBB, onOBB)) {
+//					m_drawData.m_pos.x = m_onObject->GetWorldPosition().x + relativePos.x;
 					if (m_drawData.m_pos.x < 0.0f) {
 						m_drawData.m_pos.x = halfW + m_moveSquareHalfWidth;
 					}

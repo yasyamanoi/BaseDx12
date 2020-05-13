@@ -154,7 +154,7 @@ namespace basedx12 {
 		}
 	}
 
-	void CollisionManager::MakePair(BaseSquare* leftPtr,BaseSquare* rightPtr, float hitTime) {
+	CollitionPair CollisionManager::MakePair(BaseSquare* leftPtr,BaseSquare* rightPtr, float hitTime) {
 		auto leftBefore = leftPtr->GetBeforeOBB();
 		auto rightBefore = rightPtr->GetBeforeOBB();
 
@@ -195,6 +195,7 @@ namespace basedx12 {
 		}
 		//まずはテンポラリに追加
 		m_tempPairVec.push_back(pair);
+		return pair;
 	}
 
 
@@ -204,6 +205,7 @@ namespace basedx12 {
 		m_tempPairVec.clear();
 		for (int i = 0; i < m_objectVec.size(); i++) {
 			auto playerPtr = dynamic_cast<Player*>(m_objectVec[i]);
+			//プレイヤー以外は判定なし
 			if (!playerPtr) {
 				continue;
 			}
@@ -225,7 +227,10 @@ namespace basedx12 {
 					Float3 spanVelocity = m_objectVec[i]->GetWorldVelocity() - m_objectVec[j]->GetWorldVelocity();
 					float hitTime = 0;
 					if (HitTest::CollisionTestObbObbWithEpsilon(leftBefore, spanVelocity, rightBefore,0.01f, 0, elapsedTime, hitTime)) {
-						MakePair(m_objectVec[i], m_objectVec[j], hitTime);
+						auto pair = MakePair(m_objectVec[i], m_objectVec[j], hitTime);
+						Float3 velo = m_objectVec[i]->GetWorldVelocity();
+						velo.slide(pair.m_normalLeft);
+						m_objectVec[i]->SetWorldVelocity(velo);
 					}
 				}
 			}
@@ -253,18 +258,10 @@ namespace basedx12 {
 						escapeLen *= 0.5f;
 					}
 					//Srcのエスケープ
-					if (v.m_normalLeft.x > 0) {
-						srcCenter += v.m_normalLeft * escapeLen * 2.0f;
-					}
-					else {
-						srcCenter += v.m_normalLeft * escapeLen * 2.0f;
-					}
-					srcCenter.floor(0);
+					srcCenter += v.m_normalLeft * escapeLen;
 					v.m_left->SetWorldPosition(srcCenter);
 				}
 				v.m_left->SetDirtyflag(true);
-				//拘束の解消後の速度は0
-				v.m_left->SetWorldVelocity(Float3(0));
 			}
 		}
 	}
