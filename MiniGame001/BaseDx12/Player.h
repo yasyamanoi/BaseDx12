@@ -6,7 +6,7 @@ namespace basedx12 {
 	class Player : public BaseSquare {
 
 		const float m_speedParam = 250.0f;
-		const float m_jumpVelocity = 530.0f;
+		const float m_jumpVelocity = 500.0f;
 		const float m_onObjectChkParam = 20.0f;
 		const float m_widthMargin = 16.0f;
 		const float m_moveSquareHalfWidth = 80.0f;
@@ -47,6 +47,7 @@ namespace basedx12 {
 
 		void ApplyGravity();
 		void ApplyPotision();
+		void ApplyOutStage();
 		void ApplyControlers();
 
 		void ChkAndChangeOnObject();

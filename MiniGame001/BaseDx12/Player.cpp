@@ -60,34 +60,30 @@ namespace basedx12 {
 
 	void Player::ApplyPotision() {
 		float elapsedTime = App::GetElapsedTime();
-		Float3 relativePos(0.0f);
 		if (m_onObject) {
 			m_drawData.m_pos += m_onObject->GetWorldVelocity() * elapsedTime;
 		}
 		m_drawData.m_pos += m_drawData.m_velocity * elapsedTime;
 		m_drawData.m_dirtyflag = true;
-		if (m_onObject) {
-			relativePos = m_drawData.m_pos - m_onObject->GetWorldPosition();
-		}
 
+	}
+
+	void Player::ApplyOutStage() {
 		//ステージ外に出たときの処理
 		float halfW = static_cast<float>(App::GetGameWidth()) / 2.0f;
 		float halfWEx = halfW + m_widthMargin;
 		if (abs(m_drawData.m_pos.x) >= halfWEx) {
 			auto ptr = dynamic_cast<MoveSquare*>(m_onObject);
 			if (ptr) {
+				static Float3 relativePos(0.0f);
 				OBB myOBB = GetOBB();
 				OBB onOBB = m_onObject->GetOBB();
-
 				myOBB.m_Center.y -= m_onObjectChkParam;
 				if (!HitTest::OBB_OBB(myOBB, onOBB)) {
-//					m_drawData.m_pos.x = m_onObject->GetWorldPosition().x + relativePos.x;
-					if (m_drawData.m_pos.x < 0.0f) {
-						m_drawData.m_pos.x = halfW + m_moveSquareHalfWidth;
-					}
-					else {
-						m_drawData.m_pos.x = -halfW - m_moveSquareHalfWidth;
-					}
+					m_drawData.m_pos = m_onObject->GetWorldPosition() + relativePos;
+				}
+				else {
+					relativePos = m_drawData.m_pos - m_onObject->GetWorldPosition();
 				}
 			}
 			else {
@@ -95,6 +91,7 @@ namespace basedx12 {
 			}
 		}
 	}
+
 
 	void Player::SetExcludeObject() {
 		if (m_onObject) {
@@ -204,6 +201,7 @@ namespace basedx12 {
 		owner->ApplyGravity();
 		owner->ApplyControlers();
 		owner->ApplyPotision();
+		owner->ApplyOutStage();
 	}
 
 	void PlayerJumpState::Exit(Player* owner) {
@@ -221,6 +219,7 @@ namespace basedx12 {
 	void PlayerOnObjState::Execute(Player* owner) {
 		owner->ApplyControlers();
 		owner->ApplyPotision();
+		owner->ApplyOutStage();
 		owner->ChkAndChangeOnObject();
 	}
 

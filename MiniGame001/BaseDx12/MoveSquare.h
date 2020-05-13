@@ -4,7 +4,7 @@
 namespace basedx12 {
 
 	class MoveSquare : public BaseSquare {
-		const float m_widthMargin = 64.0f + 16.0f;
+		const float m_widthMargin = 64.0f + 48.0f;
 		//PositionTextureの四角形メッシュ
 		shared_ptr<BaseMesh> m_ptSquareMesh;
 		//テクスチャ
