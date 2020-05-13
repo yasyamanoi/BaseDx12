@@ -118,10 +118,9 @@ namespace basedx12 {
 
 	void Player::ChkAndChangeOnObject() {
 		if (m_onObject) {
-			OBB myOBB = GetOBB();
-			OBB onOBB = m_onObject->GetOBB();
-			myOBB.m_Center.y -= m_onObjectChkParam;
-			if (!HitTest::OBB_OBB(myOBB, onOBB)) {
+			auto scene = App::GetTypedSceneBase<Scene>();
+			auto manager = scene->GetCollisionManager();
+			if (!manager->IsOnObject(this, m_onObject)) {
 				m_stateMachine->ChangeState(PlayerJumpState::Instance());
 			}
 		}

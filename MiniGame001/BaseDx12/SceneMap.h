@@ -19,6 +19,7 @@ namespace basedx12 {
 		{ CharaType::MoveSquare, Float3(5.0,1.0,1.0), Float3(0.0), Quat(), Float3(8.0f,2.0f,0.0f) },
 		{ CharaType::ItemSquare, Float3(1.0,1.0,1.0), Float3(0.0), Quat(), Float3(0.0f,8.0f,0.0f) },
 
+		{ CharaType::WallSquare, Float3(3.0,3.0,1.0), Float3(0.0), Quat(), Float3(5.0f,-9.0f,0.0f) },
 	};
 
 	vector<vector<MapData>> g_Stages;

@@ -88,24 +88,58 @@ namespace basedx12 {
 
 
 	bool CollisionManager::IsOnObject(BaseSquare* src,BaseSquare* dest) {
+		float span = 7.0f;
 		auto left = src->GetOBB();
 		auto right = dest->GetOBB();
-		Float3 ret;
-		HitTest::ClosestPtPointOBB(left.m_Center, right, ret);
-		float len = bsm::length(ret - left.m_Center);
-		if (len > m_onObjectSpan) {
-			return false;
-		}
-		Float3 normal = ret - left.m_Center;
-		normal.normalize();
-		auto f = bsm::angleBetweenNormals(normal, Float3(0, -1, 0));
-		if (abs(f) < XM_PIDIV4) {
+		OBB testOBB = left;
+		testOBB.m_Center.y -= span;
+		if (HitTest::OBB_OBB(testOBB, right)) {
+			testOBB = left;
+			testOBB.m_Center.y += span;
+			if (HitTest::OBB_OBB(testOBB, right)) {
+				return false;
+			}
+			testOBB = left;
+			testOBB.m_Center.x -= span;
+			if (HitTest::OBB_OBB(testOBB, right)) {
+				return false;
+			}
+			testOBB = left;
+			testOBB.m_Center.x += span;
+			if (HitTest::OBB_OBB(testOBB, right)) {
+				return false;
+			}
 			return true;
 		}
 		return false;
 	}
 
-	void CollisionManager::CollisionPre() {
+	UINT CollisionManager::GetOnSide(const OBB& left, const OBB& right) {
+		float span = 10.0f;
+		OBB testOBB = left;
+		testOBB.m_Center.y -= span;
+		if (HitTest::OBB_OBB(testOBB, right)) {
+			return 1;
+		}
+		testOBB = left;
+		testOBB.m_Center.y += span;
+		if (HitTest::OBB_OBB(testOBB, right)) {
+			return 2;
+		}
+		testOBB = left;
+		testOBB.m_Center.x -= span;
+		if (HitTest::OBB_OBB(testOBB, right)) {
+			return 3;
+		}
+		testOBB = left;
+		testOBB.m_Center.x += span;
+		if (HitTest::OBB_OBB(testOBB, right)) {
+			return 4;
+		}
+		return 1;
+	}
+
+	void CollisionManager::TestPreCollision() {
 		//コリジョンの前処理
 		auto it = m_pairVec.begin();
 		while (it != m_pairVec.end()) {
@@ -120,18 +154,61 @@ namespace basedx12 {
 		}
 	}
 
-	void CollisionManager::CollisionTest() {
+	void CollisionManager::MakePair(BaseSquare* leftPtr,BaseSquare* rightPtr, float hitTime) {
+		auto leftBefore = leftPtr->GetBeforeOBB();
+		auto rightBefore = rightPtr->GetBeforeOBB();
+
+		CollitionPair pair;
+		pair.m_left = leftPtr;
+		pair.m_right = rightPtr;
+		OBB leftChkObb = leftBefore;
+		leftChkObb.m_Center += leftPtr->GetWorldVelocity() * hitTime;
+
+		OBB rightChkObb = rightBefore;
+		rightChkObb.m_Center += rightPtr->GetWorldVelocity() * hitTime;
+
+		switch (GetOnSide(leftChkObb, rightChkObb)) {
+		case 1:
+			pair.m_normalLeft = Float3(0, 1, 0);
+			pair.m_hitMomentCenterLeft = leftChkObb.m_Center;
+			pair.m_normalRight = Float3(0, -1, 0);
+			pair.m_hitMomentCenterRight = rightChkObb.m_Center;
+			break;
+		case 2:
+			pair.m_normalLeft = Float3(0, -1, 0);
+			pair.m_hitMomentCenterLeft = leftChkObb.m_Center;
+			pair.m_normalRight = Float3(0, 1, 0);
+			pair.m_hitMomentCenterRight = rightChkObb.m_Center;
+			break;
+		case 3:
+			pair.m_normalLeft = Float3(1, 0, 0);
+			pair.m_hitMomentCenterLeft = leftChkObb.m_Center;
+			pair.m_normalRight = Float3(-1, 0, 0);
+			pair.m_hitMomentCenterRight = rightChkObb.m_Center;
+			break;
+		case 4:
+			pair.m_normalLeft = Float3(-1, 0, 0);
+			pair.m_hitMomentCenterLeft = leftChkObb.m_Center;
+			pair.m_normalRight = Float3(1, 0, 0);
+			pair.m_hitMomentCenterRight = rightChkObb.m_Center;
+			break;
+		}
+		//まずはテンポラリに追加
+		m_tempPairVec.push_back(pair);
+	}
+
+
+	void CollisionManager::TestCollision() {
 		float elapsedTime = App::GetElapsedTime();
 		//衝突判定
 		m_tempPairVec.clear();
 		for (int i = 0; i < m_objectVec.size(); i++) {
+			auto playerPtr = dynamic_cast<Player*>(m_objectVec[i]);
+			if (!playerPtr) {
+				continue;
+			}
 			for (int j = 0; j < m_objectVec.size(); j++) {
 				if (i != j) {
-					auto* leftPtr = dynamic_cast<WallSquare*>(m_objectVec[i]);
-					auto* rightPtr = dynamic_cast<WallSquare*>(m_objectVec[j]);
-					if (leftPtr && rightPtr) {
-						continue;
-					}
 					if (IsExcludeChk(m_objectVec[i], m_objectVec[j])) {
 						continue;
 					}
@@ -147,36 +224,8 @@ namespace basedx12 {
 					auto right = m_objectVec[j]->GetOBB();
 					Float3 spanVelocity = m_objectVec[i]->GetWorldVelocity() - m_objectVec[j]->GetWorldVelocity();
 					float hitTime = 0;
-					if (HitTest::CollisionTestObbObb(leftBefore, spanVelocity, rightBefore, 0, elapsedTime, hitTime)) {
-
-						CollitionPair pair;
-						pair.m_left = m_objectVec[i];
-						pair.m_right = m_objectVec[j];
-						OBB leftChkObb = leftBefore;
-						leftChkObb.m_Center += m_objectVec[i]->GetWorldVelocity() * hitTime;
-
-						OBB rightChkObb = rightBefore;
-						rightChkObb.m_Center += m_objectVec[j]->GetWorldVelocity() * hitTime;
-
-						hitTime = elapsedTime - hitTime;
-
-						Float3 ret;
-						HitTest::ClosestPtPointOBB(leftChkObb.m_Center, rightChkObb, ret);
-						Float3 normal = leftChkObb.m_Center - ret;
-						normal.z = 0.0f;
-						normal.normalize();
-						pair.m_normalLeft = normal;
-						pair.m_hitMomentCenterLeft = leftChkObb.m_Center;
-
-						HitTest::ClosestPtPointOBB(rightChkObb.m_Center, leftChkObb, ret);
-						normal = rightChkObb.m_Center - ret;
-						normal.z = 0.0f;
-						normal.normalize();
-						pair.m_normalRight = normal;
-						pair.m_hitMomentCenterRight = rightChkObb.m_Center;
-
-						//まずはテンポラリに追加
-						m_tempPairVec.push_back(pair);
+					if (HitTest::CollisionTestObbObbWithEpsilon(leftBefore, spanVelocity, rightBefore,0.01f, 0, elapsedTime, hitTime)) {
+						MakePair(m_objectVec[i], m_objectVec[j], hitTime);
 					}
 				}
 			}
@@ -185,12 +234,14 @@ namespace basedx12 {
 		for (auto& v : m_tempPairVec) {
 			m_pairVec.push_back(v);
 		}
+	}
+	void CollisionManager::EscapeCollision() {
 		//エスケープ処理
+		//left側のみエスケープ
 		for (auto& v : m_pairVec) {
 			if (!v.m_left->IsFixed()) {
 				//拘束の解消
 				Float3 srcCenter = v.m_left->GetWorldPosition();
-
 				Float3 destCenter = v.m_right->GetWorldPosition();
 				Float3 destMoveVec = destCenter - v.m_hitMomentCenterRight;
 				Float3 srcLocalVec = srcCenter - v.m_hitMomentCenterLeft - destMoveVec;
@@ -202,42 +253,34 @@ namespace basedx12 {
 						escapeLen *= 0.5f;
 					}
 					//Srcのエスケープ
-					srcCenter += v.m_normalLeft * escapeLen;
-					srcCenter.floor(3);
+					if (v.m_normalLeft.x > 0) {
+						srcCenter += v.m_normalLeft * escapeLen * 2.0f;
+					}
+					else {
+						srcCenter += v.m_normalLeft * escapeLen * 2.0f;
+					}
+					srcCenter.floor(0);
 					v.m_left->SetWorldPosition(srcCenter);
 				}
 				v.m_left->SetDirtyflag(true);
 				//拘束の解消後の速度は0
 				v.m_left->SetWorldVelocity(Float3(0));
 			}
-			if (!v.m_right->IsFixed()) {
-				//拘束の解消
-				Float3 srcCenter = v.m_right->GetWorldPosition();
-				Float3 destCenter = v.m_left->GetWorldPosition();
-				Float3 destMoveVec = destCenter - v.m_hitMomentCenterLeft;
-				Float3 srcLocalVec = srcCenter - v.m_hitMomentCenterRight -destMoveVec;
-				float srcV = bsm::dot(srcLocalVec, v.m_normalRight);
-				if (srcV < 0.0f) {
-					//まだ衝突していたら
-					float escapeLen = abs(srcV);
-					if (!v.m_left->IsFixed()) {
-						escapeLen *= 0.5f;
-					}
-					//Srcのエスケープ
-					srcCenter += v.m_normalRight * escapeLen;
-					srcCenter.floor(3);
-					v.m_right->SetWorldPosition(srcCenter);
-				}
-				v.m_right->SetDirtyflag(true);
-				//拘束の解消後の速度は0
-				v.m_right->SetWorldVelocity(Float3(0));
-			}
 		}
+	}
+
+	void CollisionManager::MessageCollision() {
 		//各オブジェクトに衝突があったことをメッセージする
 		for (auto& v : m_tempPairVec) {
 			v.m_left->OnCollisionEnter(v.m_right);
 			v.m_right->OnCollisionEnter(v.m_left);
 		}
+	}
+
+	void CollisionManager::TestMainCollision() {
+		TestCollision();
+		EscapeCollision();
+		MessageCollision();
 	}
 
 }

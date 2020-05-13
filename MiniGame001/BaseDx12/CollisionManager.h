@@ -29,6 +29,10 @@ namespace basedx12 {
 		bool IsPairChk(BaseSquare* left, BaseSquare* right);
 		bool IsTempPairChk(BaseSquare* left, BaseSquare* right);
 		bool IsExcludeChk(BaseSquare* left, BaseSquare* right);
+		void MakePair(BaseSquare* leftPtr,BaseSquare* rightPtr,float hitTime);
+		void TestCollision();
+		void EscapeCollision();
+		void MessageCollision();
 	public:
 		CollisionManager():
 			m_objectVec(1024), 
@@ -45,11 +49,12 @@ namespace basedx12 {
 		void RegisterObject(BaseSquare* pBaseSquare);
 		void RemoveObject(BaseSquare* pBaseSquare);
 
-		void CollisionPre();
-		void CollisionTest();
+		void TestPreCollision();
+		void TestMainCollision();
 		void SetExcludeObjects(BaseSquare* left,BaseSquare* right);
 		void ResetExcludeObjects(BaseSquare* left, BaseSquare* right);
 		bool IsOnObject(BaseSquare* src,BaseSquare* dest);
+		UINT GetOnSide(const OBB& left, const OBB& right);
 	};
 
 }

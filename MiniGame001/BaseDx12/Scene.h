@@ -13,14 +13,8 @@ namespace basedx12 {
 		UINT m_linearWrapSamplerIndex;
 		//PositionTexture用パイプラインステート（コンスタントバッファあり共有する）
 		ComPtr<ID3D12PipelineState> m_ptConstPipelineState;
-		//配置される「オブジェクト
-		CellSquare m_cellSquare;
-		vector<WallSquare> m_wallSquareVec;
-		vector<MoveSquare> m_moveSquareVec;
-		vector<ItemSquare> m_itemSquareVec;
-		Player m_player;
 		//配置されるオブジェクトの親クラスポインタの配列
-		vector<BaseSquare*> m_baseSquareVec;
+		vector<shared_ptr<BaseSquare>> m_baseSquareVec;
 		//衝突判定マネージャ
 		CollisionManager m_collisionManager;
 	public:

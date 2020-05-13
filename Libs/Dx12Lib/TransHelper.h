@@ -3545,6 +3545,40 @@ namespace basedx12 {
 		}
 		//--------------------------------------------------------------------------------------
 		/*!
+		@brief	Sphereと動かないObbの衝突判定(Epsilon指定)
+		@param[in]	SrcSp	Srcの球
+		@param[in]	SrcVelocity	ソース速度
+		@param[in]	DestObb	DestのOBB
+		@param[in]	Epsilon	指定のEpsilon
+		@param[in]	StartTime	開始時間
+		@param[in]	EndTime	終了時間
+		@param[out]	HitTime	ヒット時間
+		@return	衝突していればtrue
+		*/
+		//--------------------------------------------------------------------------------------
+		static bool CollisionTestSphereObbWithEpsilon(const SPHERE& SrcSp, const bsm::Float3& SrcVelocity,
+			const OBB& DestObb,float Epsilon,
+			float StartTime, float EndTime, float& HitTime) {
+			SPHERE SrcSp2;
+			float mid = (StartTime + EndTime) * 0.5f;
+			SrcSp2.m_Center = SrcSp.m_Center + SrcVelocity * mid;
+			SrcSp2.m_Radius = (mid - StartTime) * bsm::length(SrcVelocity) + SrcSp.m_Radius;
+			bsm::Float3 RetVec;
+			if (!HitTest::SPHERE_OBB(SrcSp2, DestObb, RetVec)) {
+				return false;
+			}
+			if (EndTime - StartTime < Epsilon) {
+				HitTime = StartTime;
+				return true;
+			}
+			if (CollisionTestSphereObbWithEpsilon(SrcSp, SrcVelocity, DestObb, Epsilon, StartTime, mid, HitTime)) {
+				return true;
+			}
+			return CollisionTestSphereObbWithEpsilon(SrcSp, SrcVelocity, DestObb, Epsilon, mid, EndTime, HitTime);
+		}
+
+		//--------------------------------------------------------------------------------------
+		/*!
 		@brief	カプセルと動かないAABBの衝突判定
 		@param[in]	SrcCapsule	Srcのカプセル
 		@param[in]	SrcVelocity	ソース速度
@@ -3748,8 +3782,44 @@ namespace basedx12 {
 				return true;
 			}
 			return CollisionTestObbObbSub(SrcObb, SrcVelocity, DestObb, mid, EndTime, HitTime);
+		}
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	OBBと動かないOBBの衝突判定（サブ関数として実装、Epsilon指定）
+		@param[in]	SrcObb	SrcのObb
+		@param[in]	SrcVelocity	ソース速度
+		@param[in]	DestObb	DestのOBB
+		@param[in]	Epsilon	指定のEpsilon
+		@param[in]	StartTime	開始時間
+		@param[in]	EndTime	終了時間
+		@param[out]	HitTime	ヒット時間
+		@return	衝突していればtrue
+		*/
+		//--------------------------------------------------------------------------------------
+		static bool CollisionTestObbObbSubWithEpsilon(const OBB& SrcObb, const bsm::Float3& SrcVelocity,
+			const OBB& DestObb,float Epsilon,
+			float StartTime, float EndTime, float& HitTime) {
+			OBB SrcObb2 = SrcObb;
+			float mid = (StartTime + EndTime) * 0.5f;
+			SrcObb2.m_Center = SrcObb.m_Center + SrcVelocity * mid;
+			//OBBの各辺の長さを拡大
+			SrcObb2.m_Size.x = (mid - StartTime) * bsm::length(SrcVelocity) + SrcObb.m_Size.x;
+			SrcObb2.m_Size.y = (mid - StartTime) * bsm::length(SrcVelocity) + SrcObb.m_Size.y;
+			SrcObb2.m_Size.z = (mid - StartTime) * bsm::length(SrcVelocity) + SrcObb.m_Size.z;
+			if (!HitTest::OBB_OBB(SrcObb2, DestObb)) {
+				return false;
+			}
+			if (EndTime - StartTime < Epsilon) {
+				HitTime = StartTime;
+				return true;
+			}
+			if (CollisionTestObbObbSubWithEpsilon(SrcObb, SrcVelocity, DestObb, Epsilon,StartTime, mid, HitTime)) {
+				return true;
+			}
+			return CollisionTestObbObbSubWithEpsilon(SrcObb, SrcVelocity, DestObb, Epsilon, mid, EndTime, HitTime);
 
 		}
+
 		//--------------------------------------------------------------------------------------
 		/*!
 		@brief	OBBと動かないOBBの衝突判定（SrcObbはSPHERE化できるOBB）
@@ -3773,6 +3843,32 @@ namespace basedx12 {
 			}
 			return CollisionTestObbObbSub(SrcObb, SrcVelocity,DestObb, StartTime, EndTime,HitTime);
 		}
+
+		//--------------------------------------------------------------------------------------
+		/*!
+		@brief	OBBと動かないOBBの衝突判定（SrcObbはSPHERE化できるOBB、Epsilon指定）
+		@param[in]	SrcObb	SrcのObb
+		@param[in]	SrcVelocity	ソース速度
+		@param[in]	DestObb	DestのOBB
+		@param[in]	Epsilon	指定のEpsilon
+		@param[in]	StartTime	開始時間
+		@param[in]	EndTime	終了時間
+		@param[out]	HitTime	ヒット時間
+		@return	衝突していればtrue
+		*/
+		//--------------------------------------------------------------------------------------
+		static bool CollisionTestObbObbWithEpsilon(const OBB& SrcObb, const bsm::Float3& SrcVelocity,
+			const OBB& DestObb,float Epsilon, float StartTime, float EndTime, float& HitTime) {
+			SPHERE BeforeSrcSphere;
+			BeforeSrcSphere.m_Center = SrcObb.m_Center;
+			BeforeSrcSphere.m_Radius = bsm::length(SrcObb.m_Size);
+			if (!CollisionTestSphereObbWithEpsilon(BeforeSrcSphere, SrcVelocity, DestObb, Epsilon, StartTime, EndTime, HitTime)) {
+				//衝突がなければOBBも衝突なし
+				return false;
+			}
+			return CollisionTestObbObbSubWithEpsilon(SrcObb, SrcVelocity, DestObb, Epsilon, StartTime, EndTime, HitTime);
+		}
+
 	};
 
 	inline AABB CAPSULE::GetWrappedAABB() const {

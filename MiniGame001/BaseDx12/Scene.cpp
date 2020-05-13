@@ -46,37 +46,39 @@ namespace basedx12 {
 			for (auto& v : stage) {
 				switch (v.m_charaType) {
 					case CharaType::CellSquare:
-						m_cellSquare.SetInitData(v);
+						{
+							auto ptrCell = shared_ptr<CellSquare>(new CellSquare());
+							ptrCell->SetInitData(v);
+							m_baseSquareVec.push_back(ptrCell);
+						}
 					break;
 					case CharaType::WallSquare:
-						m_wallSquareVec.push_back(WallSquare(v));
+						{
+							auto ptrWall = shared_ptr<WallSquare>(new WallSquare(v));
+							m_baseSquareVec.push_back(ptrWall);
+						}
 					break;
 					case CharaType::MoveSquare:
-						m_moveSquareVec.push_back(MoveSquare(v));
+						{
+							auto ptrMove = shared_ptr<MoveSquare>(new MoveSquare(v));
+							m_baseSquareVec.push_back(ptrMove);
+						}
 					break;
 					case CharaType::ItemSquare:
-						m_itemSquareVec.push_back(ItemSquare(v));
+						{
+							auto ptrItem = shared_ptr<ItemSquare>(new ItemSquare(v));
+							m_baseSquareVec.push_back(ptrItem);
+						}
 						break;
-
 					case CharaType::Player:
-						m_player.SetInitData(v);
-					break;
+						{
+							auto ptrPlayer = shared_ptr<Player>(new Player());
+							ptrPlayer->SetInitData(v);
+							m_baseSquareVec.push_back(ptrPlayer);
+						}
+						break;
 				}
 			}
-			//各オブジェクトのポインタを配列に追加
-			m_baseSquareVec.push_back(&m_cellSquare);
-			for (auto& v : m_wallSquareVec) {
-				m_baseSquareVec.push_back(&v);
-			}
-			for (auto& v : m_moveSquareVec) {
-				m_baseSquareVec.push_back(&v);
-			}
-			for (auto& v : m_itemSquareVec) {
-				m_baseSquareVec.push_back(&v);
-			}
-
-			m_baseSquareVec.push_back(&m_player);
-			//各オブジェクトの初期化（仮想関数呼び出し）
 			for (auto v : m_baseSquareVec) {
 				v->OnInit();
 			}
@@ -126,13 +128,13 @@ namespace basedx12 {
 			v->SetToBefore();
 		}
 		//衝突判定の前処理
-		m_collisionManager.CollisionPre();
+		m_collisionManager.TestPreCollision();
 		//各オブジェクトの更新処理
 		for (auto v : m_baseSquareVec) {
 			v->OnUpdate();
 		}
 		//衝突判定のテスト
-		m_collisionManager.CollisionTest();
+		m_collisionManager.TestMainCollision();
 	}
 	void Scene::OnDraw() {
 		auto baseDevice = App::GetBaseDevice();

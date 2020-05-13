@@ -114,7 +114,7 @@ namespace basedx12 {
 	};
 
 
-	class BaseSquare {
+	class BaseSquare : public std::enable_shared_from_this<BaseSquare> {
 	protected:
 		MapData m_initData;
 		DrawData m_drawData;
