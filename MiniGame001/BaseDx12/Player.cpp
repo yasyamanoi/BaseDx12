@@ -61,11 +61,10 @@ namespace basedx12 {
 	void Player::ApplyPotision() {
 		float elapsedTime = App::GetElapsedTime();
 		if (m_onObject) {
-			m_drawData.m_pos += m_onObject->GetWorldVelocity() * elapsedTime;
+			m_drawData.m_velocity += m_onObject->GetWorldVelocity();
 		}
 		m_drawData.m_pos += m_drawData.m_velocity * elapsedTime;
 		m_drawData.m_dirtyflag = true;
-
 	}
 
 	void Player::ApplyOutStage() {
@@ -115,7 +114,13 @@ namespace basedx12 {
 		auto cntlStats = App::GetControlers();
 		if (cntlStats[0].bConnected) {
 			float moveX = cntlStats[0].fThumbLX;
-			m_drawData.m_velocity.x = moveX * m_speedParam;
+			if (m_stateMachine->GetCurrentState() == PlayerJumpState::Instance()) {
+				//‹ó’†‚Å‚Í§Œä‚Í—}§‚·‚é
+				m_drawData.m_velocity.x = moveX * m_speedJumpParam;
+			}
+			else {
+				m_drawData.m_velocity.x = moveX * m_speedParam;
+			}
 			m_drawData.m_dirtyflag = true;
 		}
 	}

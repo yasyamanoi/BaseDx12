@@ -114,29 +114,29 @@ namespace basedx12 {
 		return false;
 	}
 
-	UINT CollisionManager::GetOnSide(const OBB& left, const OBB& right) {
+	OnSide CollisionManager::GetOnSide(const OBB& left, const OBB& right) {
 		float span = 10.0f;
 		OBB testOBB = left;
 		testOBB.m_Center.y -= span;
 		if (HitTest::OBB_OBB(testOBB, right)) {
-			return 1;
+			return OnSide::up;
 		}
 		testOBB = left;
 		testOBB.m_Center.y += span;
 		if (HitTest::OBB_OBB(testOBB, right)) {
-			return 2;
+			return OnSide::down;
 		}
 		testOBB = left;
 		testOBB.m_Center.x -= span;
 		if (HitTest::OBB_OBB(testOBB, right)) {
-			return 3;
+			return OnSide::left;
 		}
 		testOBB = left;
 		testOBB.m_Center.x += span;
 		if (HitTest::OBB_OBB(testOBB, right)) {
-			return 4;
+			return OnSide::right;
 		}
-		return 1;
+		return OnSide::up;
 	}
 
 	void CollisionManager::TestPreCollision() {
@@ -168,25 +168,25 @@ namespace basedx12 {
 		rightChkObb.m_Center += rightPtr->GetWorldVelocity() * hitTime;
 
 		switch (GetOnSide(leftChkObb, rightChkObb)) {
-		case 1:
+		case OnSide::up:
 			pair.m_normalLeft = Float3(0, 1, 0);
 			pair.m_hitMomentCenterLeft = leftChkObb.m_Center;
 			pair.m_normalRight = Float3(0, -1, 0);
 			pair.m_hitMomentCenterRight = rightChkObb.m_Center;
 			break;
-		case 2:
+		case OnSide::down:
 			pair.m_normalLeft = Float3(0, -1, 0);
 			pair.m_hitMomentCenterLeft = leftChkObb.m_Center;
 			pair.m_normalRight = Float3(0, 1, 0);
 			pair.m_hitMomentCenterRight = rightChkObb.m_Center;
 			break;
-		case 3:
+		case OnSide::left:
 			pair.m_normalLeft = Float3(1, 0, 0);
 			pair.m_hitMomentCenterLeft = leftChkObb.m_Center;
 			pair.m_normalRight = Float3(-1, 0, 0);
 			pair.m_hitMomentCenterRight = rightChkObb.m_Center;
 			break;
-		case 4:
+		case OnSide::right:
 			pair.m_normalLeft = Float3(-1, 0, 0);
 			pair.m_hitMomentCenterLeft = leftChkObb.m_Center;
 			pair.m_normalRight = Float3(1, 0, 0);

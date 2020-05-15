@@ -20,6 +20,14 @@ namespace basedx12 {
 		BaseSquare* m_right;
 	};
 
+	enum class OnSide {
+		noside,
+		up,
+		down,
+		left,
+		right
+	};
+
 	class CollisionManager {
 		const float m_onObjectSpan = 50.0f;
 		vector<BaseSquare*> m_objectVec;
@@ -54,7 +62,11 @@ namespace basedx12 {
 		void SetExcludeObjects(BaseSquare* left,BaseSquare* right);
 		void ResetExcludeObjects(BaseSquare* left, BaseSquare* right);
 		bool IsOnObject(BaseSquare* src,BaseSquare* dest);
-		UINT GetOnSide(const OBB& left, const OBB& right);
+		OnSide GetOnSide(const OBB& left, const OBB& right);
+
+		vector<CollitionPair>& GetPairVec()  {
+			return m_pairVec;
+		}
 	};
 
 }
