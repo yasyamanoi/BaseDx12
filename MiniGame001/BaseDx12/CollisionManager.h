@@ -64,9 +64,6 @@ namespace basedx12 {
 		bool IsOnObject(BaseSquare* src,BaseSquare* dest);
 		OnSide GetOnSide(const OBB& left, const OBB& right);
 
-		vector<CollitionPair>& GetPairVec()  {
-			return m_pairVec;
-		}
 	};
 
 }

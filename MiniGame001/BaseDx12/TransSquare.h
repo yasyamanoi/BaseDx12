@@ -3,12 +3,12 @@
 
 namespace basedx12 {
 
-	class WallSquare : public BaseSquare {
+	class TransSquare : public BaseSquare {
 	public:
-		WallSquare(const MapData& data) :
+		TransSquare(const MapData& data) :
 			BaseSquare(data)
 		{}
-		virtual ~WallSquare() {}
+		virtual ~TransSquare() {}
 		virtual void OnInit() override;
 	};
 

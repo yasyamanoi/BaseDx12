@@ -4,28 +4,9 @@
 namespace basedx12 {
 
 	void Player::OnInit() {
-		auto baseDevice = App::GetBaseDevice();
-		auto commandList = baseDevice->GetCommandList();
-		//メッシュ
-		{
-			m_ptSquareMesh = CreateSquareMesh(1.0f,1.0f);
-		}
-		//テクスチャ
-		{
-			auto TexFile = App::GetRelativeAssetsPath() + L"white.png";
-			m_texture = CreateTextureFromFile(TexFile, m_srvIndex);
-		}
-		//コンスタントバッファ
-		{
-			m_constantBuffer = CreateConstantBuffer(m_spriteConstData, m_constBuffIndex);
-		}
-		//DrawData関連
-		{
-			SetInitDrawData();
-			if (UpdateDrawMatrix()) {
-				UpdateConstdata();
-			}
-		}
+		auto texFile = App::GetRelativeAssetsPath() + L"white.png";
+		//メッシュ、テクスチャ、コンスタントバッファの作成
+		InitDrawResources(texFile);
 		//Collision関連
 		{
 			m_isFixed = false;
@@ -39,16 +20,6 @@ namespace basedx12 {
 			//最初のステートをPlayerJumpStateに設定
 			m_stateMachine->ChangeState(PlayerJumpState::Instance());
 		}
-	}
-
-	void Player::UpdateConstdata() {
-		Mat4x4 world = GetWorldMatrix();
-		m_spriteConstData = {};
-		m_spriteConstData.diffuse = Float4(1.0f);
-		m_spriteConstData.emissive = Float4(0.0f);
-		m_spriteConstData.worldProj = world;
-		m_spriteConstData.worldProj *= m_drawData.m_proj;
-		m_constantBuffer->Copy(m_spriteConstData);
 	}
 
 	void Player::ApplyGravity() {
@@ -66,31 +37,6 @@ namespace basedx12 {
 		m_drawData.m_pos += m_drawData.m_velocity * elapsedTime;
 		m_drawData.m_dirtyflag = true;
 	}
-
-	void Player::ApplyOutStage() {
-		//ステージ外に出たときの処理
-		float halfW = static_cast<float>(App::GetGameWidth()) / 2.0f;
-		float halfWEx = halfW + m_widthMargin;
-		if (abs(m_drawData.m_pos.x) >= halfWEx) {
-			auto ptr = dynamic_cast<MoveSquare*>(m_onObject);
-			if (ptr) {
-				static Float3 relativePos(0.0f);
-				OBB myOBB = GetOBB();
-				OBB onOBB = m_onObject->GetOBB();
-				myOBB.m_Center.y -= m_onObjectChkParam;
-				if (!HitTest::OBB_OBB(myOBB, onOBB)) {
-					m_drawData.m_pos = m_onObject->GetWorldPosition() + relativePos;
-				}
-				else {
-					relativePos = m_drawData.m_pos - m_onObject->GetWorldPosition();
-				}
-			}
-			else {
-				m_drawData.m_pos.x *= -1.0f;
-			}
-		}
-	}
-
 
 	void Player::SetExcludeObject() {
 		if (m_onObject) {
@@ -125,14 +71,44 @@ namespace basedx12 {
 		}
 	}
 
+	void Player::ApplySideSlide() {
+		if (m_slideObject) {
+			m_drawData.m_pos = m_slideObject->GetWorldPosition() + m_moveRelativePos;
+			m_drawData.m_beforePos = m_drawData.m_pos;
+			m_drawData.m_dirtyflag = true;
+		}
+	}
+
 	void Player::ChkAndChangeOnObject() {
 		if (m_onObject) {
 			auto scene = App::GetTypedSceneBase<Scene>();
 			auto manager = scene->GetCollisionManager();
-			if (!manager->IsOnObject(this, m_onObject)) {
-				m_stateMachine->ChangeState(PlayerJumpState::Instance());
+			auto ptr = dynamic_cast<MoveSquare*>(m_onObject);
+			if (manager->IsOnObject(this, m_onObject)) {
+				if (ptr) {
+					m_moveRelativePos = m_drawData.m_pos - m_onObject->GetWorldPosition();
+					m_slideObject = m_onObject;
+				}
+			}
+			else {
+				if (ptr) {
+					if (ptr->IsSideJumped()) {
+						ptr->ClearSideJumped();
+						m_stateMachine->ChangeState(PlayerOutSideState::Instance());
+					}
+					else {
+						m_stateMachine->ChangeState(PlayerJumpState::Instance());
+					}
+				}
+				else {
+					m_stateMachine->ChangeState(PlayerJumpState::Instance());
+				}
 			}
 		}
+	}
+
+	void Player::ChangeJumpState() {
+		m_stateMachine->ChangeState(PlayerJumpState::Instance());
 	}
 
 
@@ -140,9 +116,7 @@ namespace basedx12 {
 		//コントローラチェックして入力があればコマンド呼び出し
 		m_inputHandler.PushHandle(this);
 		m_stateMachine->Update();
-		if (UpdateDrawMatrix()) {
-			UpdateConstdata();
-		}
+		BaseSquare::OnUpdate();
 	}
 
 	void Player::OnPushA() {
@@ -153,45 +127,24 @@ namespace basedx12 {
 	}
 
 	void Player::OnCollisionEnter(BaseSquare* other) {
+		auto ptrItem = dynamic_cast<ItemSquare*>(other);
+		if (ptrItem) {
+			return;
+		}
 		auto scene = App::GetTypedSceneBase<Scene>();
 		auto manager = scene->GetCollisionManager();
 		if (manager->IsOnObject(this, other)) {
 			m_onObject = other;
 			m_stateMachine->ChangeState(PlayerOnObjState::Instance());
 		}
-	}
-
-
-	void Player::OnDraw() {
-		auto baseDevice = App::GetBaseDevice();
-		auto commandList = baseDevice->GetCommandList();
-		auto scene = App::GetTypedSceneBase<Scene>();
-		//パイプライステート
-		scene->SetGPUPipelineState();
-		//Sampler
-		scene->SetGPULinearClampSampler();
-		//テクスチャの更新とシェーダリソースビューの作成
-		m_texture->UpdateSRAndCreateSRV(commandList);
-		//Srvのハンドルの設定
-		CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(
-			baseDevice->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-			m_srvIndex,
-			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
-		);
-		//RootSignature上のt0に設定
-		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"t0"), srvHandle);
-		//Cbvのハンドルを設定
-		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(
-			baseDevice->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-			m_constBuffIndex,
-			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
-		);
-		//RootSignature上のb0に設定
-		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"b0"), cbvHandle);
-		//描画処理
-		commandList->IASetVertexBuffers(0, 1, &m_ptSquareMesh->GetVertexBufferView());
-		commandList->IASetIndexBuffer(&m_ptSquareMesh->GetIndexBufferView());
-		commandList->DrawIndexedInstanced(m_ptSquareMesh->GetNumIndices(), 1, 0, 0, 0);
+		else {
+			auto ptrTrans = dynamic_cast<TransSquare*>(other);
+			if (ptrTrans) {
+				m_drawData.m_pos.x *= -0.99f;
+				m_drawData.m_beforePos = m_drawData.m_pos;
+				m_drawData.m_dirtyflag = true;
+			}
+		}
 	}
 
 	//PlayerJumpState
@@ -206,7 +159,6 @@ namespace basedx12 {
 		owner->ApplyGravity();
 		owner->ApplyControlers();
 		owner->ApplyPotision();
-		owner->ApplyOutStage();
 	}
 
 	void PlayerJumpState::Exit(Player* owner) {
@@ -218,19 +170,38 @@ namespace basedx12 {
 		static shared_ptr<PlayerOnObjState> instance(new PlayerOnObjState);
 		return instance;
 	}
+
 	void PlayerOnObjState::Enter(Player* owner) {
 		owner->SetExcludeObject();
 	}
 	void PlayerOnObjState::Execute(Player* owner) {
 		owner->ApplyControlers();
 		owner->ApplyPotision();
-		owner->ApplyOutStage();
 		owner->ChkAndChangeOnObject();
 	}
 
 	void PlayerOnObjState::Exit(Player* owner) {
 		owner->ResetExcludeObject();
 	}
+
+	//PlayerOutSideState
+	shared_ptr<PlayerOutSideState> PlayerOutSideState::Instance() {
+		static shared_ptr<PlayerOutSideState> instance(new PlayerOutSideState);
+		return instance;
+	}
+
+
+	void PlayerOutSideState::Enter(Player* owner) {
+		owner->ApplySideSlide();
+	}
+	void PlayerOutSideState::Execute(Player* owner) {
+		owner->ApplyPotision();
+		owner->ChangeJumpState();
+	}
+
+	void PlayerOutSideState::Exit(Player* owner) {
+	}
+
 
 }
 //end basedx12

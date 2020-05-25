@@ -3,10 +3,6 @@
 
 namespace basedx12 {
 
-	IMPLEMENT_DX12SHADER(VSPTSprite, App::GetShadersPath() + L"VSPTSprite.cso")
-	IMPLEMENT_DX12SHADER(PSPTSprite, App::GetShadersPath() + L"PSPTSprite.cso")
-
-
 
 	shared_ptr<BaseMesh> BaseSquare::CreateSquareMesh(float u, float v) {
 		float helfSize = 0.5f;
@@ -23,31 +19,57 @@ namespace basedx12 {
 		return BaseMesh::CreateBaseMesh<VertexPositionTexture>(vertices, indices);
 	}
 
-	shared_ptr<BaseTexture> BaseSquare::CreateTextureFromFile(const wstring& file, UINT& index) {
+	shared_ptr<BaseTexture> BaseSquare::CreateTextureFromFile(const wstring& file) {
 		auto baseDevice = App::GetBaseDevice();
 		//テクスチャの作成
 		//シェーダリソースハンドルを作成
-		index = baseDevice->GetCbvSrvUavNextIndex();
+		m_srvIndex = baseDevice->GetCbvSrvUavNextIndex();
 		CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(
 			baseDevice->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-			index,
+			m_srvIndex,
 			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		//画像ファイルをもとにテクスチャを作成
 		return BaseTexture::CreateBaseTexture(file, srvHandle);
 	}
 
-	shared_ptr<ConstantBuffer> BaseSquare::CreateConstantBuffer(const SpriteConstantBuffer& data, UINT& index) {
+	shared_ptr<ConstantBuffer> BaseSquare::CreateConstantBuffer(const SpriteConstantBuffer& data) {
 		auto baseDevice = App::GetBaseDevice();
 		//コンスタントバッファハンドルを作成
-		index = baseDevice->GetCbvSrvUavNextIndex();
+		m_constBuffIndex = baseDevice->GetCbvSrvUavNextIndex();
 		CD3DX12_CPU_DESCRIPTOR_HANDLE handle(
 			baseDevice->GetCbvSrvUavDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-			index,
+			m_constBuffIndex,
 			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
 		);
 		return ConstantBuffer::CreateDirect(handle, data);
 	}
+
+	//メッシュ、テクスチャ、コンスタントバッファの作成
+	void BaseSquare::InitDrawResources(const wstring& textureFile) {
+		auto baseDevice = App::GetBaseDevice();
+		auto commandList = baseDevice->GetCommandList();
+		//メッシュ
+		{
+			m_ptSquareMesh = CreateSquareMesh(m_initData.m_scale.x, m_initData.m_scale.y);
+		}
+		//テクスチャ
+		{
+			m_texture = CreateTextureFromFile(textureFile);
+		}
+		//コンスタントバッファ
+		{
+			m_constantBuffer = CreateConstantBuffer(m_spriteConstData);
+		}
+		//DrawData関連
+		{
+			SetInitDrawData();
+			if (UpdateDrawMatrix()) {
+				UpdateConstdata();
+			}
+		}
+	}
+
 
 	void BaseSquare::SetInitDrawData() {
 		auto scene = App::GetTypedSceneBase<Scene>();
@@ -82,6 +104,56 @@ namespace basedx12 {
 		}
 		return false;
 	}
+
+	void BaseSquare::UpdateConstdata() {
+		m_spriteConstData = {};
+		m_spriteConstData.diffuse = m_drawData.m_diffuse;
+		m_spriteConstData.emissive = m_drawData.m_emissive;
+		m_spriteConstData.worldProj = m_drawData.m_world;
+		m_spriteConstData.worldProj *= m_drawData.m_proj;
+		m_constantBuffer->Copy(m_spriteConstData);
+	}
+
+	void BaseSquare::OnUpdate() {
+		if (UpdateDrawMatrix()) {
+			UpdateConstdata();
+		}
+	}
+
+	void BaseSquare::OnDraw() {
+		auto baseDevice = App::GetBaseDevice();
+		auto commandList = baseDevice->GetCommandList();
+		auto scene = App::GetTypedSceneBase<Scene>();
+		//パイプライステート
+		scene->SetGPUPipelineState();
+		//Sampler
+		scene->SetGPULinearWrapSampler();
+		//テクスチャの更新とシェーダリソースビューの作成
+		m_texture->UpdateSRAndCreateSRV(commandList);
+		//Srvのハンドルの設定
+		CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(
+			baseDevice->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+			m_srvIndex,
+			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
+		);
+		//RootSignature上のt0に設定
+		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"t0"), srvHandle);
+		//Cbvのハンドルを設定
+		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(
+			baseDevice->GetCbvSrvUavDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+			m_constBuffIndex,
+			baseDevice->GetCbvSrvUavDescriptorHandleIncrementSize()
+		);
+		//RootSignature上のb0に設定
+		commandList->SetGraphicsRootDescriptorTable(baseDevice->GetGpuSlotID(L"b0"), cbvHandle);
+		//描画処理
+		commandList->IASetVertexBuffers(0, 1, &m_ptSquareMesh->GetVertexBufferView());
+		commandList->IASetIndexBuffer(&m_ptSquareMesh->GetIndexBufferView());
+		commandList->DrawIndexedInstanced(m_ptSquareMesh->GetNumIndices(), 1, 0, 0, 0);
+	}
+
+
+
 
 	OBB BaseSquare::GetOBB()const {
 		Mat4x4 world = GetWorldMatrix();

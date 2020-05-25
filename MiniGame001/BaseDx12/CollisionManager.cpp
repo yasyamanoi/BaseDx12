@@ -205,8 +205,9 @@ namespace basedx12 {
 		m_tempPairVec.clear();
 		for (int i = 0; i < m_objectVec.size(); i++) {
 			auto playerPtr = dynamic_cast<Player*>(m_objectVec[i]);
+			auto movePtr = dynamic_cast<MoveSquare*>(m_objectVec[i]);
 			//プレイヤー以外は判定なし
-			if (!playerPtr) {
+			if (!playerPtr && !movePtr) {
 				continue;
 			}
 			for (int j = 0; j < m_objectVec.size(); j++) {
@@ -220,17 +221,21 @@ namespace basedx12 {
 					if (IsTempPairChk(m_objectVec[i], m_objectVec[j])) {
 						continue;
 					}
+					auto transPtr = dynamic_cast<TransSquare*>(m_objectVec[j]);
+
 					auto leftBefore = m_objectVec[i]->GetBeforeOBB();
 					auto rightBefore = m_objectVec[j]->GetBeforeOBB();
 					auto left = m_objectVec[i]->GetOBB();
 					auto right = m_objectVec[j]->GetOBB();
 					Float3 spanVelocity = m_objectVec[i]->GetWorldVelocity() - m_objectVec[j]->GetWorldVelocity();
 					float hitTime = 0;
-					if (HitTest::CollisionTestObbObbWithEpsilon(leftBefore, spanVelocity, rightBefore,0.01f, 0, elapsedTime, hitTime)) {
-						auto pair = MakePair(m_objectVec[i], m_objectVec[j], hitTime);
-						Float3 velo = m_objectVec[i]->GetWorldVelocity();
-						velo.slide(pair.m_normalLeft);
-						m_objectVec[i]->SetWorldVelocity(velo);
+					if (playerPtr || (movePtr && transPtr)) {
+						if (HitTest::CollisionTestObbObbWithEpsilon(leftBefore, spanVelocity, rightBefore, 0.01f, 0, elapsedTime, hitTime)) {
+							auto pair = MakePair(m_objectVec[i], m_objectVec[j], hitTime);
+							Float3 velo = m_objectVec[i]->GetWorldVelocity();
+							velo.slide(pair.m_normalLeft);
+							m_objectVec[i]->SetWorldVelocity(velo);
+						}
 					}
 				}
 			}

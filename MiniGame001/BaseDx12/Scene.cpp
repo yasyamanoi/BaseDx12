@@ -5,6 +5,72 @@
 
 namespace basedx12 {
 
+	void Scene::ClearTgtCelldata(const ObjRect& rect) {
+		for (int row = rect.top; row <= rect.bottom; row++) {
+			for (int col = rect.left; col <= rect.right; col++) {
+				g_Celldata[row][col] = 0;
+			}
+		}
+		int i = 0;
+	}
+
+	ObjRect Scene::ReadSimgleObject() {
+		ObjRect ret = {};
+		int selectType = 0;
+		for (int row = 0; row < g_Celldata.size(); row++) {
+			for (int col = 0; col < g_Celldata[row].size(); col++) {
+				if (ret.width != 0) {
+					continue;
+				}
+				if (selectType == 0 && g_Celldata[row][col] != 0) {
+					ret.left = col;
+					ret.top = row;
+					ret.type = g_Celldata[row][col];
+					selectType = g_Celldata[row][col];
+				}
+				if (selectType != 0 && g_Celldata[row][col] != selectType) {
+					ret.right = col - 1;
+					ret.width = col - ret.left;
+				}
+			}
+			if (selectType != 0 && g_Celldata[row][ret.right] != selectType) {
+				ret.bottom = row - 1;
+				ret.height = row - ret.top;
+				break;
+			}
+		}
+		ClearTgtCelldata(ret);
+		return ret;
+	}
+
+	void Scene::ConvertLeftTopDataToCenter(vector<ObjRect>& rectVec, vector<ObjData>& objVec) {
+		int maxBottom = 0;
+		//最大高さ
+		for (auto& v : rectVec) {
+			if (v.bottom > maxBottom) {
+				maxBottom = v.bottom;
+			}
+		}
+		for (auto& v : rectVec) {
+			v.left -= m_halfWidth;
+			v.right -= m_halfWidth;
+			v.top = maxBottom - v.top;
+			v.bottom = maxBottom - v.bottom;
+		}
+		objVec.clear();
+		for (auto& v : rectVec) {
+			ObjData data;
+			data.type = v.type;
+			data.centerX = (float)v.left + ((float)(v.right - v.left) / 2.0f);
+			data.centerY = (float)v.bottom + ((float)(v.top - v.bottom) / 2.0f) - 11.0f;
+			data.width = (float)(v.width);
+			data.height = (float)(v.height);
+			objVec.push_back(data);
+		}
+	}
+
+
+
 	void Scene::OnInit() {
 		//フレーム数は3
 		ResetActiveBaseDevice<GameDevice>(3);
@@ -36,47 +102,71 @@ namespace basedx12 {
 			m_ptConstPipelineState
 				= PipelineState::CreateDefault2D<VertexPositionTexture, VSPTSprite, PSPTSprite>(baseDevice->GetRootSignature(), pipeLineDesc);
 		}
-		//マップの読み込み
-		{
-			g_Stages.push_back(g_StageData1);
-		}
 		// それぞれのオブジェクトの初期化
 		{
-			auto& stage = g_Stages[0];
-			for (auto& v : stage) {
-				switch (v.m_charaType) {
-					case CharaType::CellSquare:
-						{
-							auto ptrCell = shared_ptr<CellSquare>(new CellSquare());
-							ptrCell->SetInitData(v);
-							m_baseSquareVec.push_back(ptrCell);
-						}
+			ObjRect rect = {};
+			vector<ObjRect> rectVec;
+			vector<ObjData> objVec;
+			do {
+				rect = ReadSimgleObject();
+				if (!rect.isNull()) {
+					rectVec.push_back(rect);
+				}
+			} while (!rect.isNull());
+
+			ConvertLeftTopDataToCenter(rectVec, objVec);
+			//セルガイド
+			MapData cellData(CharaType::CellSquare, Float3(41.0, 23.0, 1.0), Float3(0.0), Quat(), Float3(0.0));
+			auto ptrCell = shared_ptr<CellSquare>(new CellSquare());
+			ptrCell->SetInitData(cellData);
+			m_baseSquareVec.push_back(ptrCell);
+			MapData data;
+			for (auto& v : objVec) {
+				data.m_scale.x = v.width;
+				data.m_scale.y = v.height;
+				data.m_scale.z = 1.0f;
+				data.m_pivot = Float3(0.0f);
+				data.m_pos.x = v.centerX;
+				data.m_pos.y = v.centerY;
+				data.m_pos.z = 0.0f;
+				switch (v.type) {
+					case 1:
+					{
+						data.m_charaType = CharaType::TransSquare;
+						auto ptrTrans = shared_ptr<TransSquare>(new TransSquare(data));
+						m_baseSquareVec.push_back(ptrTrans);
+					}
 					break;
-					case CharaType::WallSquare:
-						{
-							auto ptrWall = shared_ptr<WallSquare>(new WallSquare(v));
-							m_baseSquareVec.push_back(ptrWall);
-						}
+					case 2:
+					{
+						data.m_charaType = CharaType::WallSquare;
+						auto ptrWall = shared_ptr<WallSquare>(new WallSquare(data));
+						m_baseSquareVec.push_back(ptrWall);
+					}
 					break;
-					case CharaType::MoveSquare:
-						{
-							auto ptrMove = shared_ptr<MoveSquare>(new MoveSquare(v));
-							m_baseSquareVec.push_back(ptrMove);
-						}
+					case 3:
+					{
+						data.m_charaType = CharaType::MoveSquare;
+						auto ptrMove = shared_ptr<MoveSquare>(new MoveSquare(data));
+						m_baseSquareVec.push_back(ptrMove);
+					}
 					break;
-					case CharaType::ItemSquare:
-						{
-							auto ptrItem = shared_ptr<ItemSquare>(new ItemSquare(v));
-							m_baseSquareVec.push_back(ptrItem);
-						}
-						break;
-					case CharaType::Player:
-						{
-							auto ptrPlayer = shared_ptr<Player>(new Player());
-							ptrPlayer->SetInitData(v);
-							m_baseSquareVec.push_back(ptrPlayer);
-						}
-						break;
+					case 4:
+					{
+						data.m_charaType = CharaType::ItemSquare;
+						auto ptrItem = shared_ptr<ItemSquare>(new ItemSquare(data));
+						m_baseSquareVec.push_back(ptrItem);
+					}
+					break;
+
+					case 5:
+					{
+						data.m_charaType = CharaType::Player;
+						auto ptrPlayer = shared_ptr<Player>(new Player());
+						ptrPlayer->SetInitData(data);
+						m_baseSquareVec.push_back(ptrPlayer);
+					}
+					break;
 				}
 			}
 			for (auto v : m_baseSquareVec) {

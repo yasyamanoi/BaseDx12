@@ -3,8 +3,8 @@
 
 namespace basedx12 {
 
-	void WallSquare::OnInit() {
-		auto texFile = App::GetRelativeAssetsPath() + L"Brown2.png";
+	void TransSquare::OnInit() {
+		auto texFile = App::GetRelativeAssetsPath() + L"purple.png";
 		//メッシュ、テクスチャ、コンスタントバッファの作成
 		InitDrawResources(texFile);
 		//Collision関連

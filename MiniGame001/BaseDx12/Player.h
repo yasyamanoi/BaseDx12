@@ -8,26 +8,15 @@ namespace basedx12 {
 		const float m_speedParam = 250.0f;
 		const float m_speedJumpParam = 170.0f;
 
-		const float m_jumpVelocity = 500.0f;
+		const float m_jumpVelocity = 550.0f;
 		const float m_onObjectChkParam = 20.0f;
 		const float m_widthMargin = 16.0f;
 		const float m_moveSquareHalfWidth = 80.0f;
+		//移動オブジェクトに乗ってる場合のパラメータ
+		Float3 m_moveRelativePos = Float3(0.0f);
+		BaseSquare* m_slideObject;
 		//ステートマシーン
 		unique_ptr< StateMachine<Player> >  m_stateMachine;
-		//PositionTextureの四角形メッシュ
-		shared_ptr<BaseMesh> m_ptSquareMesh;
-		//テクスチャ
-		shared_ptr<BaseTexture> m_texture;
-		//テクスチャ（シェーダリソース）のインデックス
-		UINT m_srvIndex;
-		//コンスタントバッファ
-		shared_ptr<ConstantBuffer> m_constantBuffer;
-		//コンスタントバッファ構造体の実体
-		SpriteConstantBuffer m_spriteConstData;
-		//コンスタントバッファのインデックス
-		UINT m_constBuffIndex;
-		//コンスタントバッファ更新用の仮想関数
-		virtual void UpdateConstdata()override;
 		//入力ハンドラー
 		InputHandler<Player> m_inputHandler;
 		//プレイヤーが乗っているオブジェクト
@@ -40,22 +29,20 @@ namespace basedx12 {
 		virtual ~Player() {}
 		virtual void OnInit() override;
 		virtual void OnUpdate()override;
-		virtual void OnDraw() override;
 		virtual void OnCollisionEnter(BaseSquare* other) override;
-
 
 		//Aボタン
 		void OnPushA();
 
 		void ApplyGravity();
 		void ApplyPotision();
-		void ApplyOutStage();
 		void ApplyControlers();
+		void ApplySideSlide();
 
 		void ChkAndChangeOnObject();
 		void SetExcludeObject();
 		void ResetExcludeObject();
-
+		void ChangeJumpState();
 
 	};
 
@@ -79,6 +66,15 @@ namespace basedx12 {
 		virtual void Exit(Player* owner)override;
 	};
 
+	class PlayerOutSideState : public ObjState<Player>
+	{
+		PlayerOutSideState() {}
+	public:
+		static shared_ptr<PlayerOutSideState> Instance();
+		virtual void Enter(Player* owner)override;
+		virtual void Execute(Player* owner)override;
+		virtual void Exit(Player* owner)override;
+	};
 
 
 }

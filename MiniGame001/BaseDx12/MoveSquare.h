@@ -4,20 +4,8 @@
 namespace basedx12 {
 
 	class MoveSquare : public BaseSquare {
-		const float m_widthMargin = 64.0f + 48.0f;
-		//PositionTextureの四角形メッシュ
-		shared_ptr<BaseMesh> m_ptSquareMesh;
-		//テクスチャ
-		shared_ptr<BaseTexture> m_texture;
-		//テクスチャ（シェーダリソース）のインデックス
-		UINT m_srvIndex;
-		//コンスタントバッファ
-		shared_ptr<ConstantBuffer> m_constantBuffer;
-		//コンスタントバッファ構造体の実体
-		SpriteConstantBuffer m_spriteConstData;
-		//コンスタントバッファのインデックス
-		UINT m_constBuffIndex;
-		virtual void UpdateConstdata()override;
+		const Float3 m_moveVelocity = Float3(-120.0f, 0, 0);
+		bool m_sideJumped = false;
 	public:
 		MoveSquare(const MapData& data) :
 			BaseSquare(data)
@@ -26,9 +14,12 @@ namespace basedx12 {
 		virtual void OnCollisionEnter(BaseSquare* other) override;
 		virtual void OnInit() override;
 		virtual void OnUpdate()override;
-		virtual void OnDraw() override;
-		float GetWidthMargin() const {
-			return m_widthMargin;
+
+		bool IsSideJumped() const{
+			return m_sideJumped;
+		}
+		void ClearSideJumped() {
+			m_sideJumped = false;
 		}
 	};
 
